@@ -50,7 +50,7 @@
  * @retval -3 Failed to bind the address to the socket.
  * @retval -4 Failed to put socket into a listening state.
  */
-int zdtm_listen_for_zaurus(lib_zdtm_env *cur_env) {
+int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env) {
     int retval;
     struct sockaddr_in servaddr;
     int reuse_set_flag = 1;
@@ -108,7 +108,7 @@ int zdtm_listen_for_zaurus(lib_zdtm_env *cur_env) {
  * @retval -1 Failed to accept a Zaurus connection.
  * @retval -2 Failed to convert client address to quad dot format.
  */
-int zdtm_handle_zaurus_connection(lib_zdtm_env *cur_env) {
+int zdtm_handle_zaurus_connection(zdtm_lib_env *cur_env) {
     struct sockaddr_in clntaddr;
     char source_addr[16];
     socklen_t len;
@@ -149,7 +149,7 @@ int zdtm_handle_zaurus_connection(lib_zdtm_env *cur_env) {
  * @retval 0 Successfully closed the Zaurus connection.
  * @retval -1 Failed to close the Zaurus connection.
  */
-zdtm_close_zaurus_conn(lib_zdtm_env *cur_env) {
+zdtm_close_zaurus_conn(zdtm_lib_env *cur_env) {
     int retval;
 
     retval = close(cur_env->connfd);

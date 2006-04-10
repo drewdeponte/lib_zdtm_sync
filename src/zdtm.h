@@ -58,7 +58,7 @@
 #define MSG_HDR_SIZE 13
 
 /**
- * Zaurus DTM environment.
+ * Zaurus DTM library environment.
  *
  * The zdtm_lib_env is a type defined to represent the environment for a
  * given synchronization. It contains all the data that is required to
@@ -72,7 +72,7 @@
 typedef struct zdtm_environment {
     int listenfd;
     int connfd;
-} lib_zdtm_env;
+} zdtm_lib_env;
 
 /**
  * Zaurus DTM Message Body.
@@ -99,8 +99,8 @@ struct zdtm_message {
     unsigned short int cont_size;
 };
 
-int zdtm_listen_for_zaurus(lib_zdtm_env *cur_env);
-int zdtm_handle_zaurus_conn(lib_zdtm_env *cur_env);
-int zdtm_close_zaurus_conn(lib_zdtm_env *cur_env);
+int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env);
+int zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env);
+int zdtm_close_zaurus_conn(zdtm_lib_env *cur_env);
 
 #endif
