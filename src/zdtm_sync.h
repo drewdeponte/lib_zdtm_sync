@@ -15,26 +15,28 @@
  * GNU General Public License for details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with os_zdtm_plugin; if not, write to the Free Software
+ * along with lib_zdtm_sync; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  */
 
 /**
- * @file zdtm.h
+ * @file zdtm_sync.h
  * @brief This is a specifications file for a Zaurus DTM support library.
  *
- * The zdtm.h file is a specifications for a Zaurus DTM based
+ * The zdtm_sync.h file is a specifications for a Zaurus DTM based
  * synchronization, general support library. It provides all prototypes
- * of the general functions used to perform the Zaurus side of a
+ * of the general functions used to perform a Zaurus DTM based
  * synchronization.
  */
 
-#ifndef ZDTM_H
-#define ZDTM_H
+#ifndef ZDTM_SYNC_H
+#define ZDTM_SYNC_H
 
 // Standard Input/Output Includes
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 // Memory Includes
 #include <string.h>
@@ -56,6 +58,8 @@
 
 // This is the predefined constant size a Zaurus DTM Message header.
 #define MSG_HDR_SIZE 13
+// This is the predefined constant size of common messages.
+#define COM_MSG_SIZE 7
 
 /**
  * Zaurus DTM library environment.
@@ -70,8 +74,9 @@
  * provided functions are called in the proper order.
  */
 typedef struct zdtm_environment {
-    int listenfd;
-    int connfd;
+    int listenfd;   // socket - listen for zaurus conn request
+    int connfd;     // socket - connection between desktop and zaurus
+    FILE *logfp;    // file pointer - used as the log file.
 } zdtm_lib_env;
 
 /**
@@ -81,8 +86,8 @@ typedef struct zdtm_environment {
  * Zaurus DTM message.
  */
 struct zdtm_message_body {
-    unsigned char type[3];
-    void *p_content;
+    unsigned char type[3];  // type identifier for a message
+    void *p_content;        // content for a given message
 };
 
 /**
@@ -91,16 +96,27 @@ struct zdtm_message_body {
  * The zdtm_message is a structure which represents a Zaurus DTM
  * Message.
  */
-struct zdtm_message {
-    char header[MSG_HDR_SIZE];
-    struct zdtm_message_body body;
-    unsigned short int body_size;
-    unsigned short int check_sum;
-    unsigned short int cont_size;
-};
+typedef struct zdtm_message {
+    char header[MSG_HDR_SIZE];      // header of the message
+    struct zdtm_message_body body;  // body of the msg (type and cont)
+    unsigned short int body_size;   // size of the msg body in bytes
+    unsigned short int check_sum;   // sum of each byte in msg body
+    unsigned short int cont_size;   // msg body size - msg type size
+} zdtm_msg;
 
 int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env);
 int zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env);
 int zdtm_close_zaurus_conn(zdtm_lib_env *cur_env);
+
+int zdtm_open_log(zdtm_lib_env *cur_env);
+int zdtm_write_log(zdtm_lib_env *cur_env, const unsigned char *buff,
+    unsigned int size);
+int zdtm_close_log(zdtm_lib_env *cur_env);
+
+int zdtm_is_ack_message(const unsigned char *buff);
+int zdtm_is_rqst_message(const unsigned char *buff);
+int zdtm_is_abrt_message(const unsigned char *buff);
+
+int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 
 #endif
