@@ -31,7 +31,7 @@ AC_PROG_CC
 
 # checks for header files
 AC_HEADER_STDC
-AC_CHECK_HEADERS([arpa/inet.h netinet/in.h string.h sys/socket.h])
+AC_CHECK_HEADERS([arpa/inet.h netinet/in.h string.h sys/socket.h stdint.h])
 
 # checks for types
 

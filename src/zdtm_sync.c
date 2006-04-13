@@ -33,6 +33,72 @@
 #include "zdtm_sync.h"
 
 /**
+ * Convert little-endian short to a big-endian short.
+ *
+ * The zdtm_liltobigs function converts a little-endian uint16_t
+ * to a big-endian uint16_t.
+ * @param lilshort The lil-end uint16_t to convert to big-end uint16_t.
+ * @return The big-endian version of given little-endian uint16_t.
+ */
+uint16_t zdtm_liltobigs(uint16_t lilshort) {
+    int size, i;
+    unsigned char buff[sizeof(uint16_t)];
+
+    size = sizeof(uint16_t);
+
+    for (i = 0; i < size; i++) {
+        buff[i] = ((unsigned char *)&lilshort)[(size - i - 1)];
+    }
+
+    return *(uint16_t *)buff;
+}
+
+/**
+ * Convert little-endian long to a big-endian long.
+ *
+ * The zdtm_liltobigl function converts a little-endian uint32_t
+ * to a big-endian uint32_t.
+ * @param lillong The lil-end uint32_t to convert to big-end uint32_t.
+ * @return The big-endian version of given little-endian uint32_t.
+ */
+uint32_t zdtm_liltobigl(uint32_t lillong) {
+    int size, i;
+    unsigned char buff[sizeof(uint32_t)];
+
+    size = sizeof(uint32_t);
+
+    for (i = 0; i < size; i++) {
+        buff[i] = ((unsigned char *)&lillong)[(size - i - 1)];
+    }
+
+    return *(uint32_t *)buff;
+}
+
+/**
+ * Convert big-endian short to a little-endian short.
+ *
+ * The zdtm_bigtolils function converts a big-endian uint16_t to a
+ * little-endian uint16_t.
+ * @param bigshort The big-end uint16_t to convert to lil-end uint16_t.
+ * @return The little-endian version of given big-endian uint16_t.
+ */
+uint16_t zdtm_bigtolils(uint16_t bigshort) {
+    return zdtm_liltobigs(bigshort);
+}
+
+/**
+ * Convert big-endian long to a little-endian long.
+ *
+ * The zdtm_bigtolils function converts a big-endian uint32_t to a
+ * little-endian uint32_t.
+ * @param biglong The big-end uint32_t to convert to lil-end uint32_t.
+ * @return The little-endian version of given big-endian uint32_t.
+ */
+uint32_t zdtm_bigtolill(uint32_t biglong) {
+    return zdtm_liltobigl(biglong);
+}
+
+/**
  * Listen for an incoming synchronization connection from a Zaurus.
  *
  * The zdtm_listen_for_zaurus function creates a socket and configures
@@ -354,14 +420,39 @@ int zdtm_is_abrt_message(const unsigned char *buff) {
 }
 
 /**
+ * Clean Message
+ *
+ * The zdtm_clean_message function handles the checking and freeing of
+ * any members of the message that have been dynamically allocated. Such
+ * dynamic allocation occurs in the zdtm_recv_message function.
+ * @param p_msg Pointer to a zdtm_message structure to free members of.
+ * @return An integer representing success (zero) or failure (non-zero).
+ */
+int zdtm_clean_message(zdtm_msg *p_msg) {
+    if (p_msg->body.p_content != NULL) {
+        free(p_msg->body.p_content);
+        p_msg->body.p_content = NULL;
+    }
+
+    return 0;
+}
+
+/**
  * Receive Message.
  *
- * The zdtm_recv_message functions handles receiving a message from the
+ * The zdtm_recv_message function handles receiving a message from the
  * Zaurus after a connection from the Zaurus has already been handled
  * via the zdtm_handle_zaurus_conn() function. This function supports
  * receiving common messages as well as non-common messages. When,
  * receiving a common message the structure pointed to by p_msg is not
- * altered.
+ * altered. Note: When this function alters the structure pointed to by
+ * p_msg it dynamically allocates memory for the message content. The
+ * freeing of this allocated memory for the message content must be
+ * handled by you. If the function returns in error one can determine if
+ * the content is needed to be freed by checking if the content pointer
+ * is equal no NULL. If it is equal to NULL there is no need to free it.
+ * If it is NOT equal to NULL it must be freed. The zdtm_clean_message
+ * function may help with handling the freeing of message content.
  * @param cur_env Pointer to the current zdtm library environment.
  * @param p_msg Pointer to a zdtm_message structure to store message in.
  * @return An integer representing success (zero) or failure (non-zero).
@@ -375,13 +466,19 @@ int zdtm_is_abrt_message(const unsigned char *buff) {
  * @retval -4 Failed to identify 7 byte message.
  * @retval -5 Failed to identify less than 20 byte message.
  * @retval -6 Failed, p_msg is NULL (no where to store message).
+ * @retval -7 Failed, bytes in != expected size (based on body size).
+ * @retval -8 Failed to allocate mem for message content.
  */
 int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
-    int bytes_read;
-    int max_buff_size;
+    ssize_t bytes_read;
+    uint32_t max_buff_size;
     unsigned char *buff;
+    unsigned char *cur_buff_pos;
 
-    max_buff_size = MSG_HDR_SIZE + 2 + USHRT_MAX + 2;
+    cur_buff_pos = NULL;
+
+    max_buff_size = MSG_HDR_SIZE + sizeof(uint16_t) + UINT16_MAX + \
+        sizeof(uint16_t);
    
     buff = (unsigned char *)malloc((size_t)max_buff_size);
     if (buff == NULL) {
@@ -401,8 +498,9 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
         perror("zdtm_recv_message - read");
     }
 
+    // Check for common messages and unknown messages based on size
     if (bytes_read < 20) {
-        if (bytes_read == 7) {
+        if (bytes_read == COM_MSG_SIZE) {
             if (zdtm_is_ack_message(buff)) {
                 free((void *)buff);
                 return 1;
@@ -434,6 +532,66 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
         return -6;
     }
 
+    /*
+     * Init the body content to NULL in-case failure at some point so
+     * the user can determine if they need to free the content or not.
+     */
+    p_msg->body.p_content = NULL;
+
+    /*
+     * Now that I know the size is acceptable I am going to parse the
+     * data into the proper pieces to fill the zdtm_message structure so
+     * that the information may be easily obtained later on.
+     */
+
+    cur_buff_pos = buff;
+
+    // Set the zdtm_message header
+    memcpy((void *)p_msg->header, (const void *)cur_buff_pos,
+        MSG_HDR_SIZE);
+    cur_buff_pos = cur_buff_pos + MSG_HDR_SIZE;
+
+    // Set the zdtm_message body size
+    p_msg->body_size = *((uint16_t *)(cur_buff_pos));
+#ifdef WORDS_BIGENDIAN
+    p_msg->body_size = zdtm_liltobigs(p_msg->body_size);
+#endif
+    cur_buff_pos = cur_buff_pos + sizeof(uint16_t);
+
+    // Check to see if the number of bytes read in coincides with the
+    // body size that was just obtained from the raw message data.
+    if (bytes_read != (MSG_HDR_SIZE + sizeof(uint16_t) + \
+        p_msg->body_size + sizeof(uint16_t))) {
+        free((void *)buff);
+        // return signifying that body size miss-match
+        return -7;
+    }
+
+    // Set the zdtm_message_body type
+    memcpy((void *)p_msg->body.type, (const void *)cur_buff_pos,
+        MSG_TYPE_SIZE);
+    cur_buff_pos = cur_buff_pos + MSG_TYPE_SIZE;
+
+    // Set the zdtm_message cont_size and the zdtm_message_body content
+    p_msg->cont_size = p_msg->body_size - MSG_TYPE_SIZE;
+    p_msg->body.p_content = malloc((size_t)p_msg->cont_size);
+    if (p_msg->body.p_content == NULL) {
+        free((void *)buff);
+        // return signifying that malloc failed
+        perror("zdtm_recv_message - malloc");
+        return -8;
+    }
+    memcpy(p_msg->body.p_content, (const void *)cur_buff_pos,
+        p_msg->cont_size);
+    cur_buff_pos = cur_buff_pos + p_msg->cont_size;
+
+    // Set the zdtm_message check_sum
+    p_msg->check_sum = *((uint16_t *)(cur_buff_pos));
+#ifdef WORDS_BIGENDIAN
+    p_msg->check_sum = zdtm_liltobigs(p_msg->check_sum);
+#endif
+
+    // Free the temp message buffer since I am done with it
     free((void *)buff);
 
     return 0;
