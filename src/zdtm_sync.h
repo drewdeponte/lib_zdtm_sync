@@ -80,9 +80,83 @@
  */
 typedef struct zdtm_environment {
     int listenfd;   // socket - listen for zaurus conn request
-    int connfd;     // socket - connection between desktop and zaurus
+    int connfd;     // socket - connection from zaurus to desktop
+    int reqfd;      // socket - connection to zaurus from the desktop
     FILE *logfp;    // file pointer - used as the log file.
 } zdtm_lib_env;
+
+/*
+ * ### This section denotes the start of the definitions of the specific
+ * ### message content type definitions which are designed to be used
+ * ### within a union inside the message type.
+ */
+
+/**
+ * Zaurus AAY message content.
+ *
+ * The zdtm_aay_msg_content is a structure which represents an AAY
+ * Zaurus message content after being parsed from the raw message
+ * content.
+ */
+struct zdtm_aay_msg_content {
+    unsigned char uk_data_0[3]; // general unknown data
+};
+
+/**
+ * Zaurus AIG message content.
+ *
+ * The zdtm_aig_msg_content is a structure which represents an AIG
+ * Zaurus message content after being parsed from the raw message
+ * content.
+ */
+struct zdtm_aig_msg_content {
+    uint16_t model_str_len;     // length of the model string
+    unsigned char *model_str;   // string of the zaurus model info
+    unsigned char uk_data_0[5]; // general unknown data
+    unsigned char language[2];  // an identifier of the zaurus lang
+    unsigned char auth_state;   // zaurus authentication state
+    unsigned char uk_data_1[6]; // general unknown data
+};
+
+/**
+ * Zaurus AMG message content.
+ *
+ * The zdtm_amg_msg_content is a structure which represents an AMG
+ * Zaurus message content after being parsed from the raw message
+ * content.
+ */
+struct zdtm_amg_msg_content {
+
+};
+
+/**
+ * Zaurus ATG message content.
+ *
+ * The zdtm_atg_msg_content is a structure which represents an ATG
+ * Zaurus message content after being parsed from the raw message
+ * content.
+ */
+struct zdtm_atg_msg_content {
+    unsigned char year[4];
+    unsigned char month[2];
+    unsigned char day[2];
+    unsigned char hour[2];
+    unsigned char minutes[2];
+    unsigned char seconds[2];
+};
+
+/**
+ * Zaurus AEX message content.
+ *
+ * The zdtm_aex_msg_content is a structure which represents an AEX
+ * Zaurus message content after being parsed from the raw message
+ * content.
+ */
+struct zdtm_aex_msg_content {
+
+};
+
+
 
 /**
  * Zaurus DTM Message Body.
@@ -92,7 +166,16 @@ typedef struct zdtm_environment {
  */
 struct zdtm_message_body {
     unsigned char type[MSG_TYPE_SIZE];  // type identifier for a message
-    void *p_content;                    // content for a given message
+    void *p_raw_content;                // content for a given message
+    union zdtm_spec_type_content {
+        // Content structures for Zaurus messages
+        struct zdtm_aay_msg_content aay;
+        struct zdtm_aig_msg_content aig;
+        struct zdtm_amg_msg_content amg;
+        struct zdtm_atg_msg_content atg;
+        struct zdtm_aex_msg_content aex;
+        // Content structures for Qtopia Desktop messages
+    } cont;
 };
 
 /**
@@ -109,6 +192,46 @@ typedef struct zdtm_message {
     uint16_t cont_size;             // msg body size - msg type size
 } zdtm_msg;
 
+
+
+/*
+Options for Message storage
+
+typedef struct zdtm_message {
+    char header[MSG_HDR_SIZE];      // header of the message
+    struct zdtm_message_body body;  // body of the msg (type and cont)
+    union type_body {
+        struct ray_msg_type ray_body;
+        struct rig_msg_type rig_body;
+        struct aig_msg_type aig_body;
+    }
+    uint16_t body_size;             // size of the msg body in bytes
+    uint16_t check_sum;             // sum of each byte in msg body
+    uint16_t cont_size;             // msg body size - msg type size
+} zdtm_msg;
+
+This first method requires checking of the message type to determin
+which body to access for both sides of any functions that it is passed
+into. For example:
+
+if(memcmp(zdtm_message.header, "AIG", 3) == 0) {
+    parse_aig_message(zdtm_msg *some_msg); 
+} else if (memcmp(zdtm_message.header, "RAY", 3) == 0) {
+    parse_ray_message(zdtm_msg *some_msg);
+} else if...
+...
+
+This method is on the top of my list right now.
+
+Or I could provide functions to parse each member out of each specific
+type of message. I do NOT like this solution, it polutes the name space.
+
+Or I could just create seperate structs for each type of message using
+common namings for shared members and pass them through functions using
+void * pointers which would then have to be type casted appropriately on
+both sides of the functions dependent upon the message type.
+*/
+
 uint16_t zdtm_liltobigs(uint16_t lilshort);
 uint32_t zdtm_liltobigl(uint32_t lillong);
 uint16_t zdtm_bigtolils(uint16_t bigshort);
@@ -117,6 +240,7 @@ uint32_t zdtm_bigtolill(uint32_t biglong);
 int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env);
 int zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env);
 int zdtm_close_zaurus_conn(zdtm_lib_env *cur_env);
+int zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip);
 
 int zdtm_open_log(zdtm_lib_env *cur_env);
 int zdtm_write_log(zdtm_lib_env *cur_env, const unsigned char *buff,
@@ -129,5 +253,8 @@ int zdtm_is_abrt_message(const unsigned char *buff);
 
 int zdtm_clean_message(zdtm_msg *p_msg);
 int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
+//int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
+
+//struct zdtm_aay_msg * zdtm_msg_to_aay_msg(zdtm_msg *p_msg);
 
 #endif

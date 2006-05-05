@@ -174,7 +174,7 @@ int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env) {
  * @retval -1 Failed to accept a Zaurus connection.
  * @retval -2 Failed to convert client address to quad dot format.
  */
-int zdtm_handle_zaurus_connection(zdtm_lib_env *cur_env) {
+int zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env) {
     struct sockaddr_in clntaddr;
     char source_addr[16];
     socklen_t len;
@@ -226,6 +226,48 @@ int zdtm_close_zaurus_conn(zdtm_lib_env *cur_env) {
         return -1;
     }
     
+    return 0;
+}
+
+/**
+ * Connect to Zaurus
+ *
+ * The zdtm_conn_to_zaurus function initiates a connection to the
+ * Zaurus. This connection is used to initiate a synchornization
+ * originating from the desktop.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param zaurus_ip A string containing dotted quad zaurus ip address.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully connected to the Zaurus.
+ * @retval -1 Failed to create a socket to use to connect to the zaurus.
+ * @retval -2 Failed to convert the zaurus ip address.
+ * @retval -3 Failed to connect to the zaurus.
+ */
+int zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip) {
+    struct sockaddr_in servaddr;
+    int retval;
+
+    cur_env->reqfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (cur_env->reqfd == -1) {
+        perror("zdtm_conn_to_zaurus - socket");
+        return -1;
+    }
+
+    memset(&servaddr, 0, sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_port = htons(ZLISTPORT);
+    if (inet_pton(AF_INET, zaurus_ip, &servaddr.sin_addr) <= 0) {
+        perror("zdtm_conn_to_zaurus - inet_pton");
+        return -2;
+    }
+
+    retval = connect(cur_env->reqfd, (struct sockaddr *)&servaddr,
+        sizeof(servaddr));
+    if(retval == -1) {
+        perror("zdtm_conn_to_zaurus - connect");
+        return -3;
+    }
+
     return 0;
 }
 
@@ -429,9 +471,9 @@ int zdtm_is_abrt_message(const unsigned char *buff) {
  * @return An integer representing success (zero) or failure (non-zero).
  */
 int zdtm_clean_message(zdtm_msg *p_msg) {
-    if (p_msg->body.p_content != NULL) {
-        free(p_msg->body.p_content);
-        p_msg->body.p_content = NULL;
+    if (p_msg->body.p_raw_content != NULL) {
+        free(p_msg->body.p_raw_content);
+        p_msg->body.p_raw_content = NULL;
     }
 
     return 0;
@@ -466,8 +508,9 @@ int zdtm_clean_message(zdtm_msg *p_msg) {
  * @retval -4 Failed to identify 7 byte message.
  * @retval -5 Failed to identify less than 20 byte message.
  * @retval -6 Failed, p_msg is NULL (no where to store message).
- * @retval -7 Failed, bytes in != expected size (based on body size).
- * @retval -8 Failed to allocate mem for message content.
+ * @retval -7 Failed, message raw content is not initialized to NULL.
+ * @retval -8 Failed, bytes in != expected size (based on body size).
+ * @retval -9 Failed to allocate mem for message content.
  */
 int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     ssize_t bytes_read;
@@ -533,15 +576,21 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     }
 
     /*
-     * Init the body content to NULL in-case failure at some point so
-     * the user can determine if they need to free the content or not.
+     * Check if the body raw content is initialized to NULL so that
+     * in-case of failure at some point so the user can determine if
+     * they need to free the content or not.
      */
-    p_msg->body.p_content = NULL;
+    if (p_msg->body.p_raw_content != NULL) {
+        free((void *)buff);
+        return -7;
+    }
 
     /*
      * Now that I know the size is acceptable I am going to parse the
      * data into the proper pieces to fill the zdtm_message structure so
-     * that the information may be easily obtained later on.
+     * that the information may be easily obtained later on. Note, I am
+     * only parsing into to the raw portions. Later parsing will occur
+     * in a seperate function for each specific type of message.
      */
 
     cur_buff_pos = buff;
@@ -564,7 +613,7 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
         p_msg->body_size + sizeof(uint16_t))) {
         free((void *)buff);
         // return signifying that body size miss-match
-        return -7;
+        return -8;
     }
 
     // Set the zdtm_message_body type
@@ -574,14 +623,14 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
 
     // Set the zdtm_message cont_size and the zdtm_message_body content
     p_msg->cont_size = p_msg->body_size - MSG_TYPE_SIZE;
-    p_msg->body.p_content = malloc((size_t)p_msg->cont_size);
-    if (p_msg->body.p_content == NULL) {
+    p_msg->body.p_raw_content = malloc((size_t)p_msg->cont_size);
+    if (p_msg->body.p_raw_content == NULL) {
         free((void *)buff);
         // return signifying that malloc failed
         perror("zdtm_recv_message - malloc");
-        return -8;
+        return -9;
     }
-    memcpy(p_msg->body.p_content, (const void *)cur_buff_pos,
+    memcpy(p_msg->body.p_raw_content, (const void *)cur_buff_pos,
         p_msg->cont_size);
     cur_buff_pos = cur_buff_pos + p_msg->cont_size;
 
@@ -596,3 +645,17 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
 
     return 0;
 }
+
+/*
+int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
+    unsigned char *wire_msg;
+    unsigned int msg_size;
+
+    wire_msg = NULL;
+
+    
+    
+
+    return 0;
+}
+*/
