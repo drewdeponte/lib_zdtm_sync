@@ -667,6 +667,11 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
 
 /**
  * Prepare the raw message for sending based on the p_msg content.
+ * Fills in the Message Header, body_size, cont_size, check_sum,
+ * and p_raw_content in p_msg.
+ *
+ * The p_raw_content must be freed at a later point.
+ *
  * @return RET_NNULL_RAW Failed, raw message not null.
  * @return RET_UNK_TYPE Failed, unknown message type. 
  */
