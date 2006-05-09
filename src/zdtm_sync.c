@@ -99,6 +99,22 @@ uint32_t zdtm_bigtolill(uint32_t biglong) {
 }
 
 /**
+ * Sum all the bytes in a buffer.
+ *
+ * @param buf The buffer to sum.
+ * @param n The number of bytes in the buffer.
+ */
+uint16_t zdtm_checksum(unsigned char *buf, uint16_t n) {
+    uint16_t sum = 0;
+
+    for(;n > 0; --n){
+        sum += *(buf++);
+    }
+
+    return sum;
+}
+
+/**
  * Listen for an incoming synchronization connection from a Zaurus.
  *
  * The zdtm_listen_for_zaurus function creates a socket and configures
@@ -508,9 +524,11 @@ int zdtm_clean_message(zdtm_msg *p_msg) {
  * @retval -4 Failed to identify 7 byte message.
  * @retval -5 Failed to identify less than 20 byte message.
  * @retval -6 Failed, p_msg is NULL (no where to store message).
- * @retval -7 Failed, message raw content is not initialized to NULL.
- * @retval -8 Failed, bytes in != expected size (based on body size).
- * @retval -9 Failed to allocate mem for message content.
+ * @retval RET_NNULL_RAW Failed, message raw content is not initialized to NULL.
+ * @retval RET_SIZE_MISMATCH  Failed, bytes in != expected size 
+ *                            (based on body size).
+ *
+ * @retval RET_MEM_CONTENT Failed to allocate mem for message content.
  */
 int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     ssize_t bytes_read;
@@ -613,7 +631,7 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
         p_msg->body_size + sizeof(uint16_t))) {
         free((void *)buff);
         // return signifying that body size miss-match
-        return -8;
+        return RET_SIZE_MISMATCH;
     }
 
     // Set the zdtm_message_body type
@@ -628,7 +646,7 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
         free((void *)buff);
         // return signifying that malloc failed
         perror("zdtm_recv_message - malloc");
-        return -9;
+        return RET_MEM_CONTENT;
     }
     memcpy(p_msg->body.p_raw_content, (const void *)cur_buff_pos,
         p_msg->cont_size);
@@ -644,6 +662,70 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     free((void *)buff);
 
     return 0;
+}
+
+
+/**
+ * Prepare the raw message for sending based on the p_msg content.
+ * @return RET_NNULL_RAW Failed, raw message not null.
+ * @return RET_UNK_TYPE Failed, unknown message type. 
+ */
+int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
+    
+    void *p_body;
+    uint16_t *p_cont_size;
+
+    // First we will calculate the body size -- all messages have
+    // the message type.
+    p_msg->body_size = MSG_TYPE_SIZE;
+
+    if(memcmp(p_msg->body.type, RRL_MSG_TYPE, MSG_TYPE_SIZE) == 0) {
+        p_msg->body_size += sizeof(uint8_t) + p_msg->body.cont.rrl.pw_size;
+
+    } else if(memcmp(p_msg->body.type, RAY_MSG_TYPE, MSG_TYPE_SIZE) == 0 ||
+              memcmp(p_msg->body.type, RIG_MSG_TYPE, MSG_TYPE_SIZE) == 0) {
+        // No additional content 
+        
+    } else {
+        // Unknown message type 
+        return RET_UNK_TYPE;
+    }
+
+    // The cont_size is the body - the type size
+    p_msg->cont_size = p_msg->body_size - MSG_TYPE_SIZE;
+
+    // Set up the header
+    memcpy(p_msg->header, DMSG_HDR, MSG_HDR_SIZE);
+    // Write the content size;
+    p_cont_size = (uint16_t *)(p_msg->header + MSG_HDR_CONT_OFFSET);
+
+#ifdef WORDS_BIGENDIAN
+    *p_cont_size = zdtm_liltobigs(p_msg->cont_size);
+#else
+    *p_cont_size = p_msg->cont_size;
+#endif
+
+    // Initialize the raw content.
+    if(p_msg->body.p_raw_content != NULL) return RET_NNULL_RAW;
+
+    // Allocate the raw message.
+    p_body = p_msg->body.p_raw_content = malloc(p_msg->body_size);
+
+    // Copy in the type
+    memcpy(p_body, p_msg->body.type, MSG_TYPE_SIZE);
+    p_body += 3;
+
+    // Fill in the rest for non-trivial messages
+    if(memcmp(p_msg->body.type, RRL_MSG_TYPE, MSG_TYPE_SIZE) == 0) {
+        *((unsigned char*)p_body++) = p_msg->body.cont.rrl.pw_size;
+        memcpy(p_body, p_msg->body.cont.rrl.pw, p_msg->body.cont.rrl.pw_size);
+    }
+
+    // Compute the checksum -- sill in host byte order
+    p_msg->check_sum = zdtm_checksum(p_msg->body.p_raw_content, 
+                                     p_msg->body_size);
+
+    return 0; 
 }
 
 /*

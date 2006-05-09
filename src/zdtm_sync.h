@@ -66,6 +66,23 @@
 // This is the size, in bytes,  of a common messages.
 #define COM_MSG_SIZE 7
 
+// Return values
+#define RET_NNULL_RAW     -7
+#define RET_SIZE_MISMATCH -8
+#define RET_MEM_CONTENT   -9
+#define RET_UNK_TYPE      -10
+
+// This is the static message header for the Zaurus
+const unsigned char ZMSG_HDR[MSG_HDR_SIZE] =
+{0x00, 0x00, 0x00, 0x00, 0x00, 0x96, 0x01, 0x01, 0x00, 0xff, 0xff, 0xff, 0xff};
+
+// This is the static message header for the Desktop
+// The two 0xff bytes are to be replaced by the message content size later
+const unsigned char DMSG_HDR[MSG_HDR_SIZE] =
+{0x00, 0x00, 0x00, 0x00, 0x00, 0x96, 0x01, 0x01, 0x0c, 0xff, 0xff, 0x00, 0x00};
+
+#define MSG_HDR_CONT_OFFSET 0x09
+
 /**
  * Zaurus DTM library environment.
  *
@@ -156,7 +173,42 @@ struct zdtm_aex_msg_content {
 
 };
 
+/**
+ * Desktop RAY message content.
+ *
+ * The zdtm_ray_msg_content represents an RAY Desktop to Zaurus message
+ * in response to the AAY message.  It contains no specific content.
+ */
+struct zdtm_ray_msg_content {
 
+};
+
+const unsigned char *RAY_MSG_TYPE = "RAY";
+
+/**
+ * Desktop RIG message content.
+ *
+ * The zdtm_rig_msg_content represents an RIG Desktop to Zaurus message
+ * to request an AIG information packet.
+ */
+struct zdtm_rig_msg_content {
+
+};
+
+const unsigned char *RIG_MSG_TYPE = "RIG";
+
+/**
+ * Desktop RRL message content.
+ *
+ * The zdtm_rrl_msg_content represents an RRL Desktop to Zaurus message
+ * for authentication.
+ */
+struct zdtm_rrl_msg_content {
+    unsigned char pw_size;
+    unsigned char *pw;
+};
+
+const unsigned char *RRL_MSG_TYPE = "RRL";
 
 /**
  * Zaurus DTM Message Body.
@@ -174,7 +226,11 @@ struct zdtm_message_body {
         struct zdtm_amg_msg_content amg;
         struct zdtm_atg_msg_content atg;
         struct zdtm_aex_msg_content aex;
+
         // Content structures for Qtopia Desktop messages
+        struct zdtm_ray_msg_content ray;
+        struct zdtm_rig_msg_content rig;
+        struct zdtm_rrl_msg_content rrl;
     } cont;
 };
 
@@ -237,6 +293,8 @@ uint32_t zdtm_liltobigl(uint32_t lillong);
 uint16_t zdtm_bigtolils(uint16_t bigshort);
 uint32_t zdtm_bigtolill(uint32_t biglong);
 
+uint16_t zdtm_checksum(unsigned char *buf, uint16_t n);
+
 int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env);
 int zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env);
 int zdtm_close_zaurus_conn(zdtm_lib_env *cur_env);
@@ -253,6 +311,7 @@ int zdtm_is_abrt_message(const unsigned char *buff);
 
 int zdtm_clean_message(zdtm_msg *p_msg);
 int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
+int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 //int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 
 //struct zdtm_aay_msg * zdtm_msg_to_aay_msg(zdtm_msg *p_msg);
