@@ -555,8 +555,8 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     } else if (bytes_read == -1) {
         // read - returned an error and set errno
         free((void *)buff);
-        return -3;
         perror("zdtm_recv_message - read");
+        return -3;
     }
 
     // Check for common messages and unknown messages based on size
@@ -661,6 +661,11 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     // Free the temp message buffer since I am done with it
     free((void *)buff);
 
+    /*
+     * At this point everything in the zdtm_message struct is filled in
+     * except for the p_msg->body.cont.
+     */
+
     return 0;
 }
 
@@ -746,3 +751,13 @@ int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     return 0;
 }
 */
+
+
+int zdtm_parse_raw_msg(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
+    /*
+     * This function needs to use the provided information in p_msg to
+     * fill in p_msg->body.cont.
+     */
+
+    return 0;
+}

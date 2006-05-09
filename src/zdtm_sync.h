@@ -314,6 +314,8 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 //int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 
+int zdtm_parse_raw_msg(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
+
 //struct zdtm_aay_msg * zdtm_msg_to_aay_msg(zdtm_msg *p_msg);
 
 #endif
