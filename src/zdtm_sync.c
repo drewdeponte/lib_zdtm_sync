@@ -689,11 +689,10 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     // the message type.
     p_msg->body_size = MSG_TYPE_SIZE;
 
-    if(memcmp(p_msg->body.type, RRL_MSG_TYPE, MSG_TYPE_SIZE) == 0) {
+    if(IS_RRL(p_msg)) {
         p_msg->body_size += sizeof(uint8_t) + p_msg->body.cont.rrl.pw_size;
 
-    } else if(memcmp(p_msg->body.type, RAY_MSG_TYPE, MSG_TYPE_SIZE) == 0 ||
-              memcmp(p_msg->body.type, RIG_MSG_TYPE, MSG_TYPE_SIZE) == 0) {
+    } else if(IS_RAY(p_msg) || IS_RIG(p_msg)) {
         // No additional content 
         
     } else {
@@ -726,7 +725,7 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     p_body += 3;
 
     // Fill in the rest for non-trivial messages
-    if(memcmp(p_msg->body.type, RRL_MSG_TYPE, MSG_TYPE_SIZE) == 0) {
+    if(IS_RRL(p_msg) == 0) {
         *((unsigned char*)p_body++) = p_msg->body.cont.rrl.pw_size;
         memcpy(p_body, p_msg->body.cont.rrl.pw, p_msg->body.cont.rrl.pw_size);
     }

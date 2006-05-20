@@ -45,5 +45,5 @@ AC_CHECK_FUNCS([memset socket])
 
 # checks for system services
 
-AC_CONFIG_FILES([Makefile src/Makefile src/testing/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile testing/Makefile])
 AC_OUTPUT

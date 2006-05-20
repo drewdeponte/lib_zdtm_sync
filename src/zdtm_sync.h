@@ -119,6 +119,9 @@ struct zdtm_aay_msg_content {
     unsigned char uk_data_0[3]; // general unknown data
 };
 
+const char *AAY_MSG_TYPE = "AAY";
+#define IS_AAY(x) (memcmp(x->body.type, AAY_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
 /**
  * Zaurus AIG message content.
  *
@@ -135,6 +138,9 @@ struct zdtm_aig_msg_content {
     unsigned char uk_data_1[6]; // general unknown data
 };
 
+const char *AIG_MSG_TYPE = "AIG";
+#define IS_AIG(x) (memcmp(x->body.type, AIG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
 /**
  * Zaurus AMG message content.
  *
@@ -145,6 +151,8 @@ struct zdtm_aig_msg_content {
 struct zdtm_amg_msg_content {
 
 };
+const char *AMG_MSG_TYPE = "AMG";
+#define IS_AMG(x) (memcmp(x->body.type, AMG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 /**
  * Zaurus ATG message content.
@@ -162,6 +170,9 @@ struct zdtm_atg_msg_content {
     unsigned char seconds[2];
 };
 
+const char *ATG_MSG_TYPE = "ATG";
+#define IS_ATG(x) (memcmp(x->body.type, ATG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
 /**
  * Zaurus AEX message content.
  *
@@ -172,6 +183,8 @@ struct zdtm_atg_msg_content {
 struct zdtm_aex_msg_content {
 
 };
+const char *AEX_MSG_TYPE = "AEX";
+#define IS_AEX(x) (memcmp(x->body.type, AEX_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 /**
  * Desktop RAY message content.
@@ -183,7 +196,8 @@ struct zdtm_ray_msg_content {
 
 };
 
-const unsigned char *RAY_MSG_TYPE = "RAY";
+const char *RAY_MSG_TYPE = "RAY";
+#define IS_RAY(x) (memcmp(x->body.type, RAY_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 /**
  * Desktop RIG message content.
@@ -195,7 +209,8 @@ struct zdtm_rig_msg_content {
 
 };
 
-const unsigned char *RIG_MSG_TYPE = "RIG";
+const char *RIG_MSG_TYPE = "RIG";
+#define IS_RIG(x) (memcmp(x->body.type, RIG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 /**
  * Desktop RRL message content.
@@ -208,7 +223,9 @@ struct zdtm_rrl_msg_content {
     unsigned char *pw;
 };
 
-const unsigned char *RRL_MSG_TYPE = "RRL";
+const char *RRL_MSG_TYPE = "RRL";
+#define IS_RRL(x) (memcmp(x, RRL_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
 
 /**
  * Zaurus DTM Message Body.
