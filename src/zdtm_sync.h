@@ -269,7 +269,7 @@ struct zdtm_rms_msg_content {
 };
 
 const char *RMS_MSG_TYPE = "RMS";
-#define IS_RMS(x) (memcmp(x, RMS_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+#define IS_RMS(x) (memcmp(x->body.type, RMS_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 /**
  * Desktop RTG message content.
@@ -325,7 +325,7 @@ const char *RDI_MSG_TYPE = "RDI";
 /**
  * Desktop RSY message content.
  *
- * The zdtm_rsy_msg_content represents an RDI Desktop to Zaurus message
+ * The zdtm_rsy_msg_content represents an RSY Desktop to Zaurus message
  * solicits ASY message.
  *      - sync_type
  *          - todo 0x06
@@ -341,6 +341,28 @@ struct zdtm_rsy_msg_content {
 
 const char *RSY_MSG_TYPE = "RSY";
 #define IS_RSY(x) (memcmp(x->body.type, RSY_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+/**
+ * Desktop RDR message content.
+ *
+ * The zdtm_rdr_msg_content represents an RDR Desktop to Zaurus message
+ * solicits ADR messages, one message for each specific item.
+ *      - sync_type
+ *          - todo 0x06
+ *          - calendar 0x01
+ *          - address book 0x07
+ *      - num_sync_ids Usually 1
+ *      - sync_id
+ */
+
+struct zdtm_rdr_msg_content {
+    unsigned char sync_type;
+    uint16_t num_sync_ids;
+    uint32_t sync_id;
+};
+
+const char *RDR_MSG_TYPE = "RDR";
+#define IS_RDR(x) (memcmp(x->body.type, RDR_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 /**
  * Zaurus DTM Message Body.
@@ -369,6 +391,7 @@ struct zdtm_message_body {
         struct zdtm_rts_msg_content rts;
         struct zdtm_rdi_msg_content rdi;
         struct zdtm_rsy_msg_content rsy;
+        struct zdtm_rdr_msg_content rdr;
     } cont;
 };
 

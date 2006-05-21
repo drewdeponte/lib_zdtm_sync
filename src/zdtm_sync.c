@@ -708,6 +708,22 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     } else if(IS_RSY(p_msg)) {
         p_msg->body_size += sizeof(struct zdtm_rsy_msg_content);
 
+    } else if(IS_RDR(p_msg)) {
+        /* Because there is a char early in the struct, it is being 
+         * null by the compiler to get the other data types memory
+         * aligned, therefore, we are going to size the individual 
+         * components, rather than using gcc-isms to get the data
+         * structure packed.
+         * The alternative is to add a __attribute__((__packed__))
+         * between the closing brace and the semicolon on the 
+         * structure declaration.
+         * TODO Do we need to do this on the other structures
+         *      for cross-platform issues?
+         */
+        p_msg->body_size += sizeof(p_msg->body.cont.rdr.sync_type);
+        p_msg->body_size += sizeof(p_msg->body.cont.rdr.num_sync_ids);
+        p_msg->body_size += sizeof(p_msg->body.cont.rdr.sync_id);
+
     } else if(IS_RAY(p_msg) || IS_RIG(p_msg) || IS_RTG(p_msg)) {
         // No additional content 
         
@@ -754,10 +770,15 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
             return RET_BAD_SIZE;
         
 #ifdef WORDS_BIGENDIAN            
-        *((uint16_t*)p_body++) = zdtm_liltobigs(p_msg->body.cont.rms.log_size);
+        *((uint16_t*)p_body) = zdtm_liltobigs(p_msg->body.cont.rms.log_size);
+        p_body += sizeof(uint16_t);
+        
 #else
-        *((uint16_t*)p_body++) = p_msg->body.cont.rms.log_size;
+        *((uint16_t*)p_body) = p_msg->body.cont.rms.log_size;
+        p_body += sizeof(uint16_t);
+
 #endif
+
         memcpy(p_body, 
                p_msg->body.cont.rms.log, 
                p_msg->body.cont.rms.log_size);
@@ -777,6 +798,27 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     }else if(IS_RSY(p_msg)){
         *((unsigned char*)p_body++) = p_msg->body.cont.rsy.sync_type;
         *((unsigned char*)p_body++) = p_msg->body.cont.rsy.uk;
+
+    }else if(IS_RDR(p_msg)){
+        *((unsigned char*)p_body++) = p_msg->body.cont.rdr.sync_type;
+
+#ifdef WORDS_BIGENDIAN
+        *((uint16_t*)p_body) = zdtm_liltobigs(
+                                            p_msg->body.cont.rdr.num_sync_ids);
+        p_body += sizeof(uint16_t);
+
+        *((uint32_t*)p_body) = zdtm_liltobigs(p_msg->body.cont.rdr._sync_id);
+        p_body += sizeof(uint32_t);
+
+#else
+        *((uint16_t*)p_body) = p_msg->body.cont.rdr.num_sync_ids;
+        p_body += sizeof(uint16_t);
+
+        *((uint32_t*)p_body) = p_msg->body.cont.rdr.sync_id;
+        p_body += sizeof(uint32_t);
+
+#endif
+
 
     }
 

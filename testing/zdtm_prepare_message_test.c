@@ -67,6 +67,16 @@ int main(int argc, char *argv[])
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
     dump_msg(&msg);
     
+    /* Make a simply RMS msg. */
+    printf("RMS\n");
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RMS_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rms.log_size = 12;
+    memset(msg.body.cont.rms.log, 0xfe, 12);
+    r = zdtm_prepare_message(&cur_env, &msg);
+    if(r < 0){ printf("Failed: %d\n", r); return 1; }
+    dump_msg(&msg);
+
     /* Make a simply RTG msg. */
     printf("RTG\n");
     memset(&msg, 0, sizeof(zdtm_msg));
@@ -94,12 +104,23 @@ int main(int argc, char *argv[])
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
     dump_msg(&msg);
 
-    /* Make a simply RDI msg. */
+    /* Make a simply RSY msg. */
     printf("RSY\n");
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RSY_MSG_TYPE, MSG_TYPE_SIZE);
     msg.body.cont.rsy.sync_type = SYNC_TYPE_TODO;
     msg.body.cont.rsy.uk = 0x07;
+    r = zdtm_prepare_message(&cur_env, &msg);
+    if(r < 0){ printf("Failed: %d\n", r); return 1; }
+    dump_msg(&msg);
+
+    /* Make a simply RDR msg. */
+    printf("RDR\n");
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RDR_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rdr.sync_type = SYNC_TYPE_TODO;
+    msg.body.cont.rdr.num_sync_ids = 1;
+    msg.body.cont.rdr.sync_id = 0xdeadbeef;
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
     dump_msg(&msg);
