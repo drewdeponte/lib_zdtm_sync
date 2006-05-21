@@ -71,6 +71,12 @@
 #define RET_SIZE_MISMATCH -8
 #define RET_MEM_CONTENT   -9
 #define RET_UNK_TYPE      -10
+#define RET_BAD_SIZE      -11
+
+// Sync Types
+#define SYNC_TYPE_CALENDAR  0x01
+#define SYNC_TYPE_TODO      0x06
+#define SYNC_TYPE_ADDRESS   0x07
 
 // This is the static message header for the Zaurus
 const unsigned char ZMSG_HDR[MSG_HDR_SIZE] =
@@ -206,7 +212,6 @@ const char *RAY_MSG_TYPE = "RAY";
  * to request an AIG information packet.
  */
 struct zdtm_rig_msg_content {
-
 };
 
 const char *RIG_MSG_TYPE = "RIG";
@@ -220,12 +225,122 @@ const char *RIG_MSG_TYPE = "RIG";
  */
 struct zdtm_rrl_msg_content {
     unsigned char pw_size;
-    unsigned char *pw;
+    char *pw;
 };
 
 const char *RRL_MSG_TYPE = "RRL";
-#define IS_RRL(x) (memcmp(x, RRL_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+#define IS_RRL(x) (memcmp(x->body.type, RRL_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
+/**
+ * Desktop RMG message content.
+ *
+ * The zdtm_rmg_msg_content represents an RMG Desktop to Zaurus message
+ * to indicate the synchronization type.
+ *      - uk is typically 0x01
+ *      - sync_type
+ *          - todo 0x06
+ *          - calendar 0x01
+ *          - address book 0x07
+ * Synchronization log.
+ */
+
+struct zdtm_rmg_msg_content {
+    unsigned char uk;
+    unsigned char sync_type;
+};
+
+const char *RMG_MSG_TYPE = "RMG";
+#define IS_RMG(x) (memcmp(x->body.type, RMG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+
+/**
+ * Desktop RMS message content.
+ *
+ * The zdtm_rms_msg_content represents an RMS Desktop to Zaurus message
+ * in the process of doing a full synchronization.
+ * Not really implemented at the moment.
+ * First two bytes are size, the remaining 38 are log message.
+ * The message is padded with 0x00 if it is not the full size.
+ */
+
+struct zdtm_rms_msg_content {
+    uint16_t log_size;
+    unsigned char log[38];
+};
+
+const char *RMS_MSG_TYPE = "RMS";
+#define IS_RMS(x) (memcmp(x, RMS_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+/**
+ * Desktop RTG message content.
+ *
+ * The zdtm_rtg_msg_content represents an RTG Desktop to Zaurus message
+ * Request for time stamp.
+ */
+
+struct zdtm_rtg_msg_content {
+};
+
+const char *RTG_MSG_TYPE = "RTG";
+#define IS_RTG(x) (memcmp(x->body.type, RTG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+/**
+ * Desktop RTS message content.
+ *
+ * The zdtm_rts_msg_content represents an RTS Desktop to Zaurus message
+ * notify Zaurus of the time.
+ *
+ * String of YYYYMMDDhhmmss
+ */
+
+#define RTS_DATE_LEN 14
+
+struct zdtm_rts_msg_content {
+    char date[RTS_DATE_LEN];
+};
+
+const char *RTS_MSG_TYPE = "RTS";
+#define IS_RTS(x) (memcmp(x->body.type, RTS_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+/**
+ * Desktop RDI message content.
+ *
+ * The zdtm_rdi_msg_content represents an RDI Desktop to Zaurus message
+ * solicits ADI message.
+ *      - sync_type
+ *          - todo 0x06
+ *          - calendar 0x01
+ *          - address book 0x07
+ *      - uk is typically 0x07
+ */
+
+struct zdtm_rdi_msg_content {
+    unsigned char sync_type;
+    unsigned char uk;
+};
+
+const char *RDI_MSG_TYPE = "RDI";
+#define IS_RDI(x) (memcmp(x->body.type, RDI_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+/**
+ * Desktop RSY message content.
+ *
+ * The zdtm_rsy_msg_content represents an RDI Desktop to Zaurus message
+ * solicits ASY message.
+ *      - sync_type
+ *          - todo 0x06
+ *          - calendar 0x01
+ *          - address book 0x07
+ *      - uk is typically 0x07
+ */
+
+struct zdtm_rsy_msg_content {
+    unsigned char sync_type;
+    unsigned char uk;
+};
+
+const char *RSY_MSG_TYPE = "RSY";
+#define IS_RSY(x) (memcmp(x->body.type, RSY_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 /**
  * Zaurus DTM Message Body.
@@ -248,6 +363,12 @@ struct zdtm_message_body {
         struct zdtm_ray_msg_content ray;
         struct zdtm_rig_msg_content rig;
         struct zdtm_rrl_msg_content rrl;
+        struct zdtm_rmg_msg_content rmg;
+        struct zdtm_rms_msg_content rms;
+        struct zdtm_rtg_msg_content rtg;
+        struct zdtm_rts_msg_content rts;
+        struct zdtm_rdi_msg_content rdi;
+        struct zdtm_rsy_msg_content rsy;
     } cont;
 };
 

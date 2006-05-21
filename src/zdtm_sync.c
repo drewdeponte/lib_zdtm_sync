@@ -679,6 +679,7 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
  *
  * @return RET_NNULL_RAW Failed, raw message not null.
  * @return RET_UNK_TYPE Failed, unknown message type. 
+ * @return RET_BAD_SIZE Failed, size field bad.
  */
 int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     
@@ -692,7 +693,22 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     if(IS_RRL(p_msg)) {
         p_msg->body_size += sizeof(uint8_t) + p_msg->body.cont.rrl.pw_size;
 
-    } else if(IS_RAY(p_msg) || IS_RIG(p_msg)) {
+    } else if(IS_RMG(p_msg)) {
+        p_msg->body_size += sizeof(struct zdtm_rmg_msg_content);
+
+    } else if(IS_RMS(p_msg)) {
+        p_msg->body_size += sizeof(struct zdtm_rms_msg_content);
+
+    } else if(IS_RTS(p_msg)) {
+        p_msg->body_size += sizeof(struct zdtm_rts_msg_content);
+
+    } else if(IS_RDI(p_msg)) {
+        p_msg->body_size += sizeof(struct zdtm_rdi_msg_content);
+
+    } else if(IS_RSY(p_msg)) {
+        p_msg->body_size += sizeof(struct zdtm_rsy_msg_content);
+
+    } else if(IS_RAY(p_msg) || IS_RIG(p_msg) || IS_RTG(p_msg)) {
         // No additional content 
         
     } else {
@@ -725,10 +741,46 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     p_body += 3;
 
     // Fill in the rest for non-trivial messages
-    if(IS_RRL(p_msg) == 0) {
+    if(IS_RRL(p_msg)) {
         *((unsigned char*)p_body++) = p_msg->body.cont.rrl.pw_size;
         memcpy(p_body, p_msg->body.cont.rrl.pw, p_msg->body.cont.rrl.pw_size);
+
+    }else if(IS_RMG(p_msg)){
+        *((unsigned char*)p_body++) = p_msg->body.cont.rmg.uk;
+        *((unsigned char*)p_body++) = p_msg->body.cont.rmg.sync_type;
+
+    }else if(IS_RMS(p_msg)){
+        if(p_msg->body.cont.rms.log_size > sizeof(p_msg->body.cont.rms.log))
+            return RET_BAD_SIZE;
+        
+#ifdef WORDS_BIGENDIAN            
+        *((uint16_t*)p_body++) = zdtm_liltobigs(p_msg->body.cont.rms.log_size);
+#else
+        *((uint16_t*)p_body++) = p_msg->body.cont.rms.log_size;
+#endif
+        memcpy(p_body, 
+               p_msg->body.cont.rms.log, 
+               p_msg->body.cont.rms.log_size);
+
+        p_body += p_msg->body.cont.rms.log_size;
+
+        memset(p_body, 0x00, sizeof(p_msg->body.cont.rms.log) - 
+                             p_msg->body.cont.rms.log_size);
+
+    }else if(IS_RTS(p_msg)){
+        memcpy(p_body, p_msg->body.cont.rts.date, RTS_DATE_LEN);
+
+    }else if(IS_RDI(p_msg)){
+        *((unsigned char*)p_body++) = p_msg->body.cont.rdi.sync_type;
+        *((unsigned char*)p_body++) = p_msg->body.cont.rdi.uk;
+
+    }else if(IS_RSY(p_msg)){
+        *((unsigned char*)p_body++) = p_msg->body.cont.rsy.sync_type;
+        *((unsigned char*)p_body++) = p_msg->body.cont.rsy.uk;
+
     }
+
+
 
     // Compute the checksum -- sill in host byte order
     p_msg->check_sum = zdtm_checksum(p_msg->body.p_raw_content, 
