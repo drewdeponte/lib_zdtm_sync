@@ -703,22 +703,22 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     if(IS_RRL(p_msg)) {
         p_msg->body_size += sizeof(uint8_t) + p_msg->body.cont.rrl.pw_size;
 
-    } else if(IS_RMG(p_msg)) {
+    }else if(IS_RMG(p_msg)) {
         p_msg->body_size += sizeof(struct zdtm_rmg_msg_content);
 
-    } else if(IS_RMS(p_msg)) {
+    }else if(IS_RMS(p_msg)) {
         p_msg->body_size += sizeof(struct zdtm_rms_msg_content);
 
-    } else if(IS_RTS(p_msg)) {
+    }else if(IS_RTS(p_msg)) {
         p_msg->body_size += sizeof(struct zdtm_rts_msg_content);
 
-    } else if(IS_RDI(p_msg)) {
+    }else if(IS_RDI(p_msg)) {
         p_msg->body_size += sizeof(struct zdtm_rdi_msg_content);
 
-    } else if(IS_RSY(p_msg)) {
+    }else if(IS_RSY(p_msg)) {
         p_msg->body_size += sizeof(struct zdtm_rsy_msg_content);
 
-    } else if(IS_RDR(p_msg)) {
+    }else if(IS_RDR(p_msg)) {
         /* Because there is a char early in the struct, it is being 
          * null by the compiler to get the other data types memory
          * aligned, therefore, we are going to size the individual 
@@ -733,7 +733,7 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
         p_msg->body_size += sizeof(p_msg->body.cont.rdr.sync_type);
         p_msg->body_size += sizeof(p_msg->body.cont.rdr.num_sync_ids);
         p_msg->body_size += sizeof(p_msg->body.cont.rdr.sync_id);
-    } else if(IS_RDW(p_msg)) {
+    }else if(IS_RDW(p_msg)) {
         /* This one is tricky. */
         p_msg->body_size += sizeof(p_msg->body.cont.rdw.sync_type);
         p_msg->body_size += sizeof(p_msg->body.cont.rdw.num_sync_ids);
@@ -791,10 +791,28 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
                 break;
         }
 
-    } else if(IS_RAY(p_msg) || IS_RIG(p_msg) || IS_RTG(p_msg)) {
+    }else if(IS_RDD(p_msg)){
+        p_msg->body_size += sizeof(p_msg->body.cont.rdd.sync_type);
+        p_msg->body_size += sizeof(p_msg->body.cont.rdd.num_sync_ids);
+        p_msg->body_size += sizeof(p_msg->body.cont.rdd.sync_id);
+
+    }else if(IS_RDS(p_msg)){
+        p_msg->body_size += sizeof(p_msg->body.cont.rds);
+
+    }else if(IS_RQT(p_msg)){
+        p_msg->body_size += sizeof(p_msg->body.cont.rqt.null_bytes);
+
+    }else if(IS_RLR(p_msg)){
+        p_msg->body_size += sizeof(p_msg->body.cont.rlr.sync_type);
+
+    }else if(IS_RGE(p_msg)){
+        p_msg->body_size += sizeof(p_msg->body.cont.rge.path_len);
+        p_msg->body_size += p_msg->body.cont.rge.path_len;
+
+    }else if(IS_RAY(p_msg) || IS_RIG(p_msg) || IS_RTG(p_msg)) {
         // No additional content 
         
-    } else {
+    }else {
         // Unknown message type 
         return RET_UNK_TYPE;
     }
@@ -995,9 +1013,49 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
             default:
                 break;
         }
+
+    }else if(IS_RDD(p_msg)){
+        *((unsigned char*)p_body++) = p_msg->body.cont.rdd.sync_type;
+
+#ifdef WORDS_BIGENDIAN
+        *((uint16_t*)p_body) = zdtm_liltobigs(
+                                            p_msg->body.cont.rdd.num_sync_ids);
+        p_body += sizeof(uint16_t);
+
+        *((uint32_t*)p_body) = zdtm_liltobigs(p_msg->body.cont.rdd.sync_id);
+        p_body += sizeof(uint32_t);
+
+#else
+        *((uint16_t*)p_body) = p_msg->body.cont.rdd.num_sync_ids;
+        p_body += sizeof(uint16_t);
+
+        *((uint32_t*)p_body) = p_msg->body.cont.rdd.sync_id;
+        p_body += sizeof(uint32_t);
+
+#endif
+
+    }else if(IS_RDS(p_msg)){
+        *((unsigned char*)p_body++) = p_msg->body.cont.rds.sync_type;
+        *((unsigned char*)p_body++) = p_msg->body.cont.rds.status;
+        memcpy(p_body, p_msg->body.cont.rds.null_bytes,
+                sizeof(p_msg->body.cont.rds.null_bytes));
+
+    }else if(IS_RQT(p_msg)){
+        memcpy(p_body, p_msg->body.cont.rqt.null_bytes,
+                sizeof(p_msg->body.cont.rqt.null_bytes));
+
+    }else if(IS_RLR(p_msg)){
+        *((unsigned char*)p_body++) = p_msg->body.cont.rlr.sync_type;
+
+    }else if(IS_RGE(p_msg)){
+        *((uint16_t*)p_body) = p_msg->body.cont.rge.path_len;
+        p_body += sizeof(p_msg->body.cont.rge.path_len);
+
+        memcpy(p_body, p_msg->body.cont.rge.path, 
+                       p_msg->body.cont.rge.path_len);
+
+
     }
-
-
 
     // Compute the checksum -- sill in host byte order
     p_msg->check_sum = zdtm_checksum(p_msg->body.p_raw_content, 

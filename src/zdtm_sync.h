@@ -423,6 +423,86 @@ struct zdtm_rdw_msg_content {
 const char *RDW_MSG_TYPE = "RDW";
 #define IS_RDW(x) (memcmp(x->body.type, RDW_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
+/**
+ * Desktop RDD message content.
+ *
+ * The zdtm_rdd_msg_content represents an RDD Desktop to Zaurus message
+ * indicates that an item is to be deleted during synchronizaion.
+ *
+ *      - num_sync_ids is always 1, like a happy vestigial organ.
+ */
+
+struct zdtm_rdd_msg_content {
+    unsigned char sync_type;
+    uint16_t num_sync_ids;
+    uint32_t sync_id;
+};
+
+const char *RDD_MSG_TYPE = "RDD";
+#define IS_RDD(x) (memcmp(x->body.type, RDD_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+/**
+ * Desktop RDS message content.
+ *
+ * The zdtm_rds_msg_content represents an RDS Desktop to Zaurus message
+ * indicates that synchronization was successful. 
+ *
+ * status is always 0x7.
+ */
+
+struct zdtm_rds_msg_content {
+    unsigned char sync_type;
+    char status;
+    char null_bytes[2];
+};
+
+const char *RDS_MSG_TYPE = "RDS";
+#define IS_RDS(x) (memcmp(x->body.type, RDS_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+/**
+ * Desktop RQT message content.
+ *
+ * The zdtm_rqt_msg_content represents an RQT Desktop to Zaurus message
+ * terminates the zaurus connection.
+ */
+
+struct zdtm_rqt_msg_content {
+    char null_bytes[3];
+};
+
+const char *RQT_MSG_TYPE = "RQT";
+#define IS_RQT(x) (memcmp(x->body.type, RQT_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+/**
+ * Desktop RLR message content.
+ *
+ * The zdtm_rlr_msg_content represents an RLR Desktop to Zaurus message
+ * requests all synchronization ids of a given type.
+ *
+ */
+
+struct zdtm_rlr_msg_content {
+    unsigned char sync_type;
+};
+
+const char *RLR_MSG_TYPE = "RLR";
+#define IS_RLR(x) (memcmp(x->body.type, RLR_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+/**
+ * Desktop RGE message content.
+ *
+ * The zdtm_rge_msg_content represents an RGE Desktop to Zaurus message
+ * requests the contents of a DTM index file or a DTM box file.
+ *
+ */
+
+struct zdtm_rge_msg_content {
+    uint16_t path_len;
+    char *path;
+};
+
+const char *RGE_MSG_TYPE = "RGE";
+#define IS_RGE(x) (memcmp(x->body.type, RGE_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 /**
  * Zaurus DTM Message Body.
@@ -453,6 +533,11 @@ struct zdtm_message_body {
         struct zdtm_rsy_msg_content rsy;
         struct zdtm_rdr_msg_content rdr;
         struct zdtm_rdw_msg_content rdw;
+        struct zdtm_rdd_msg_content rdd;
+        struct zdtm_rds_msg_content rds;
+        struct zdtm_rqt_msg_content rqt;
+        struct zdtm_rds_msg_content rlr;
+        struct zdtm_rge_msg_content rge;
     } cont;
 };
 
