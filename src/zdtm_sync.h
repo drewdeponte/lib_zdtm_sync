@@ -537,7 +537,7 @@ struct zdtm_message_body {
         struct zdtm_rdd_msg_content rdd;
         struct zdtm_rds_msg_content rds;
         struct zdtm_rqt_msg_content rqt;
-        struct zdtm_rds_msg_content rlr;
+        struct zdtm_rlr_msg_content rlr;
         struct zdtm_rge_msg_content rge;
     } cont;
 };
@@ -589,6 +589,48 @@ int zdtm_parse_raw_aay_msg(zdtm_msg *p_msg);
 int zdtm_parse_raw_aig_msg(zdtm_msg *p_msg);
 
 inline int zdtm_todo_length(struct zdtm_todo * todo);
-inline void * zdtm_todo_write(void *buf, struct zdtm_todo *todo);
+inline void *zdtm_todo_write(void *buf, struct zdtm_todo *todo);
+
+inline int zdtm_rrl_length(struct zdtm_rrl_msg_content *rrl);
+inline void *zdtm_rrl_write(void *buf, struct zdtm_rrl_msg_content *rrl);
+
+inline int zdtm_rmg_length(struct zdtm_rmg_msg_content *rmg);
+inline void *zdtm_rmg_write(void *buf, struct zdtm_rmg_msg_content *rmg);
+
+inline int zdtm_rms_length(struct zdtm_rms_msg_content *rms);
+inline void *zdtm_rms_write(void *buf, struct zdtm_rms_msg_content *rms);
+
+inline int zdtm_rms_length(struct zdtm_rms_msg_content *rms);
+inline void *zdtm_rms_write(void *buf, struct zdtm_rms_msg_content *rms);
+
+inline int zdtm_rts_length(struct zdtm_rts_msg_content *rts);
+inline void *zdtm_rts_write(void *buf, struct zdtm_rts_msg_content *rts);
+
+inline int zdtm_rdi_length(struct zdtm_rdi_msg_content *rdi);
+inline void *zdtm_rdi_write(void *buf, struct zdtm_rdi_msg_content *rdi);
+
+inline int zdtm_rsy_length(struct zdtm_rsy_msg_content *rsy);
+inline void *zdtm_rsy_write(void *buf, struct zdtm_rsy_msg_content *rsy);
+
+inline int zdtm_rdr_length(struct zdtm_rdr_msg_content *rdr);
+inline void *zdtm_rdr_write(void *buf, struct zdtm_rdr_msg_content *rdr);
+
+inline int zdtm_rdw_length(struct zdtm_rdw_msg_content *rdw);
+inline void *zdtm_rdw_write(void *buf, struct zdtm_rdw_msg_content *rdw);
+
+inline int zdtm_rdd_length(struct zdtm_rdd_msg_content *rdd);
+inline void *zdtm_rdd_write(void *buf, struct zdtm_rdd_msg_content *rdd);
+
+inline int zdtm_rds_length(struct zdtm_rds_msg_content *rds);
+inline void *zdtm_rds_write(void *buf, struct zdtm_rds_msg_content *rds);
+
+inline int zdtm_rqt_length(struct zdtm_rqt_msg_content *rqt);
+inline void *zdtm_rqt_write(void *buf, struct zdtm_rqt_msg_content *rqt);
+
+inline int zdtm_rlr_length(struct zdtm_rlr_msg_content *rlr);
+inline void *zdtm_rlr_write(void *buf, struct zdtm_rlr_msg_content *rlr);
+
+inline int zdtm_rge_length(struct zdtm_rge_msg_content *rge);
+inline void *zdtm_rge_write(void *buf, struct zdtm_rge_msg_content *rge);
 
 #endif
