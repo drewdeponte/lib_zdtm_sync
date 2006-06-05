@@ -72,6 +72,7 @@
 #define RET_MEM_CONTENT   -9
 #define RET_UNK_TYPE      -10
 #define RET_BAD_SIZE      -11
+#define RET_UNK_VAR      -12
 
 // Sync Types
 #define SYNC_TYPE_CALENDAR  0x01
@@ -365,6 +366,63 @@ const char *RDR_MSG_TYPE = "RDR";
 #define IS_RDR(x) (memcmp(x->body.type, RDR_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 /**
+ * Desktop RDW message content.
+ *
+ * The zdtm_rdw_msg_content represents an RDW Desktop to Zaurus message
+ * used for updating or adding items.
+ *
+ *    - variation -- added to help the preparation process.
+ *
+ */
+
+/* todo struct, probably should go elsewhere. */
+struct zdtm_todo{
+    uint32_t category_len;
+    char *category;
+    char start_date[5];
+    char due_date[5];
+    char completed_date[5];
+    char progress;
+    char priority;
+    uint32_t description_len;
+    char *description;
+    uint32_t notes_len;
+    char *notes;
+};
+
+
+struct zdtm_rdw_msg_content {
+    unsigned char sync_type;
+    uint16_t num_sync_ids;
+    uint32_t sync_id;
+    unsigned char variation;
+    union zdtm_rdw_variations {
+        struct {
+            unsigned char padding[16];
+        } one;
+
+        struct {
+            char attribute;
+        } two;
+
+        struct {
+            char attribute;
+            char card_created_date_time[5];
+            char card_mod_date_time[5];
+            uint32_t sync_id;
+        } three;
+    } vars;
+
+    union {
+        struct zdtm_todo todo;
+    } cont;
+};
+
+const char *RDW_MSG_TYPE = "RDW";
+#define IS_RDW(x) (memcmp(x->body.type, RDW_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+
+/**
  * Zaurus DTM Message Body.
  *
  * The zdtm_message_body is a structure which represents the body of a
@@ -392,6 +450,7 @@ struct zdtm_message_body {
         struct zdtm_rdi_msg_content rdi;
         struct zdtm_rsy_msg_content rsy;
         struct zdtm_rdr_msg_content rdr;
+        struct zdtm_rdw_msg_content rdw;
     } cont;
 };
 
@@ -478,5 +537,8 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 int zdtm_parse_raw_msg(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 
 //struct zdtm_aay_msg * zdtm_msg_to_aay_msg(zdtm_msg *p_msg);
+
+inline int zdtm_todo_length(struct zdtm_todo * todo);
+inline void * zdtm_todo_write(void *buf, struct zdtm_todo *todo);
 
 #endif

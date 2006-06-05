@@ -492,6 +492,15 @@ int zdtm_clean_message(zdtm_msg *p_msg) {
         p_msg->body.p_raw_content = NULL;
     }
 
+    /* Cleanup RRL Messages. */
+    if (memcmp(p_msg->body.type, RRL_MSG_TYPE, MSG_TYPE_SIZE) == 0){
+        if(p_msg->body.cont.rrl.pw != NULL){
+            free(p_msg->body.cont.rrl.pw);
+            p_msg->body.cont.rrl.pw = NULL;
+
+        }
+    }
+
     return 0;
 }
 
@@ -680,6 +689,7 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
  * @return RET_NNULL_RAW Failed, raw message not null.
  * @return RET_UNK_TYPE Failed, unknown message type. 
  * @return RET_BAD_SIZE Failed, size field bad.
+ * @return RET_UNK_VAR  Failed, unknown variation for RDW message.
  */
 int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     
@@ -723,6 +733,63 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
         p_msg->body_size += sizeof(p_msg->body.cont.rdr.sync_type);
         p_msg->body_size += sizeof(p_msg->body.cont.rdr.num_sync_ids);
         p_msg->body_size += sizeof(p_msg->body.cont.rdr.sync_id);
+    } else if(IS_RDW(p_msg)) {
+        /* This one is tricky. */
+        p_msg->body_size += sizeof(p_msg->body.cont.rdw.sync_type);
+        p_msg->body_size += sizeof(p_msg->body.cont.rdw.num_sync_ids);
+        p_msg->body_size += sizeof(p_msg->body.cont.rdw.sync_id);
+
+        switch(p_msg->body.cont.rdw.variation){
+            case 1:
+                p_msg->body_size += sizeof(p_msg->body.cont.rdw.vars.one.padding);
+
+                switch(p_msg->body.cont.rdw.sync_type){
+                    //case SYNC_TYPE_CALENDAR:
+                    case SYNC_TYPE_TODO:
+                        p_msg->body_size += 
+                           zdtm_todo_length(&p_msg->body.cont.rdw.cont.todo);
+                        break;
+                    //case SYNC_TYPE_ADDRESS:
+                    default:
+                        return RET_UNK_TYPE;
+                        break;
+                }
+
+                break;
+                
+            case 2:
+                p_msg->body_size += sizeof(uint32_t) + 
+                                    sizeof(p_msg->body.cont.rdw.vars.two.attribute);
+                break;
+
+            case 3:
+                p_msg->body_size += 
+                    sizeof(uint32_t) +
+                    sizeof(p_msg->body.cont.rdw.vars.three.attribute) +
+                    sizeof(uint32_t) +
+                    sizeof(p_msg->body.cont.rdw.vars.three.card_created_date_time) +
+                    sizeof(uint32_t) +
+                    sizeof(p_msg->body.cont.rdw.vars.three.card_mod_date_time) +
+                    sizeof(uint32_t) +
+                    sizeof(p_msg->body.cont.rdw.vars.three.sync_id);
+
+
+                switch(p_msg->body.cont.rdw.sync_type){
+                    //case SYNC_TYPE_CALENDAR:
+                    case SYNC_TYPE_TODO:
+                        p_msg->body_size += 
+                          zdtm_todo_length(&p_msg->body.cont.rdw.cont.todo);
+                        break;
+                    //case SYNC_TYPE_ADDRESS:
+                    default:
+                        return RET_UNK_TYPE;
+                        break;
+                }
+                break;
+            default:
+                return RET_UNK_VAR;
+                break;
+        }
 
     } else if(IS_RAY(p_msg) || IS_RIG(p_msg) || IS_RTG(p_msg)) {
         // No additional content 
@@ -807,7 +874,7 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
                                             p_msg->body.cont.rdr.num_sync_ids);
         p_body += sizeof(uint16_t);
 
-        *((uint32_t*)p_body) = zdtm_liltobigs(p_msg->body.cont.rdr._sync_id);
+        *((uint32_t*)p_body) = zdtm_liltobigs(p_msg->body.cont.rdr.sync_id);
         p_body += sizeof(uint32_t);
 
 #else
@@ -818,8 +885,116 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
         p_body += sizeof(uint32_t);
 
 #endif
+    }else if(IS_RDW(p_msg)){
+        *((unsigned char*)p_body++) = p_msg->body.cont.rdw.sync_type;
+        
+#ifdef WORDS_BIGENDIAN
+        *((uint16_t*)p_body) = zdtm_liltobigs(
+                                            p_msg->body.cont.rdw.num_sync_ids);
+        p_body += sizeof(uint16_t);
 
+        *((uint32_t*)p_body) = zdtm_liltobigs(p_msg->body.cont.rdw.sync_id);
+        p_body += sizeof(uint32_t);
 
+#else
+        *((uint16_t*)p_body) = p_msg->body.cont.rdw.num_sync_ids;
+        p_body += sizeof(uint16_t);
+
+        *((uint32_t*)p_body) = p_msg->body.cont.rdw.sync_id;
+        p_body += sizeof(uint32_t);
+
+#endif
+
+        switch(p_msg->body.cont.rdw.variation){
+            case 1:
+                memcpy(p_body, p_msg->body.cont.rdw.vars.one.padding, 
+                       sizeof(p_msg->body.cont.rdw.vars.one.padding));
+                p_body += sizeof(p_msg->body.cont.rdw.vars.one.padding);
+
+                switch(p_msg->body.cont.rdw.sync_type){
+                    //case SYNC_TYPE_CALENDAR:
+                    case SYNC_TYPE_TODO:
+                        p_body = zdtm_todo_write(p_body, 
+                                       &p_msg->body.cont.rdw.cont.todo);
+                        break;
+                    //case SYNC_TYPE_ADDRESS:
+                    default:
+                        return RET_UNK_TYPE;
+                        break;
+                }
+                break;
+
+            case 2:
+#ifdef WORDS_BIGENDIAN
+                *((uint32_t*)p_body) = zdtm_liltobigl(sizeof(p_msg->body.cont.rdw.vars.two.attribute));
+#else
+                *((uint32_t*)p_body) = sizeof(p_msg->body.cont.rdw.vars.two.attribute);
+#endif
+                p_body += sizeof(uint32_t);
+
+                memcpy(p_body, &p_msg->body.cont.rdw.vars.two.attribute,
+                       sizeof(p_msg->body.cont.rdw.vars.two.attribute));
+                p_body += sizeof(p_msg->body.cont.rdw.vars.two.attribute);
+                break;
+
+            case 3:
+#ifdef WORDS_BIGENDIAN
+                *((uint32_t*)p_body) = zdtm_liltobigl(sizeof(p_msg->body.cont.rdw.vars.three.attribute));
+#else
+                *((uint32_t*)p_body) = sizeof(p_msg->body.cont.rdw.vars.three.attribute);
+#endif
+                p_body += sizeof(uint32_t);
+
+                memcpy(p_body, &p_msg->body.cont.rdw.vars.three.attribute,
+                       sizeof(p_msg->body.cont.rdw.vars.three.attribute));
+                p_body += sizeof(p_msg->body.cont.rdw.vars.three.attribute);
+
+#ifdef WORDS_BIGENDIAN
+                *((uint32_t*)p_body) = zdtm_liltobigl(sizeof(p_msg->body.cont.rdw.vars.three.card_created_date_time));
+#else
+                *((uint32_t*)p_body) = sizeof(p_msg->body.cont.rdw.vars.three.card_created_date_time);
+#endif
+                p_body += sizeof(uint32_t);
+
+                memcpy(p_body, p_msg->body.cont.rdw.vars.three.card_created_date_time, sizeof(p_msg->body.cont.rdw.vars.three.card_created_date_time));
+                p_body += sizeof(p_msg->body.cont.rdw.vars.three.card_created_date_time);
+
+#ifdef WORDS_BIGENDIAN
+                *((uint32_t*)p_body) = zdtm_liltobigl(sizeof(p_msg->body.cont.rdw.vars.three.card_mod_date_time));
+#else
+                *((uint32_t*)p_body) = sizeof(p_msg->body.cont.rdw.vars.three.card_mod_date_time);
+#endif
+                p_body += sizeof(uint32_t);
+
+                memcpy(p_body, p_msg->body.cont.rdw.vars.three.card_mod_date_time, sizeof(p_msg->body.cont.rdw.vars.three.card_created_date_time));
+                p_body += sizeof(p_msg->body.cont.rdw.vars.three.card_mod_date_time);
+
+#ifdef WORDS_BIGENDIAN
+                *((uint32_t*)p_body) = zdtm_liltobigl(sizeof(p_msg->body.cont.rdw.vars.three.sync_id));
+#else
+                *((uint32_t*)p_body) = sizeof(p_msg->body.cont.rdw.vars.three.sync_id);
+#endif
+                p_body += sizeof(uint32_t);
+
+                memcpy(p_body, &p_msg->body.cont.rdw.vars.three.sync_id, sizeof(p_msg->body.cont.rdw.vars.three.sync_id));
+                p_body += sizeof(p_msg->body.cont.rdw.vars.three.sync_id);
+
+                switch(p_msg->body.cont.rdw.sync_type){
+                    //case SYNC_TYPE_CALENDAR:
+                    case SYNC_TYPE_TODO:
+                        p_body = zdtm_todo_write(p_body, 
+                                       &p_msg->body.cont.rdw.cont.todo);
+                        break;
+                    //case SYNC_TYPE_ADDRESS:
+                    default:
+                        return RET_UNK_TYPE;
+                        break;
+                }
+                break;
+
+            default:
+                break;
+        }
     }
 
 
@@ -838,9 +1013,6 @@ int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
 
     wire_msg = NULL;
 
-    
-    
-
     return 0;
 }
 */
@@ -853,4 +1025,104 @@ int zdtm_parse_raw_msg(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
      */
 
     return 0;
+}
+
+int zdtm_todo_length(struct zdtm_todo *todo){
+    return sizeof(uint32_t) + todo->category_len +
+           sizeof(uint32_t) + sizeof(todo->start_date) +
+           sizeof(uint32_t) + sizeof(todo->due_date) +
+           sizeof(uint32_t) + sizeof(todo->completed_date) +
+           sizeof(uint32_t) + sizeof(todo->progress) +
+           sizeof(uint32_t) + sizeof(todo->priority) +
+           sizeof(uint32_t) + todo->description_len +
+           sizeof(uint32_t) + todo->notes_len;
+}
+
+
+/**
+ * Copies the contents of a zdtm_todo struct into a packet buffer
+ * and returns a pointer just past the end of the data.
+ */
+void* zdtm_todo_write(void *buf, struct zdtm_todo *todo){
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(todo->category_len);            
+#else
+    *((uint32_t*)buf) = sizeof(todo->category_len);
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, todo->category, todo->category_len);
+    buf += todo->category_len;
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(sizeof(todo->start_date));            
+#else
+    *((uint32_t*)buf) = sizeof(todo->start_date); 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, todo->start_date, sizeof(todo->start_date));
+    buf += sizeof(todo->start_date);
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(sizeof(todo->due_date));            
+#else
+    *((uint32_t*)buf) = sizeof(todo->due_date); 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, todo->due_date, sizeof(todo->due_date));
+    buf += sizeof(todo->due_date);
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(sizeof(todo->completed_date));
+#else
+    *((uint32_t*)buf) = sizeof(todo->completed_date); 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, todo->completed_date, sizeof(todo->completed_date));
+    buf += sizeof(todo->completed_date);
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(sizeof(todo->progress));
+#else
+    *((uint32_t*)buf) = sizeof(todo->progress); 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, &todo->progress, sizeof(todo->progress));
+    buf += sizeof(todo->progress);
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(sizeof(todo->priority));
+#else
+    *((uint32_t*)buf) = sizeof(todo->priority); 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, &todo->priority, sizeof(todo->priority));
+    buf += sizeof(todo->priority);
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(todo->description_len);
+#else
+    *((uint32_t*)buf) = todo->description_len; 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, todo->description, sizeof(todo->description_len));
+    buf += sizeof(todo->description_len);
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(todo->notes_len);
+#else
+    *((uint32_t*)buf) = todo->notes_len; 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, todo->notes, sizeof(todo->notes_len));
+    buf += sizeof(todo->notes_len);
+
+    return buf;
 }

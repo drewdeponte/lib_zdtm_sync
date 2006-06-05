@@ -125,5 +125,72 @@ int main(int argc, char *argv[])
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
     dump_msg(&msg);
 
+    /* Make a simply RDW msg var 1. */
+    printf("RDW - 1\n");
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RDW_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rdw.sync_type = SYNC_TYPE_TODO;
+    msg.body.cont.rdw.num_sync_ids = 1;
+    msg.body.cont.rdw.sync_id = 0xdeadbeef;
+    msg.body.cont.rdw.variation = 1;
+    memset(msg.body.cont.rdw.vars.one.padding, 0xff, sizeof(msg.body.cont.rdw.vars.one.padding));
+    msg.body.cont.rdw.cont.todo.category_len = 5;
+    msg.body.cont.rdw.cont.todo.category = "CRUD";
+    memcpy(msg.body.cont.rdw.cont.todo.start_date, "abcde", 5);
+    memcpy(msg.body.cont.rdw.cont.todo.due_date, "abcde", 5);
+    memcpy(msg.body.cont.rdw.cont.todo.completed_date, "abcde", 5);
+    msg.body.cont.rdw.cont.todo.progress = 0xa5;
+    msg.body.cont.rdw.cont.todo.priority = 0xff;
+    msg.body.cont.rdw.cont.todo.description_len = 5;
+    msg.body.cont.rdw.cont.todo.description = "CRUD";
+    msg.body.cont.rdw.cont.todo.notes_len = 5;
+    msg.body.cont.rdw.cont.todo.notes = "CRUD";
+
+    r = zdtm_prepare_message(&cur_env, &msg);
+    if(r < 0){ printf("Failed: %d\n", r); return 1; }
+    dump_msg(&msg);
+
+    /* Make a simply RDW msg var 2. */
+    printf("RDW - 2\n");
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RDW_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rdw.sync_type = SYNC_TYPE_TODO;
+    msg.body.cont.rdw.num_sync_ids = 1;
+    msg.body.cont.rdw.sync_id = 0xdeadbeef;
+    msg.body.cont.rdw.variation = 2;
+
+    msg.body.cont.rdw.vars.two.attribute = 0xfe;
+
+    r = zdtm_prepare_message(&cur_env, &msg);
+    if(r < 0){ printf("Failed: %d\n", r); return 1; }
+    dump_msg(&msg);
+
+
+    /* Make a simply RDW msg var 3. */
+    printf("RDW - 3\n");
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RDW_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rdw.sync_type = SYNC_TYPE_TODO;
+    msg.body.cont.rdw.num_sync_ids = 1;
+    msg.body.cont.rdw.sync_id = 0xdeadbeef;
+    msg.body.cont.rdw.variation = 3;
+    msg.body.cont.rdw.vars.three.attribute = 0xfe;
+    memcpy(msg.body.cont.rdw.vars.three.card_created_date_time, "abcde", 5);
+    msg.body.cont.rdw.cont.todo.category_len = 5;
+    msg.body.cont.rdw.cont.todo.category = "CRUD";
+    memcpy(msg.body.cont.rdw.cont.todo.start_date, "abcde", 5);
+    memcpy(msg.body.cont.rdw.cont.todo.due_date, "abcde", 5);
+    memcpy(msg.body.cont.rdw.cont.todo.completed_date, "abcde", 5);
+    msg.body.cont.rdw.cont.todo.progress = 0xa5;
+    msg.body.cont.rdw.cont.todo.priority = 0xff;
+    msg.body.cont.rdw.cont.todo.description_len = 5;
+    msg.body.cont.rdw.cont.todo.description = "CRUD";
+    msg.body.cont.rdw.cont.todo.notes_len = 5;
+    msg.body.cont.rdw.cont.todo.notes = "CRUD";
+
+    r = zdtm_prepare_message(&cur_env, &msg);
+    if(r < 0){ printf("Failed: %d\n", r); return 1; }
+    dump_msg(&msg);
+
     return 0;
 }
