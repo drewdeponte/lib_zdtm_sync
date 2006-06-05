@@ -103,6 +103,7 @@ uint32_t zdtm_bigtolill(uint32_t biglong) {
  *
  * @param buf The buffer to sum.
  * @param n The number of bytes in the buffer.
+ * @return Summation of bytes in passed buffer.
  */
 uint16_t zdtm_checksum(unsigned char *buf, uint16_t n) {
     uint16_t sum = 0;
@@ -686,9 +687,11 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
  *
  * The p_raw_content must be freed at a later point.
  *
- * @return RET_NNULL_RAW Failed, raw message not null.
- * @return RET_UNK_TYPE Failed, unknown message type. 
- * @return RET_BAD_SIZE Failed, size field bad.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval RET_NNULL_RAW Failed, raw message not null.
+ * @retval RET_UNK_TYPE Failed, unknown message type. 
+ * @retval RET_BAD_SIZE Failed, size field bad.
+ * @retval -1 Failed to allocate memory for raw content.
  * @return RET_UNK_VAR  Failed, unknown variation for RDW message.
  */
 int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
@@ -836,6 +839,9 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
 
     // Allocate the raw message.
     p_body = p_msg->body.p_raw_content = malloc(p_msg->body_size);
+    if (p_body == NULL) {
+        return -1;
+    }
 
     // Copy in the type
     memcpy(p_body, p_msg->body.type, MSG_TYPE_SIZE);
@@ -1076,11 +1082,93 @@ int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
 */
 
 
-int zdtm_parse_raw_msg(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
+/**
+ * Parsae a raw message.
+ *
+ * The zdtm_parse_raw_msg function is designed to take in a raw message
+ * that has just been read from the network and parse it into the proper
+ * compents filling out the proper message type structure so that it may
+ * easily be accessed at a later point in time.
+ * @param p_msg Pointer to zdtm_message struct containing raw message.
+ * @return An integer representing success (zero) or failure (non-zero).
+ */
+int zdtm_parse_raw_msg(zdtm_msg *p_msg) {
     /*
      * This function needs to use the provided information in p_msg to
      * fill in p_msg->body.cont.
      */
+
+    if (IS_AAY(p_msg)) {
+        if (zdtm_parse_raw_aay_msg(p_msg))
+            return -1;
+    } else if (IS_AIG(p_msg)) {
+        if (zdtm_parse_raw_aig_msg(p_msg))
+            return -2;
+    }
+    
+    return 0;
+}
+
+/**
+ * Parse a raw AAY message.
+ *
+ * The zdtm_parse_raw_aay_msg function takes a raw AAY message and
+ * parses it into it's appropriate components and fills in the aay
+ * content fields so that the data can be easily obtained at a later
+ * point in time.
+ * @param p_msg Pointer to zdtm_message struct containing raw aay msg.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully parsed the aay message.
+ */
+int zdtm_parse_raw_aay_msg(zdtm_msg *p_msg) {
+    memcpy((void *)p_msg->body.cont.aay.uk_data_0,
+            p_msg->body.p_raw_content, 3);
+    return 0;
+}
+
+/**
+ * Parse a raw AIG message.
+ *
+ * The zdtm_parse_raw_aig_msg function takes a raw AIG message and
+ * parses it into it's appropriate components and fills in the aig
+ * content fields so that the data can be easily obtained at a later
+ * point in time.
+ * @param p_msg Pointer to zdtm_message struct containing raw aig msg.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully parsed the aig message.
+ * @retval -1 Failed to allocate memory for the model string.
+ */
+int zdtm_parse_raw_aig_msg(zdtm_msg *p_msg) {
+    void *tmp_p;
+
+    tmp_p = p_msg->body.p_raw_content;
+#ifdef WORDS_BIGENDIAN
+    p_msg->body.cont.aig.model_str_len = zdtm_liltobigs(*((uint16_t *)tmp_p));
+    tmp_p += sizeof(uint16_t);
+#else
+    p_msg->body.cont.aig.model_str_len = *((uint16_t *)tmp_p);
+    tmp_p += sizeof(uint16_t);
+#endif
+    
+    p_msg->body.cont.aig.model_str = \
+        (unsigned char *)malloc(p_msg->body.cont.aig.model_str_len);
+    if (p_msg->body.cont.aig.model_str == NULL) {
+        return -1;
+    }
+    memcpy((void *)p_msg->body.cont.aig.model_str, tmp_p,
+            p_msg->body.cont.aig.model_str_len);
+    tmp_p += p_msg->body.cont.aig.model_str_len;
+
+    memcpy((void *)p_msg->body.cont.aig.uk_data_0, tmp_p, 5);
+    tmp_p += 5;
+
+    memcpy((void *)p_msg->body.cont.aig.language, tmp_p, 2);
+    tmp_p += 2;
+
+    p_msg->body.cont.aig.auth_state = *((unsigned char *)tmp_p);
+    tmp_p += 1;
+
+    memcpy((void *)p_msg->body.cont.aig.uk_data_1, tmp_p, 6);
 
     return 0;
 }

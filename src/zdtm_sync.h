@@ -72,6 +72,7 @@
 #define RET_MEM_CONTENT   -9
 #define RET_UNK_TYPE      -10
 #define RET_BAD_SIZE      -11
+#define RET_MALLOC_FAIL   -13
 #define RET_UNK_VAR      -12
 
 // Sync Types
@@ -555,46 +556,6 @@ typedef struct zdtm_message {
     uint16_t cont_size;             // msg body size - msg type size
 } zdtm_msg;
 
-
-
-/*
-Options for Message storage
-
-typedef struct zdtm_message {
-    char header[MSG_HDR_SIZE];      // header of the message
-    struct zdtm_message_body body;  // body of the msg (type and cont)
-    union type_body {
-        struct ray_msg_type ray_body;
-        struct rig_msg_type rig_body;
-        struct aig_msg_type aig_body;
-    }
-    uint16_t body_size;             // size of the msg body in bytes
-    uint16_t check_sum;             // sum of each byte in msg body
-    uint16_t cont_size;             // msg body size - msg type size
-} zdtm_msg;
-
-This first method requires checking of the message type to determin
-which body to access for both sides of any functions that it is passed
-into. For example:
-
-if(memcmp(zdtm_message.header, "AIG", 3) == 0) {
-    parse_aig_message(zdtm_msg *some_msg); 
-} else if (memcmp(zdtm_message.header, "RAY", 3) == 0) {
-    parse_ray_message(zdtm_msg *some_msg);
-} else if...
-...
-
-This method is on the top of my list right now.
-
-Or I could provide functions to parse each member out of each specific
-type of message. I do NOT like this solution, it polutes the name space.
-
-Or I could just create seperate structs for each type of message using
-common namings for shared members and pass them through functions using
-void * pointers which would then have to be type casted appropriately on
-both sides of the functions dependent upon the message type.
-*/
-
 uint16_t zdtm_liltobigs(uint16_t lilshort);
 uint32_t zdtm_liltobigl(uint32_t lillong);
 uint16_t zdtm_bigtolils(uint16_t bigshort);
@@ -621,9 +582,11 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 //int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 
-int zdtm_parse_raw_msg(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
+int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 
-//struct zdtm_aay_msg * zdtm_msg_to_aay_msg(zdtm_msg *p_msg);
+int zdtm_parse_raw_msg(zdtm_msg *p_msg);
+int zdtm_parse_raw_aay_msg(zdtm_msg *p_msg);
+int zdtm_parse_raw_aig_msg(zdtm_msg *p_msg);
 
 inline int zdtm_todo_length(struct zdtm_todo * todo);
 inline void * zdtm_todo_write(void *buf, struct zdtm_todo *todo);
