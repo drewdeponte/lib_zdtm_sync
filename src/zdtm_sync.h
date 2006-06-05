@@ -116,6 +116,23 @@ typedef struct zdtm_environment {
  */
 
 /**
+ * zdtm_todo contains the information for a todo message. 
+ */ 
+struct zdtm_todo{
+    uint32_t category_len;
+    char *category;
+    char start_date[5];
+    char due_date[5];
+    char completed_date[5];
+    char progress;
+    char priority;
+    uint32_t description_len;
+    char *description;
+    uint32_t notes_len;
+    char *notes;
+};
+
+/**
  * Zaurus AAY message content.
  *
  * The zdtm_aay_msg_content is a structure which represents an AAY
@@ -374,21 +391,6 @@ const char *RDR_MSG_TYPE = "RDR";
  *    - variation -- added to help the preparation process.
  *
  */
-
-/* todo struct, probably should go elsewhere. */
-struct zdtm_todo{
-    uint32_t category_len;
-    char *category;
-    char start_date[5];
-    char due_date[5];
-    char completed_date[5];
-    char progress;
-    char priority;
-    uint32_t description_len;
-    char *description;
-    uint32_t notes_len;
-    char *notes;
-};
 
 
 struct zdtm_rdw_msg_content {
