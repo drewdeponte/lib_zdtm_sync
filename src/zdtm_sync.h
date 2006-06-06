@@ -72,8 +72,9 @@
 #define RET_MEM_CONTENT   -9
 #define RET_UNK_TYPE      -10
 #define RET_BAD_SIZE      -11
+#define RET_UNK_VAR       -12
 #define RET_MALLOC_FAIL   -13
-#define RET_UNK_VAR      -12
+#define RET_PARSE_RAW_FAIL -14
 
 // Sync Types
 #define SYNC_TYPE_CALENDAR  0x01
@@ -143,7 +144,6 @@ struct zdtm_todo{
 struct zdtm_aay_msg_content {
     unsigned char uk_data_0[3]; // general unknown data
 };
-
 const char *AAY_MSG_TYPE = "AAY";
 #define IS_AAY(x) (memcmp(x->body.type, AAY_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
@@ -162,7 +162,6 @@ struct zdtm_aig_msg_content {
     unsigned char auth_state;   // zaurus authentication state
     unsigned char uk_data_1[6]; // general unknown data
 };
-
 const char *AIG_MSG_TYPE = "AIG";
 #define IS_AIG(x) (memcmp(x->body.type, AIG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
@@ -174,7 +173,6 @@ const char *AIG_MSG_TYPE = "AIG";
  * content.
  */
 struct zdtm_amg_msg_content {
-
 };
 const char *AMG_MSG_TYPE = "AMG";
 #define IS_AMG(x) (memcmp(x->body.type, AMG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
@@ -194,7 +192,6 @@ struct zdtm_atg_msg_content {
     unsigned char minutes[2];
     unsigned char seconds[2];
 };
-
 const char *ATG_MSG_TYPE = "ATG";
 #define IS_ATG(x) (memcmp(x->body.type, ATG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
@@ -206,10 +203,52 @@ const char *ATG_MSG_TYPE = "ATG";
  * content.
  */
 struct zdtm_aex_msg_content {
-
 };
 const char *AEX_MSG_TYPE = "AEX";
 #define IS_AEX(x) (memcmp(x->body.type, AEX_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+/**
+ * Zaurus ANG message content.
+ *
+ * The zdtm_ang_msg_content is a structure which represents an ANG
+ * Zaurus message content after being parsed from the raw message
+ * content.
+ */
+struct zdtm_ang_msg_content {
+    unsigned char uk_data_0;    // general unknown data
+};
+const char *ANG_MSG_TYPE = "ANG";
+#define IS_ANG(x) (memcmp(x->body.type, ANG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+/**
+ * Zaurus ADI message parameter.
+ *
+ * The zdtm_adi_msg_param is designed to be a substructure of the AID
+ * message content structure. It is used to provide an easily accessible
+ * interface to the data after the raw ADI message has been parsed.
+ */
+struct zdtm_adi_msg_param {
+    unsigned char abrev[4];
+    unsigned char type_id;
+    uint16_t desc_len;
+    unsigned char *desc;
+};
+
+/**
+ * Zaurus ADI message content.
+ *
+ * The zdtm_adi_msg_content is a structure which represents an ADI
+ * Zaurus message content after being parsed from the raw message
+ * content.
+ */
+struct zdtm_adi_msg_content {
+    uint32_t num_cards;
+    uint16_t num_params;
+    unsigned char uk_data_0;
+    struct zdtm_adi_msg_param *params;
+};
+const char *ADI_MSG_TYPE = "ADI";
+#define IS_ADI(x) (memcmp(x->body.type, ADI_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 /**
  * Desktop RAY message content.
@@ -521,6 +560,8 @@ struct zdtm_message_body {
         struct zdtm_amg_msg_content amg;
         struct zdtm_atg_msg_content atg;
         struct zdtm_aex_msg_content aex;
+        struct zdtm_ang_msg_content ang;
+        struct zdtm_adi_msg_content adi;
 
         // Content structures for Qtopia Desktop messages
         struct zdtm_ray_msg_content ray;
@@ -587,6 +628,9 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 int zdtm_parse_raw_msg(zdtm_msg *p_msg);
 int zdtm_parse_raw_aay_msg(zdtm_msg *p_msg);
 int zdtm_parse_raw_aig_msg(zdtm_msg *p_msg);
+int zdtm_parse_raw_atg_msg(zdtm_msg *p_msg);
+int zdtm_parse_raw_ang_msg(zdtm_msg *p_msg);
+int zdtm_parse_raw_adi_msg(zdtm_msg *p_msg);
 
 inline int zdtm_todo_length(struct zdtm_todo * todo);
 inline void *zdtm_todo_write(void *buf, struct zdtm_todo *todo);

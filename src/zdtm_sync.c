@@ -539,6 +539,7 @@ int zdtm_clean_message(zdtm_msg *p_msg) {
  *                            (based on body size).
  *
  * @retval RET_MEM_CONTENT Failed to allocate mem for message content.
+ * @retval RET_PARSE_RAW_FAIL Failed to parse the raw message.
  */
 int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     ssize_t bytes_read;
@@ -676,6 +677,10 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
      * except for the p_msg->body.cont.
      */
 
+    if (zdtm_parse_raw_msg(p_msg) != 0) {
+        return RET_PARSE_RAW_FAIL;
+    }
+    
     return 0;
 }
 
@@ -854,10 +859,6 @@ int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
  * @return An integer representing success (zero) or failure (non-zero).
  */
 int zdtm_parse_raw_msg(zdtm_msg *p_msg) {
-    /*
-     * This function needs to use the provided information in p_msg to
-     * fill in p_msg->body.cont.
-     */
 
     if (IS_AAY(p_msg)) {
         if (zdtm_parse_raw_aay_msg(p_msg))
@@ -865,6 +866,31 @@ int zdtm_parse_raw_msg(zdtm_msg *p_msg) {
     } else if (IS_AIG(p_msg)) {
         if (zdtm_parse_raw_aig_msg(p_msg))
             return -2;
+    } else if (IS_AMG(p_msg)) {
+        /*
+         * For now the following function does not exist because I am
+         * not sure what the meaning of the data inside the AMG message
+         * is. Hence, I have no idea how to parse it, :).
+        if (zdtm_parse_raw_amg_msg(p_msg))
+            return -3;
+         */
+    } else if (IS_ATG(p_msg)) {
+        if (zdtm_parse_raw_atg_msg(p_msg))
+            return -4;
+    } else if (IS_AEX(p_msg)) {
+        /*
+         * For now the following function does not exist because there
+         * is no content inside the AEX messages. Hence, there is
+         * nothing to parse.
+        if (zdtm_parse_raw_aex_msg(p_msg))
+            return -5;
+         */
+    } else if (IS_ANG(p_msg)) {
+        if (zdtm_parse_raw_ang_msg(p_msg))
+            return -6;
+    } else if (IS_ADI(p_msg)) {
+        if (zdtm_parse_raw_adi_msg(p_msg))
+            return -7;
     }
     
     return 0;
@@ -931,6 +957,133 @@ int zdtm_parse_raw_aig_msg(zdtm_msg *p_msg) {
 
     memcpy((void *)p_msg->body.cont.aig.uk_data_1, tmp_p, 6);
 
+    return 0;
+}
+
+/**
+ * Parse a raw ATG message.
+ *
+ * The zdtm_parse_raw_atg_msg function takes a raw ATG message and
+ * parses it into it's appropriate components and fills in the atg
+ * content fields so that the data can be easily obtained at a later
+ * point in time.
+ * @param p_msg Pointer to zdtm_message struct containing raw atg msg.
+ * @return An integener representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully parsed the atg message.
+ */
+int zdtm_parse_raw_atg_msg(zdtm_msg *p_msg) {
+    void *p_raw_cont;
+
+    p_raw_cont = p_msg->body.p_raw_content;
+    memcpy((void *)p_msg->body.cont.atg.year, p_raw_cont, 4);
+    p_raw_cont += 4;
+    memcpy((void *)p_msg->body.cont.atg.month, p_raw_cont, 2);
+    p_raw_cont += 2;
+    memcpy((void *)p_msg->body.cont.atg.day, p_raw_cont, 2);
+    p_raw_cont += 2;
+    memcpy((void *)p_msg->body.cont.atg.hour, p_raw_cont, 2);
+    p_raw_cont += 2;
+    memcpy((void *)p_msg->body.cont.atg.minutes, p_raw_cont, 2);
+    p_raw_cont += 2;
+    memcpy((void *)p_msg->body.cont.atg.seconds, p_raw_cont, 2);
+
+    return 0;
+    
+}
+
+/**
+ * Parse a raw ANG message.
+ *
+ * The zdtm_parse_raw_ang_msg function takes a raw ANG message and
+ * parses it into it's appropriate components and fills in the ang
+ * content fields so that the data con be easily obtained at a later
+ * point in time.
+ * @param p_msg Pointer to zdtm_message struct containing raw ang msg.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully parsed the ang message.
+ */
+int zdtm_parse_raw_ang_msg(zdtm_msg *p_msg) {
+    void *p_raw_cont;
+    
+    p_raw_cont = p_msg->body.p_raw_content;
+
+    p_msg->body.cont.ang.uk_data_0 = *(unsigned char *)p_raw_cont;
+
+    return 0;
+}
+
+/**
+ * Parse a raw ADI message.
+ *
+ * The zdtm_parse_raw_adi_msg function takes a raw ADI message and
+ * parses it into it's appropriate components and fills in the adi
+ * content fields so that the data can be easily obtained at a later
+ * point in time.
+ * @param p_msg Point to the zdtm_message struct containing raw adi msg.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully parsed the adi message.
+ * @retval -1 Failed to allocate memory for adi message params.
+ * @retval -2 Failed to allocate memory for a adi msg param description.
+ */
+int zdtm_parse_raw_adi_msg(zdtm_msg *p_msg) {
+    void *p_raw_cont;
+    int i;
+
+    p_raw_cont = p_msg->body.p_raw_content;
+
+#ifdef WORDS_BIGENDIAN
+    p_msg->body.cont.adi.num_cards = zdtm_liltobigl(*((uint32_t *)p_raw_cont));
+    p_raw_cont += sizeof(uint32_t);
+
+    p_msg->body.cont.adi.num_params = zdtm_liltobigs(*((uint16_t *)p_raw_cont));
+    p_raw_cont += sizeof(uint16_t);
+#else
+    p_msg->body.cont.adi.num_cards = *((uint32_t *)p_raw_cont);
+    p_raw_cont += sizeof(uint32_t);
+    
+    p_msg->body.cont.adi.num_params = *((uint16_t *)p_raw_cont);
+    p_raw_cont += sizeof(uint16_t);
+#endif
+
+    p_msg->body.cont.adi.uk_data_0 = *((unsigned char *)p_raw_cont);
+    p_raw_cont += 1;
+
+    p_msg->body.cont.adi.params = \
+        (struct zdtm_adi_msg_param *)malloc(p_msg->body.cont.adi.num_params);
+    if (p_msg->body.cont.adi.params == NULL)
+        return -1;
+
+    for (i = 0; i < p_msg->body.cont.adi.num_params; i++) {
+        memcpy((void *)p_msg->body.cont.adi.params[i].abrev,
+                p_raw_cont, 4);
+        p_raw_cont += 4;
+    }
+    
+    for (i = 0; i < p_msg->body.cont.adi.num_params; i++) {
+        memcpy((void *)&p_msg->body.cont.adi.params[i].type_id,
+                p_raw_cont, 1);
+        p_raw_cont += 1;
+    }
+    
+    for (i = 0; i < p_msg->body.cont.adi.num_params; i++) {
+#ifdef WORDS_BIGENDIAN
+        p_msg->body.cont.adi.params[i].desc_len = \
+            zdtm_liltobigs(*((uint16_t *)p_raw_cont));
+#else
+        p_msg->body.cont.adi.params[i].desc_len = *((uint16_t *)p_raw_cont);
+#endif
+        p_raw_cont += sizeof(uint16_t);
+
+        p_msg->body.cont.adi.params[i].desc = (unsigned char *)malloc(
+                p_msg->body.cont.adi.params[i].desc_len);
+        if (p_msg->body.cont.adi.params[i].desc == NULL)
+            return -2;
+
+        memcpy((void *)p_msg->body.cont.adi.params[i].desc, p_raw_cont,
+                p_msg->body.cont.adi.params[i].desc_len);
+        p_raw_cont += p_msg->body.cont.adi.params[i].desc_len;
+    }
+    
     return 0;
 }
 
