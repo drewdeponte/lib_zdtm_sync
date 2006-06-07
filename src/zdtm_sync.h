@@ -50,7 +50,17 @@
 // Standard Integer Type Includes
 #include <stdint.h>
 
-#include "config.h"
+#include "zdtm_common.h"
+
+// Zaurus Message Includes
+#include "zdtm_aay_msg.h"
+#include "zdtm_adi_msg.h"
+#include "zdtm_aex_msg.h"
+#include "zdtm_aig_msg.h"
+#include "zdtm_amg_msg.h"
+#include "zdtm_ang_msg.h"
+#include "zdtm_asy_msg.h"
+#include "zdtm_atg_msg.h"
 
 // This is the port that the Zaurus listens on waiting for a connection
 // to initiate a synchronization from the Desktop.
@@ -133,143 +143,6 @@ struct zdtm_todo{
     uint32_t notes_len;
     char *notes;
 };
-
-/**
- * Zaurus AAY message content.
- *
- * The zdtm_aay_msg_content is a structure which represents an AAY
- * Zaurus message content after being parsed from the raw message
- * content.
- */
-struct zdtm_aay_msg_content {
-    unsigned char uk_data_0[3]; // general unknown data
-};
-const char *AAY_MSG_TYPE = "AAY";
-#define IS_AAY(x) (memcmp(x->body.type, AAY_MSG_TYPE, MSG_TYPE_SIZE) == 0)
-
-/**
- * Zaurus AIG message content.
- *
- * The zdtm_aig_msg_content is a structure which represents an AIG
- * Zaurus message content after being parsed from the raw message
- * content.
- */
-struct zdtm_aig_msg_content {
-    uint16_t model_str_len;     // length of the model string
-    unsigned char *model_str;   // string of the zaurus model info
-    unsigned char uk_data_0[5]; // general unknown data
-    unsigned char language[2];  // an identifier of the zaurus lang
-    unsigned char auth_state;   // zaurus authentication state
-    unsigned char uk_data_1[6]; // general unknown data
-};
-const char *AIG_MSG_TYPE = "AIG";
-#define IS_AIG(x) (memcmp(x->body.type, AIG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
-
-/**
- * Zaurus AMG message content.
- *
- * The zdtm_amg_msg_content is a structure which represents an AMG
- * Zaurus message content after being parsed from the raw message
- * content.
- */
-struct zdtm_amg_msg_content {
-};
-const char *AMG_MSG_TYPE = "AMG";
-#define IS_AMG(x) (memcmp(x->body.type, AMG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
-
-/**
- * Zaurus ATG message content.
- *
- * The zdtm_atg_msg_content is a structure which represents an ATG
- * Zaurus message content after being parsed from the raw message
- * content.
- */
-struct zdtm_atg_msg_content {
-    unsigned char year[4];
-    unsigned char month[2];
-    unsigned char day[2];
-    unsigned char hour[2];
-    unsigned char minutes[2];
-    unsigned char seconds[2];
-};
-const char *ATG_MSG_TYPE = "ATG";
-#define IS_ATG(x) (memcmp(x->body.type, ATG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
-
-/**
- * Zaurus AEX message content.
- *
- * The zdtm_aex_msg_content is a structure which represents an AEX
- * Zaurus message content after being parsed from the raw message
- * content.
- */
-struct zdtm_aex_msg_content {
-};
-const char *AEX_MSG_TYPE = "AEX";
-#define IS_AEX(x) (memcmp(x->body.type, AEX_MSG_TYPE, MSG_TYPE_SIZE) == 0)
-
-/**
- * Zaurus ANG message content.
- *
- * The zdtm_ang_msg_content is a structure which represents an ANG
- * Zaurus message content after being parsed from the raw message
- * content.
- */
-struct zdtm_ang_msg_content {
-    unsigned char uk_data_0;    // general unknown data
-};
-const char *ANG_MSG_TYPE = "ANG";
-#define IS_ANG(x) (memcmp(x->body.type, ANG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
-
-/**
- * Zaurus ADI message parameter.
- *
- * The zdtm_adi_msg_param is designed to be a substructure of the AID
- * message content structure. It is used to provide an easily accessible
- * interface to the data after the raw ADI message has been parsed.
- */
-struct zdtm_adi_msg_param {
-    unsigned char abrev[4];
-    unsigned char type_id;
-    uint16_t desc_len;
-    unsigned char *desc;
-};
-
-/**
- * Zaurus ADI message content.
- *
- * The zdtm_adi_msg_content is a structure which represents an ADI
- * Zaurus message content after being parsed from the raw message
- * content.
- */
-struct zdtm_adi_msg_content {
-    uint32_t num_cards;
-    uint16_t num_params;
-    unsigned char uk_data_0;
-    struct zdtm_adi_msg_param *params;
-};
-const char *ADI_MSG_TYPE = "ADI";
-#define IS_ADI(x) (memcmp(x->body.type, ADI_MSG_TYPE, MSG_TYPE_SIZE) == 0)
-
-/**
- * Zaurus ASY message content.
- *
- * The zdtm_asy_msg_content is a structure which represents an ASY
- * Zaurus message content after being parsed from the raw message
- * content.
- */
-struct zdtm_asy_msg_content {
-    unsigned char new_list_id;
-    uint16_t num_new_sync_ids;  // Number of new sync ids.
-    uint32_t *new_sync_ids;     // Array of new sync ids.
-    unsigned char mod_list_id;
-    uint16_t num_mod_sync_ids;  // Number of mod sync ids.
-    uint32_t *mod_sync_ids;     // Array of mod sync ids.
-    unsigned char del_list_id; 
-    uint16_t num_del_sync_ids;  // Number of del sync ids.
-    uint32_t *del_sync_ids;     // Array of ndel sync ids.
-};
-const char *ASY_MSG_TYPE = "ASY";
-#define IS_ASY(x) (memcmp(x->body.type, ASY_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 /**
  * Desktop RAY message content.
@@ -619,11 +492,6 @@ typedef struct zdtm_message {
     uint16_t cont_size;             // msg body size - msg type size
 } zdtm_msg;
 
-uint16_t zdtm_liltobigs(uint16_t lilshort);
-uint32_t zdtm_liltobigl(uint32_t lillong);
-uint16_t zdtm_bigtolils(uint16_t bigshort);
-uint32_t zdtm_bigtolill(uint32_t biglong);
-
 uint16_t zdtm_checksum(unsigned char *buf, uint16_t n);
 
 int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env);
@@ -648,12 +516,6 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 
 int zdtm_parse_raw_msg(zdtm_msg *p_msg);
-int zdtm_parse_raw_aay_msg(zdtm_msg *p_msg);
-int zdtm_parse_raw_aig_msg(zdtm_msg *p_msg);
-int zdtm_parse_raw_atg_msg(zdtm_msg *p_msg);
-int zdtm_parse_raw_ang_msg(zdtm_msg *p_msg);
-int zdtm_parse_raw_adi_msg(zdtm_msg *p_msg);
-int zdtm_parse_raw_asy_msg(zdtm_msg *p_msg);
 
 inline int zdtm_todo_length(struct zdtm_todo * todo);
 inline void *zdtm_todo_write(void *buf, struct zdtm_todo *todo);

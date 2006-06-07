@@ -33,72 +33,6 @@
 #include "zdtm_sync.h"
 
 /**
- * Convert little-endian short to a big-endian short.
- *
- * The zdtm_liltobigs function converts a little-endian uint16_t
- * to a big-endian uint16_t.
- * @param lilshort The lil-end uint16_t to convert to big-end uint16_t.
- * @return The big-endian version of given little-endian uint16_t.
- */
-uint16_t zdtm_liltobigs(uint16_t lilshort) {
-    int size, i;
-    unsigned char buff[sizeof(uint16_t)];
-
-    size = sizeof(uint16_t);
-
-    for (i = 0; i < size; i++) {
-        buff[i] = ((unsigned char *)&lilshort)[(size - i - 1)];
-    }
-
-    return *(uint16_t *)buff;
-}
-
-/**
- * Convert little-endian long to a big-endian long.
- *
- * The zdtm_liltobigl function converts a little-endian uint32_t
- * to a big-endian uint32_t.
- * @param lillong The lil-end uint32_t to convert to big-end uint32_t.
- * @return The big-endian version of given little-endian uint32_t.
- */
-uint32_t zdtm_liltobigl(uint32_t lillong) {
-    int size, i;
-    unsigned char buff[sizeof(uint32_t)];
-
-    size = sizeof(uint32_t);
-
-    for (i = 0; i < size; i++) {
-        buff[i] = ((unsigned char *)&lillong)[(size - i - 1)];
-    }
-
-    return *(uint32_t *)buff;
-}
-
-/**
- * Convert big-endian short to a little-endian short.
- *
- * The zdtm_bigtolils function converts a big-endian uint16_t to a
- * little-endian uint16_t.
- * @param bigshort The big-end uint16_t to convert to lil-end uint16_t.
- * @return The little-endian version of given big-endian uint16_t.
- */
-uint16_t zdtm_bigtolils(uint16_t bigshort) {
-    return zdtm_liltobigs(bigshort);
-}
-
-/**
- * Convert big-endian long to a little-endian long.
- *
- * The zdtm_bigtolils function converts a big-endian uint32_t to a
- * little-endian uint32_t.
- * @param biglong The big-end uint32_t to convert to lil-end uint32_t.
- * @return The little-endian version of given big-endian uint32_t.
- */
-uint32_t zdtm_bigtolill(uint32_t biglong) {
-    return zdtm_liltobigl(biglong);
-}
-
-/**
  * Sum all the bytes in a buffer.
  *
  * @param buf The buffer to sum.
@@ -861,11 +795,12 @@ int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
 int zdtm_parse_raw_msg(zdtm_msg *p_msg) {
 
     if (IS_AAY(p_msg)) {
-        if (zdtm_parse_raw_aay_msg(p_msg))
+        if (zdtm_parse_raw_aay_msg(p_msg->body.p_raw_content,
+                    &p_msg->body.cont.aay))
             return -1;
     } else if (IS_AIG(p_msg)) {
-        if (zdtm_parse_raw_aig_msg(p_msg))
-            return -2;
+        //if (zdtm_parse_raw_aig_msg(p_msg))
+        //    return -2;
     } else if (IS_AMG(p_msg)) {
         /*
          * For now the following function does not exist because I am
@@ -875,8 +810,8 @@ int zdtm_parse_raw_msg(zdtm_msg *p_msg) {
             return -3;
          */
     } else if (IS_ATG(p_msg)) {
-        if (zdtm_parse_raw_atg_msg(p_msg))
-            return -4;
+        //if (zdtm_parse_raw_atg_msg(p_msg))
+        //    return -4;
     } else if (IS_AEX(p_msg)) {
         /*
          * For now the following function does not exist because there
@@ -886,325 +821,14 @@ int zdtm_parse_raw_msg(zdtm_msg *p_msg) {
             return -5;
          */
     } else if (IS_ANG(p_msg)) {
-        if (zdtm_parse_raw_ang_msg(p_msg))
-            return -6;
+        //if (zdtm_parse_raw_ang_msg(p_msg))
+        //    return -6;
     } else if (IS_ADI(p_msg)) {
-        if (zdtm_parse_raw_adi_msg(p_msg))
-            return -7;
+        //if (zdtm_parse_raw_adi_msg(p_msg))
+        //    return -7;
     } else if (IS_ASY(p_msg)) {
-        if (zdtm_parse_raw_asy_msg(p_msg))
-            return -8;
-    }
-    
-    return 0;
-}
-
-/**
- * Parse a raw AAY message.
- *
- * The zdtm_parse_raw_aay_msg function takes a raw AAY message and
- * parses it into it's appropriate components and fills in the aay
- * content fields so that the data can be easily obtained at a later
- * point in time.
- * @param p_msg Pointer to zdtm_message struct containing raw aay msg.
- * @return An integer representing success (zero) or failure (non-zero).
- * @retval 0 Successfully parsed the aay message.
- */
-int zdtm_parse_raw_aay_msg(zdtm_msg *p_msg) {
-    memcpy((void *)p_msg->body.cont.aay.uk_data_0,
-            p_msg->body.p_raw_content, 3);
-    return 0;
-}
-
-/**
- * Parse a raw AIG message.
- *
- * The zdtm_parse_raw_aig_msg function takes a raw AIG message and
- * parses it into it's appropriate components and fills in the aig
- * content fields so that the data can be easily obtained at a later
- * point in time.
- * @param p_msg Pointer to zdtm_message struct containing raw aig msg.
- * @return An integer representing success (zero) or failure (non-zero).
- * @retval 0 Successfully parsed the aig message.
- * @retval -1 Failed to allocate memory for the model string.
- */
-int zdtm_parse_raw_aig_msg(zdtm_msg *p_msg) {
-    void *tmp_p;
-
-    tmp_p = p_msg->body.p_raw_content;
-#ifdef WORDS_BIGENDIAN
-    p_msg->body.cont.aig.model_str_len = zdtm_liltobigs(*((uint16_t *)tmp_p));
-    tmp_p += sizeof(uint16_t);
-#else
-    p_msg->body.cont.aig.model_str_len = *((uint16_t *)tmp_p);
-    tmp_p += sizeof(uint16_t);
-#endif
-    
-    p_msg->body.cont.aig.model_str = \
-        (unsigned char *)malloc(p_msg->body.cont.aig.model_str_len);
-    if (p_msg->body.cont.aig.model_str == NULL) {
-        return -1;
-    }
-    memcpy((void *)p_msg->body.cont.aig.model_str, tmp_p,
-            p_msg->body.cont.aig.model_str_len);
-    tmp_p += p_msg->body.cont.aig.model_str_len;
-
-    memcpy((void *)p_msg->body.cont.aig.uk_data_0, tmp_p, 5);
-    tmp_p += 5;
-
-    memcpy((void *)p_msg->body.cont.aig.language, tmp_p, 2);
-    tmp_p += 2;
-
-    p_msg->body.cont.aig.auth_state = *((unsigned char *)tmp_p);
-    tmp_p += 1;
-
-    memcpy((void *)p_msg->body.cont.aig.uk_data_1, tmp_p, 6);
-
-    return 0;
-}
-
-/**
- * Parse a raw ATG message.
- *
- * The zdtm_parse_raw_atg_msg function takes a raw ATG message and
- * parses it into it's appropriate components and fills in the atg
- * content fields so that the data can be easily obtained at a later
- * point in time.
- * @param p_msg Pointer to zdtm_message struct containing raw atg msg.
- * @return An integener representing success (zero) or failure (non-zero).
- * @retval 0 Successfully parsed the atg message.
- */
-int zdtm_parse_raw_atg_msg(zdtm_msg *p_msg) {
-    void *p_raw_cont;
-
-    p_raw_cont = p_msg->body.p_raw_content;
-    memcpy((void *)p_msg->body.cont.atg.year, p_raw_cont, 4);
-    p_raw_cont += 4;
-    memcpy((void *)p_msg->body.cont.atg.month, p_raw_cont, 2);
-    p_raw_cont += 2;
-    memcpy((void *)p_msg->body.cont.atg.day, p_raw_cont, 2);
-    p_raw_cont += 2;
-    memcpy((void *)p_msg->body.cont.atg.hour, p_raw_cont, 2);
-    p_raw_cont += 2;
-    memcpy((void *)p_msg->body.cont.atg.minutes, p_raw_cont, 2);
-    p_raw_cont += 2;
-    memcpy((void *)p_msg->body.cont.atg.seconds, p_raw_cont, 2);
-
-    return 0;
-    
-}
-
-/**
- * Parse a raw ANG message.
- *
- * The zdtm_parse_raw_ang_msg function takes a raw ANG message and
- * parses it into it's appropriate components and fills in the ang
- * content fields so that the data con be easily obtained at a later
- * point in time.
- * @param p_msg Pointer to zdtm_message struct containing raw ang msg.
- * @return An integer representing success (zero) or failure (non-zero).
- * @retval 0 Successfully parsed the ang message.
- */
-int zdtm_parse_raw_ang_msg(zdtm_msg *p_msg) {
-    void *p_raw_cont;
-    
-    p_raw_cont = p_msg->body.p_raw_content;
-
-    p_msg->body.cont.ang.uk_data_0 = *(unsigned char *)p_raw_cont;
-
-    return 0;
-}
-
-/**
- * Parse a raw ADI message.
- *
- * The zdtm_parse_raw_adi_msg function takes a raw ADI message and
- * parses it into it's appropriate components and fills in the adi
- * content fields so that the data can be easily obtained at a later
- * point in time.
- * @param p_msg Point to the zdtm_message struct containing raw adi msg.
- * @return An integer representing success (zero) or failure (non-zero).
- * @retval 0 Successfully parsed the adi message.
- * @retval -1 Failed to allocate memory for adi message params.
- * @retval -2 Failed to allocate memory for a adi msg param description.
- */
-int zdtm_parse_raw_adi_msg(zdtm_msg *p_msg) {
-    void *p_raw_cont;
-    int i, j;
-
-    p_raw_cont = p_msg->body.p_raw_content;
-
-#ifdef WORDS_BIGENDIAN
-    p_msg->body.cont.adi.num_cards = zdtm_liltobigl(*((uint32_t *)p_raw_cont));
-    p_raw_cont += sizeof(uint32_t);
-
-    p_msg->body.cont.adi.num_params = zdtm_liltobigs(*((uint16_t *)p_raw_cont));
-    p_raw_cont += sizeof(uint16_t);
-#else
-    p_msg->body.cont.adi.num_cards = *((uint32_t *)p_raw_cont);
-    p_raw_cont += sizeof(uint32_t);
-    
-    p_msg->body.cont.adi.num_params = *((uint16_t *)p_raw_cont);
-    p_raw_cont += sizeof(uint16_t);
-#endif
-
-    p_msg->body.cont.adi.uk_data_0 = *((unsigned char *)p_raw_cont);
-    p_raw_cont += 1;
-
-    p_msg->body.cont.adi.params = \
-        (struct zdtm_adi_msg_param *)malloc(p_msg->body.cont.adi.num_params);
-    if (p_msg->body.cont.adi.params == NULL)
-        return -1;
-
-    for (i = 0; i < p_msg->body.cont.adi.num_params; i++) {
-        memcpy((void *)p_msg->body.cont.adi.params[i].abrev,
-                p_raw_cont, 4);
-        p_raw_cont += 4;
-    }
-    
-    for (i = 0; i < p_msg->body.cont.adi.num_params; i++) {
-        memcpy((void *)&p_msg->body.cont.adi.params[i].type_id,
-                p_raw_cont, 1);
-        p_raw_cont += 1;
-    }
-    
-    for (i = 0; i < p_msg->body.cont.adi.num_params; i++) {
-#ifdef WORDS_BIGENDIAN
-        p_msg->body.cont.adi.params[i].desc_len = \
-            zdtm_liltobigs(*((uint16_t *)p_raw_cont));
-#else
-        p_msg->body.cont.adi.params[i].desc_len = *((uint16_t *)p_raw_cont);
-#endif
-        p_raw_cont += sizeof(uint16_t);
-
-        p_msg->body.cont.adi.params[i].desc = (unsigned char *)malloc(
-                p_msg->body.cont.adi.params[i].desc_len);
-        if (p_msg->body.cont.adi.params[i].desc == NULL) {
-            free((void *)p_msg->body.cont.adi.params);
-            for (j = 0; j < i; j++) {
-                free((void *)p_msg->body.cont.adi.params[j].desc);
-            }
-            return -2;
-        }
-
-        memcpy((void *)p_msg->body.cont.adi.params[i].desc, p_raw_cont,
-                p_msg->body.cont.adi.params[i].desc_len);
-        p_raw_cont += p_msg->body.cont.adi.params[i].desc_len;
-    }
-    
-    return 0;
-}
-
-/**
- * Parse a raw ASY message.
- *
- * The zdtm_parse_raw_asy_msg function takes a raw ASY message and
- * parses it into it's appropriate components and fills in the asy
- * content fields so that the data can be easily obtained at a later
- * point in time.
- * @param p_msg Point to the zdtm_message struct containing raw adi msg.
- * @return An integer representing success (zero) or failure (non-zero).
- * @retval 0 Successfully parsed the adi message.
- * @retval -1 Failed to allocate memory for new sync ids.
- * @retval -2 Failed to allocate memory for mod sync ids.
- * @retval -3 Failed to allocate memory for del sync ids.
- */
-int zdtm_parse_raw_asy_msg(zdtm_msg *p_msg) {
-    void *p_raw_cont;
-    int i;
-
-    p_raw_cont = p_msg->body.p_raw_content;
-    
-    // New List
-    p_msg->body.cont.asy.new_list_id = *((unsigned char *)p_raw_cont);
-    p_raw_cont += 1;
-
-#ifdef WORDS_BIGENDIAN
-    p_msg->body.cont.asy.num_new_sync_ids =
-        zdtm_liltobigs(*((uint16_t *)p_raw_content));
-    p_raw_cont += sizeof(uint16_t);
-#else
-    p_msg->body.cont.asy.num_new_sync_ids = *((uint16_t *)p_raw_cont);
-    p_raw_cont += sizeof(uint16_t);
-#endif
-
-    p_msg->body.cont.asy.new_sync_ids = 
-        malloc(sizeof(uint32_t) * p_msg->body.cont.asy.num_new_sync_ids);
-    if (p_msg->body.cont.asy.new_sync_ids == NULL)
-        return -1;
-    
-    for (i = 0; i < p_msg->body.cont.asy.num_new_sync_ids; i++) {
-#ifdef WORDS_BIGENDIAN
-        p_msg->body.cont.asy.new_sync_ids[i] =
-            zdtm_liltobigl(*((uint32_t *)p_raw_content));
-        p_raw_cont += sizeof(uint326_t);
-#else
-        p_msg->body.cont.asy.new_sync_ids[i] = *((uint32_t *)p_raw_cont);
-        p_raw_cont += sizeof(uint32_t);
-#endif
-    }
-    
-    // Mod List
-    p_msg->body.cont.asy.mod_list_id = *((unsigned char *)p_raw_cont);
-    p_raw_cont += 1;
-
-#ifdef WORDS_BIGENDIAN
-    p_msg->body.cont.asy.num_mod_sync_ids =
-        zdtm_liltobigs(*((uint16_t *)p_raw_content));
-    p_raw_cont += sizeof(uint16_t);
-#else
-    p_msg->body.cont.asy.num_mod_sync_ids = *((uint16_t *)p_raw_cont);
-    p_raw_cont += sizeof(uint16_t);
-#endif
-
-    p_msg->body.cont.asy.mod_sync_ids = 
-        malloc(sizeof(uint32_t) * p_msg->body.cont.asy.num_mod_sync_ids);
-    if (p_msg->body.cont.asy.mod_sync_ids == NULL) {
-        free((void *)p_msg->body.cont.asy.new_sync_ids);
-        return -2;
-    }
-    
-    for (i = 0; i < p_msg->body.cont.asy.num_mod_sync_ids; i++) {
-#ifdef WORDS_BIGENDIAN
-        p_msg->body.cont.asy.mod_sync_ids[i] =
-            zdtm_liltobigl(*((uint32_t *)p_raw_content));
-        p_raw_cont += sizeof(uint326_t);
-#else
-        p_msg->body.cont.asy.mod_sync_ids[i] = *((uint32_t *)p_raw_cont);
-        p_raw_cont += sizeof(uint32_t);
-#endif
-    }
-    
-    // Del List
-    p_msg->body.cont.asy.del_list_id = *((unsigned char *)p_raw_cont);
-    p_raw_cont += 1;
-
-#ifdef WORDS_BIGENDIAN
-    p_msg->body.cont.asy.num_del_sync_ids =
-        zdtm_liltobigs(*((uint16_t *)p_raw_content));
-    p_raw_cont += sizeof(uint16_t);
-#else
-    p_msg->body.cont.asy.num_del_sync_ids = *((uint16_t *)p_raw_cont);
-    p_raw_cont += sizeof(uint16_t);
-#endif
-
-    p_msg->body.cont.asy.del_sync_ids = 
-        malloc(sizeof(uint32_t) * p_msg->body.cont.asy.num_del_sync_ids);
-    if (p_msg->body.cont.asy.del_sync_ids == NULL) {
-        free((void *)p_msg->body.cont.asy.new_sync_ids);
-        free((void *)p_msg->body.cont.asy.mod_sync_ids);
-        return -3;
-    }
-    
-    for (i = 0; i < p_msg->body.cont.asy.num_del_sync_ids; i++) {
-#ifdef WORDS_BIGENDIAN
-        p_msg->body.cont.asy.del_sync_ids[i] =
-            zdtm_liltobigl(*((uint32_t *)p_raw_content));
-        p_raw_cont += sizeof(uint326_t);
-#else
-        p_msg->body.cont.asy.del_sync_ids[i] = *((uint32_t *)p_raw_cont);
-        p_raw_cont += sizeof(uint32_t);
-#endif
+        //if (zdtm_parse_raw_asy_msg(p_msg))
+        //    return -8;
     }
     
     return 0;
@@ -1220,7 +844,6 @@ int zdtm_todo_length(struct zdtm_todo *todo){
            sizeof(uint32_t) + todo->description_len +
            sizeof(uint32_t) + todo->notes_len;
 }
-
 
 /**
  * Copies the contents of a zdtm_todo struct into a packet buffer
