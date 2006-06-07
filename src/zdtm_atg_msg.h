@@ -18,7 +18,7 @@ struct zdtm_atg_msg_content {
     unsigned char minutes[2];
     unsigned char seconds[2];
 };  
-const char *ATG_MSG_TYPE = "ATG";
+extern const char *ATG_MSG_TYPE;
 #define IS_ATG(x) (memcmp(x->body.type, ATG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 int zdtm_parse_raw_atg_msg(void *buf, struct zdtm_atg_msg_content *atg);

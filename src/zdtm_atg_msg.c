@@ -1,5 +1,7 @@
 #include "zdtm_atg_msg.h"
 
+const char *ATG_MSG_TYPE = "ATG";
+
 /**
  * Parse a raw ATG message.
  *
