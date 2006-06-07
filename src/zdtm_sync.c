@@ -891,6 +891,9 @@ int zdtm_parse_raw_msg(zdtm_msg *p_msg) {
     } else if (IS_ADI(p_msg)) {
         if (zdtm_parse_raw_adi_msg(p_msg))
             return -7;
+    } else if (IS_ASY(p_msg)) {
+        if (zdtm_parse_raw_asy_msg(p_msg))
+            return -8;
     }
     
     return 0;
@@ -1027,7 +1030,7 @@ int zdtm_parse_raw_ang_msg(zdtm_msg *p_msg) {
  */
 int zdtm_parse_raw_adi_msg(zdtm_msg *p_msg) {
     void *p_raw_cont;
-    int i;
+    int i, j;
 
     p_raw_cont = p_msg->body.p_raw_content;
 
@@ -1076,12 +1079,132 @@ int zdtm_parse_raw_adi_msg(zdtm_msg *p_msg) {
 
         p_msg->body.cont.adi.params[i].desc = (unsigned char *)malloc(
                 p_msg->body.cont.adi.params[i].desc_len);
-        if (p_msg->body.cont.adi.params[i].desc == NULL)
+        if (p_msg->body.cont.adi.params[i].desc == NULL) {
+            free((void *)p_msg->body.cont.adi.params);
+            for (j = 0; j < i; j++) {
+                free((void *)p_msg->body.cont.adi.params[j].desc);
+            }
             return -2;
+        }
 
         memcpy((void *)p_msg->body.cont.adi.params[i].desc, p_raw_cont,
                 p_msg->body.cont.adi.params[i].desc_len);
         p_raw_cont += p_msg->body.cont.adi.params[i].desc_len;
+    }
+    
+    return 0;
+}
+
+/**
+ * Parse a raw ASY message.
+ *
+ * The zdtm_parse_raw_asy_msg function takes a raw ASY message and
+ * parses it into it's appropriate components and fills in the asy
+ * content fields so that the data can be easily obtained at a later
+ * point in time.
+ * @param p_msg Point to the zdtm_message struct containing raw adi msg.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully parsed the adi message.
+ * @retval -1 Failed to allocate memory for new sync ids.
+ * @retval -2 Failed to allocate memory for mod sync ids.
+ * @retval -3 Failed to allocate memory for del sync ids.
+ */
+int zdtm_parse_raw_asy_msg(zdtm_msg *p_msg) {
+    void *p_raw_cont;
+    int i;
+
+    p_raw_cont = p_msg->body.p_raw_content;
+    
+    // New List
+    p_msg->body.cont.asy.new_list_id = *((unsigned char *)p_raw_cont);
+    p_raw_cont += 1;
+
+#ifdef WORDS_BIGENDIAN
+    p_msg->body.cont.asy.num_new_sync_ids =
+        zdtm_liltobigs(*((uint16_t *)p_raw_content));
+    p_raw_cont += sizeof(uint16_t);
+#else
+    p_msg->body.cont.asy.num_new_sync_ids = *((uint16_t *)p_raw_cont);
+    p_raw_cont += sizeof(uint16_t);
+#endif
+
+    p_msg->body.cont.asy.new_sync_ids = 
+        malloc(sizeof(uint32_t) * p_msg->body.cont.asy.num_new_sync_ids);
+    if (p_msg->body.cont.asy.new_sync_ids == NULL)
+        return -1;
+    
+    for (i = 0; i < p_msg->body.cont.asy.num_new_sync_ids; i++) {
+#ifdef WORDS_BIGENDIAN
+        p_msg->body.cont.asy.new_sync_ids[i] =
+            zdtm_liltobigl(*((uint32_t *)p_raw_content));
+        p_raw_cont += sizeof(uint326_t);
+#else
+        p_msg->body.cont.asy.new_sync_ids[i] = *((uint32_t *)p_raw_cont);
+        p_raw_cont += sizeof(uint32_t);
+#endif
+    }
+    
+    // Mod List
+    p_msg->body.cont.asy.mod_list_id = *((unsigned char *)p_raw_cont);
+    p_raw_cont += 1;
+
+#ifdef WORDS_BIGENDIAN
+    p_msg->body.cont.asy.num_mod_sync_ids =
+        zdtm_liltobigs(*((uint16_t *)p_raw_content));
+    p_raw_cont += sizeof(uint16_t);
+#else
+    p_msg->body.cont.asy.num_mod_sync_ids = *((uint16_t *)p_raw_cont);
+    p_raw_cont += sizeof(uint16_t);
+#endif
+
+    p_msg->body.cont.asy.mod_sync_ids = 
+        malloc(sizeof(uint32_t) * p_msg->body.cont.asy.num_mod_sync_ids);
+    if (p_msg->body.cont.asy.mod_sync_ids == NULL) {
+        free((void *)p_msg->body.cont.asy.new_sync_ids);
+        return -2;
+    }
+    
+    for (i = 0; i < p_msg->body.cont.asy.num_mod_sync_ids; i++) {
+#ifdef WORDS_BIGENDIAN
+        p_msg->body.cont.asy.mod_sync_ids[i] =
+            zdtm_liltobigl(*((uint32_t *)p_raw_content));
+        p_raw_cont += sizeof(uint326_t);
+#else
+        p_msg->body.cont.asy.mod_sync_ids[i] = *((uint32_t *)p_raw_cont);
+        p_raw_cont += sizeof(uint32_t);
+#endif
+    }
+    
+    // Del List
+    p_msg->body.cont.asy.del_list_id = *((unsigned char *)p_raw_cont);
+    p_raw_cont += 1;
+
+#ifdef WORDS_BIGENDIAN
+    p_msg->body.cont.asy.num_del_sync_ids =
+        zdtm_liltobigs(*((uint16_t *)p_raw_content));
+    p_raw_cont += sizeof(uint16_t);
+#else
+    p_msg->body.cont.asy.num_del_sync_ids = *((uint16_t *)p_raw_cont);
+    p_raw_cont += sizeof(uint16_t);
+#endif
+
+    p_msg->body.cont.asy.del_sync_ids = 
+        malloc(sizeof(uint32_t) * p_msg->body.cont.asy.num_del_sync_ids);
+    if (p_msg->body.cont.asy.del_sync_ids == NULL) {
+        free((void *)p_msg->body.cont.asy.new_sync_ids);
+        free((void *)p_msg->body.cont.asy.mod_sync_ids);
+        return -3;
+    }
+    
+    for (i = 0; i < p_msg->body.cont.asy.num_del_sync_ids; i++) {
+#ifdef WORDS_BIGENDIAN
+        p_msg->body.cont.asy.del_sync_ids[i] =
+            zdtm_liltobigl(*((uint32_t *)p_raw_content));
+        p_raw_cont += sizeof(uint326_t);
+#else
+        p_msg->body.cont.asy.del_sync_ids[i] = *((uint32_t *)p_raw_cont);
+        p_raw_cont += sizeof(uint32_t);
+#endif
     }
     
     return 0;

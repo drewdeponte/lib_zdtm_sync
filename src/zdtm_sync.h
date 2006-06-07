@@ -251,6 +251,27 @@ const char *ADI_MSG_TYPE = "ADI";
 #define IS_ADI(x) (memcmp(x->body.type, ADI_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 /**
+ * Zaurus ASY message content.
+ *
+ * The zdtm_asy_msg_content is a structure which represents an ASY
+ * Zaurus message content after being parsed from the raw message
+ * content.
+ */
+struct zdtm_asy_msg_content {
+    unsigned char new_list_id;
+    uint16_t num_new_sync_ids;  // Number of new sync ids.
+    uint32_t *new_sync_ids;     // Array of new sync ids.
+    unsigned char mod_list_id;
+    uint16_t num_mod_sync_ids;  // Number of mod sync ids.
+    uint32_t *mod_sync_ids;     // Array of mod sync ids.
+    unsigned char del_list_id; 
+    uint16_t num_del_sync_ids;  // Number of del sync ids.
+    uint32_t *del_sync_ids;     // Array of ndel sync ids.
+};
+const char *ASY_MSG_TYPE = "ASY";
+#define IS_ASY(x) (memcmp(x->body.type, ASY_MSG_TYPE, MSG_TYPE_SIZE) == 0)
+
+/**
  * Desktop RAY message content.
  *
  * The zdtm_ray_msg_content represents an RAY Desktop to Zaurus message
@@ -562,6 +583,7 @@ struct zdtm_message_body {
         struct zdtm_aex_msg_content aex;
         struct zdtm_ang_msg_content ang;
         struct zdtm_adi_msg_content adi;
+        struct zdtm_asy_msg_content asy;
 
         // Content structures for Qtopia Desktop messages
         struct zdtm_ray_msg_content ray;
@@ -631,6 +653,7 @@ int zdtm_parse_raw_aig_msg(zdtm_msg *p_msg);
 int zdtm_parse_raw_atg_msg(zdtm_msg *p_msg);
 int zdtm_parse_raw_ang_msg(zdtm_msg *p_msg);
 int zdtm_parse_raw_adi_msg(zdtm_msg *p_msg);
+int zdtm_parse_raw_asy_msg(zdtm_msg *p_msg);
 
 inline int zdtm_todo_length(struct zdtm_todo * todo);
 inline void *zdtm_todo_write(void *buf, struct zdtm_todo *todo);
