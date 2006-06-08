@@ -1,5 +1,7 @@
 #include "zdtm_aay_msg.h"
 
+const char *AAY_MSG_TYPE = "AAY";
+
 /**
  * Parse a raw AAY message.
  *

@@ -1,5 +1,7 @@
 #include "zdtm_aig_msg.h"
 
+const char *AIG_MSG_TYPE = "AIG";
+
 /**
  * Parse a raw AIG message.
  *

@@ -1,5 +1,7 @@
 #include "zdtm_ang_msg.h"
 
+const char *ANG_MSG_TYPE = "ANG";
+
 /**
  * Parse a raw ANG message.
  *

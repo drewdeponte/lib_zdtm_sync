@@ -1,5 +1,7 @@
 #include "zdtm_asy_msg.h"
 
+const char *ASY_MSG_TYPE = "ASY";
+
 /**
  * Parse a raw ASY message.
  *

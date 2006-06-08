@@ -21,7 +21,7 @@ struct zdtm_asy_msg_content {
     uint16_t num_del_sync_ids;  // Number of del sync ids.
     uint32_t *del_sync_ids;     // Array of ndel sync ids.
 };
-const char *ASY_MSG_TYPE = "ASY";
+extern const char *ASY_MSG_TYPE;
 #define IS_ASY(x) (memcmp(x->body.type, ASY_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 int zdtm_parse_raw_asy_msg(void *buf, struct zdtm_asy_msg_content *asy);

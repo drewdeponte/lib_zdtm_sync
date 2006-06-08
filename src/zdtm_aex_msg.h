@@ -12,7 +12,7 @@
  */
 struct zdtm_aex_msg_content {
 };
-const char *AEX_MSG_TYPE = "AEX";
+extern const char *AEX_MSG_TYPE;
 #define IS_AEX(x) (memcmp(x->body.type, AEX_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 #endif

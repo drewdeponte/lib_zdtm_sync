@@ -12,7 +12,7 @@
  */
 struct zdtm_amg_msg_content {
 };
-const char *AMG_MSG_TYPE = "AMG";
+extern const char *AMG_MSG_TYPE;
 #define IS_AMG(x) (memcmp(x->body.type, AMG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 #endif

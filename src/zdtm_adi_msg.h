@@ -30,7 +30,7 @@ struct zdtm_adi_msg_content {
     unsigned char uk_data_0;
     struct zdtm_adi_msg_param *params;
 };
-const char *ADI_MSG_TYPE = "ADI";
+extern const char *ADI_MSG_TYPE;
 #define IS_ADI(x) (memcmp(x->body.type, ADI_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 int zdtm_parse_raw_adi_msg(void *buf, struct zdtm_adi_msg_content *adi);

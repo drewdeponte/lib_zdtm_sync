@@ -1,5 +1,7 @@
 #include "zdtm_adi_msg.h"
 
+const char *ADI_MSG_TYPE = "ADI";
+
 /**
  * Parse a raw ADI message.
  *

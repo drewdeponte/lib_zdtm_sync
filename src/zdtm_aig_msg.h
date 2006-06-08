@@ -18,7 +18,7 @@ struct zdtm_aig_msg_content {
     unsigned char auth_state;   // zaurus authentication state
     unsigned char uk_data_1[6]; // general unknown data
 };
-const char *AIG_MSG_TYPE = "AIG";
+extern const char *AIG_MSG_TYPE;
 #define IS_AIG(x) (memcmp(x->body.type, AIG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
 int zdtm_parse_raw_aig_msg(void *buf, struct zdtm_aig_msg_content *aig);
