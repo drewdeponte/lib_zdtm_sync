@@ -791,6 +791,19 @@ int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
  * easily be accessed at a later point in time.
  * @param p_msg Pointer to zdtm_message struct containing raw message.
  * @return An integer representing success (zero) or failure (non-zero).
+ * @retval -1 Failed to parse AAY message.
+ * @retval -2 Failed to parse AIG message.
+ * @retval -3 Failed to parse AMG message.
+ * @retval -4 Failed to parse ATG message.
+ * @retval -5 Failed to parse AEX message.
+ * @retval -6 Failed to parse ANG message.
+ * @retval -7 Failed to parse ADI message.
+ * @retval -8 Failed to parse ASY message.
+ * @retval -9 Failed to parse ADR message.
+ * @retval -10 Failed to parse ADW message.
+ * @retval -11 Failed to parse ALR message.
+ * @retval -12 Failed to parse AGE messaeg.
+ * @retval -255 Failed, unkown message type.
  */
 int zdtm_parse_raw_msg(zdtm_msg *p_msg) {
 
@@ -799,36 +812,45 @@ int zdtm_parse_raw_msg(zdtm_msg *p_msg) {
                     &p_msg->body.cont.aay))
             return -1;
     } else if (IS_AIG(p_msg)) {
-        //if (zdtm_parse_raw_aig_msg(p_msg))
-        //    return -2;
+        if (zdtm_parse_raw_aig_msg(p_msg->body.p_raw_content,
+                    &p_msg->body.cont.aig))
+            return -2;
     } else if (IS_AMG(p_msg)) {
         /*
          * For now the following function does not exist because I am
          * not sure what the meaning of the data inside the AMG message
          * is. Hence, I have no idea how to parse it, :).
-        if (zdtm_parse_raw_amg_msg(p_msg))
+        if (zdtm_parse_raw_amg_msg(p_msg->body.p_raw_content,
+                    &p_msg->body.cont.amg))
             return -3;
          */
     } else if (IS_ATG(p_msg)) {
-        //if (zdtm_parse_raw_atg_msg(p_msg))
-        //    return -4;
+        if (zdtm_parse_raw_atg_msg(p_msg->body.p_raw_content,
+                    &p_msg->body.cont.atg))
+            return -4;
     } else if (IS_AEX(p_msg)) {
         /*
          * For now the following function does not exist because there
          * is no content inside the AEX messages. Hence, there is
          * nothing to parse.
-        if (zdtm_parse_raw_aex_msg(p_msg))
+        if (zdtm_parse_raw_aex_msg(p_msg->body.p_raw_content,
+                    &p_msg->body.cont.aex))
             return -5;
          */
     } else if (IS_ANG(p_msg)) {
-        //if (zdtm_parse_raw_ang_msg(p_msg))
-        //    return -6;
+        if (zdtm_parse_raw_ang_msg(p_msg->body.p_raw_content,
+                    &p_msg->body.cont.ang))
+            return -6;
     } else if (IS_ADI(p_msg)) {
-        //if (zdtm_parse_raw_adi_msg(p_msg))
-        //    return -7;
+        if (zdtm_parse_raw_adi_msg(p_msg->body.p_raw_content,
+                    &p_msg->body.cont.adi))
+            return -7;
     } else if (IS_ASY(p_msg)) {
-        //if (zdtm_parse_raw_asy_msg(p_msg))
-        //    return -8;
+        if (zdtm_parse_raw_asy_msg(p_msg->body.p_raw_content,
+                    &p_msg->body.cont.asy))
+            return -8;
+    } else {
+        return -255;
     }
     
     return 0;
