@@ -65,3 +65,108 @@ uint16_t zdtm_bigtolils(uint16_t bigshort) {
 uint32_t zdtm_bigtolill(uint32_t biglong) {
     return zdtm_liltobigl(biglong);
 }
+
+/**
+ * Calculate the length of a todo entry in the packet.
+ *
+ * @param todo a filled in todo struct
+ * @return the number of bytes necessary in the packed packet.
+ */
+int zdtm_todo_length(struct zdtm_todo *todo){
+    return sizeof(uint32_t) + todo->category_len +
+           sizeof(uint32_t) + sizeof(todo->start_date) +
+           sizeof(uint32_t) + sizeof(todo->due_date) +
+           sizeof(uint32_t) + sizeof(todo->completed_date) +
+           sizeof(uint32_t) + sizeof(todo->progress) +
+           sizeof(uint32_t) + sizeof(todo->priority) +
+           sizeof(uint32_t) + todo->description_len +
+           sizeof(uint32_t) + todo->notes_len;
+}
+
+/**
+ * Copies the contents of a zdtm_todo struct into a packet buffer
+ * and returns a pointer just past the end of the data.
+ */
+void* zdtm_todo_write(void *buf, struct zdtm_todo *todo){
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(todo->category_len);            
+#else
+    *((uint32_t*)buf) = sizeof(todo->category_len);
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, todo->category, todo->category_len);
+    buf += todo->category_len;
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(sizeof(todo->start_date));            
+#else
+    *((uint32_t*)buf) = sizeof(todo->start_date); 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, todo->start_date, sizeof(todo->start_date));
+    buf += sizeof(todo->start_date);
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(sizeof(todo->due_date));            
+#else
+    *((uint32_t*)buf) = sizeof(todo->due_date); 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, todo->due_date, sizeof(todo->due_date));
+    buf += sizeof(todo->due_date);
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(sizeof(todo->completed_date));
+#else
+    *((uint32_t*)buf) = sizeof(todo->completed_date); 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, todo->completed_date, sizeof(todo->completed_date));
+    buf += sizeof(todo->completed_date);
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(sizeof(todo->progress));
+#else
+    *((uint32_t*)buf) = sizeof(todo->progress); 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, &todo->progress, sizeof(todo->progress));
+    buf += sizeof(todo->progress);
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(sizeof(todo->priority));
+#else
+    *((uint32_t*)buf) = sizeof(todo->priority); 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, &todo->priority, sizeof(todo->priority));
+    buf += sizeof(todo->priority);
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(todo->description_len);
+#else
+    *((uint32_t*)buf) = todo->description_len; 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, todo->description, sizeof(todo->description_len));
+    buf += sizeof(todo->description_len);
+
+#ifdef WORDS_BIGENDIAN
+    *((uint32_t*)buf) = zdtm_liltobigl(todo->notes_len);
+#else
+    *((uint32_t*)buf) = todo->notes_len; 
+#endif
+    buf += sizeof(uint32_t);
+
+    memcpy(buf, todo->notes, sizeof(todo->notes_len));
+    buf += sizeof(todo->notes_len);
+
+    return buf;
+}

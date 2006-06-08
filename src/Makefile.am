@@ -1,5 +1,5 @@
 AM_CFLAGS = -Wall -Werror
 zdtmincdir = $(includedir)/zdtmsync
 lib_LTLIBRARIES = libzdtmsync.la
-libzdtmsync_la_SOURCES = zdtm_sync.c zdtm_common.c zdtm_aay_msg.c zdtm_adi_msg.c zdtm_aex_msg.c zdtm_aig_msg.c zdtm_amg_msg.c zdtm_ang_msg.c zdtm_asy_msg.c zdtm_atg_msg.c
-zdtminc_HEADERS = zdtm_sync.h zdtm_common.c zdtm_aay_msg.h zdtm_adi_msg.h zdtm_aex_msg.h zdtm_aig_msg.h zdtm_amg_msg.h zdtm_ang_msg.h zdtm_asy_msg.h zdtm_atg_msg.h config.h 
+libzdtmsync_la_SOURCES = zdtm_sync.c zdtm_common.c zdtm_aay_msg.c zdtm_adi_msg.c zdtm_aex_msg.c zdtm_aig_msg.c zdtm_amg_msg.c zdtm_ang_msg.c zdtm_asy_msg.c zdtm_atg_msg.c zdtm_ray_msg.c zdtm_rig_msg.c zdtm_rrl_msg.c zdtm_rmg_msg.c zdtm_rms_msg.c zdtm_rtg_msg.c zdtm_rts_msg.c zdtm_rdi_msg.c zdtm_rsy_msg.c zdtm_rdr_msg.c zdtm_rdw_msg.c zdtm_rdd_msg.c zdtm_rds_msg.c zdtm_rqt_msg.c zdtm_rlr_msg.c zdtm_rge_msg.c
+zdtminc_HEADERS = zdtm_sync.h zdtm_common.c zdtm_aay_msg.h zdtm_adi_msg.h zdtm_aex_msg.h zdtm_aig_msg.h zdtm_amg_msg.h zdtm_ang_msg.h zdtm_asy_msg.h zdtm_atg_msg.h config.h zdtm_ray_msg.h zdtm_rig_msg.h zdtm_rrl_msg.h zdtm_rmg_msg.h zdtm_rms_msg.h zdtm_rtg_msg.h zdtm_rts_msg.h zdtm_rdi_msg.h zdtm_rsy_msg.h zdtm_rdr_msg.h zdtm_rdw_msg.h zdtm_rdd_msg.h zdtm_rds_msg.h zdtm_rqt_msg.h zdtm_rlr_msg.h zdtm_rge_msg.h
