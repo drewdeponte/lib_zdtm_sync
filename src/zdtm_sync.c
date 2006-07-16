@@ -160,9 +160,10 @@ int zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env) {
  * Close the Zaurus connection.
  *
  * The zdtm_close_zaurus_conn function closes the Zaurus connection.
- * Note: In order for to close a zaurus connection a working zaurus
+ * Note: In order to close a zaurus connection, a working zaurus
  * connection must already exist. Hence, the zdtm_listen_for_zaurus and
- * the zdtm_handle_zaurus_conn must have previously been called.
+ * the zdtm_handle_zaurus_conn must have previously been called and
+ * succeeded.
  * @param cur_env Pointer to the current zdtm library environment.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully closed the Zaurus connection.
@@ -273,8 +274,8 @@ int zdtm_open_log(zdtm_lib_env *cur_env) {
  *
  * The zdtm_write_log function writes content to the zdtm libraries log
  * file in append mode. This function also flushes the file stream so
- * that the content are written to the log file now, rather than waiting
- * in a buffer somewhere.
+ * that the content is written to the log file right away, rather than
+ * waiting in a buffer somewhere.
  * @param cur_env Pointer to the current zdtm library environment.
  * @param buff Pointer to the content to write to the log.
  * @param size The size, in bytes, of the content to write to the log.
@@ -284,7 +285,7 @@ int zdtm_open_log(zdtm_lib_env *cur_env) {
  * @retval -2 Wrote fewer bytes to the log than were requested.
  * @retval -3 Failed to flush the log file stream.
  */
-int zdtm_write_log(zdtm_lib_env *cur_env, const unsigned char *buff,
+int zdtm_write_log(zdtm_lib_env *cur_env, const char *buff,
     unsigned int size) {
     int bytes_written;  // The number of bytes written
 
@@ -334,7 +335,7 @@ int zdtm_close_log(zdtm_lib_env *cur_env) {
 /**
  * Check if a message is an Ack message.
  *
- * The zdtm_is_ack_message() function checks if a message is an ack
+ * The zdtm_is_ack_message function checks if a message is an ack
  * message. This function is designed to test if the first n bytes are
  * equivalent, where n is the size in bytes of the common messages. This
  * would allow for buffers of greater length to be passed to this
@@ -359,9 +360,9 @@ int zdtm_is_ack_message(const unsigned char *buff) {
 }
 
 /**
- * Check if a message is an Request message.
+ * Check if a message is a Request message.
  *
- * The zdtm_is_rqst_message() function checks if a message is a request
+ * The zdtm_is_rqst_message function checks if a message is a request
  * message. This function is designed to test if the first n bytes are
  * equivalent, where n is the size in bytes of the common messages. This
  * would allow for buffers of greater length to be passed to this
@@ -388,7 +389,7 @@ int zdtm_is_rqst_message(const unsigned char *buff) {
 /**
  * Check if a message is an Abort message.
  *
- * The zdtm_is_abrt_message() function checks if a message is an abort
+ * The zdtm_is_abrt_message function checks if a message is an abort
  * message. This function is designed to test if the first n bytes are
  * equivalent, where n is the size in bytes of the common messages. This
  * would allow for buffers of greater length to be passed to this
@@ -432,7 +433,6 @@ int zdtm_clean_message(zdtm_msg *p_msg) {
         if(p_msg->body.cont.rrl.pw != NULL){
             free(p_msg->body.cont.rrl.pw);
             p_msg->body.cont.rrl.pw = NULL;
-
         }
     }
 
@@ -444,17 +444,15 @@ int zdtm_clean_message(zdtm_msg *p_msg) {
  *
  * The zdtm_recv_message function handles receiving a message from the
  * Zaurus after a connection from the Zaurus has already been handled
- * via the zdtm_handle_zaurus_conn() function. This function supports
+ * via the zdtm_handle_zaurus_conn function. This function supports
  * receiving common messages as well as non-common messages. When,
  * receiving a common message the structure pointed to by p_msg is not
  * altered. Note: When this function alters the structure pointed to by
  * p_msg it dynamically allocates memory for the message content. The
  * freeing of this allocated memory for the message content must be
- * handled by you. If the function returns in error one can determine if
- * the content is needed to be freed by checking if the content pointer
- * is equal no NULL. If it is equal to NULL there is no need to free it.
- * If it is NOT equal to NULL it must be freed. The zdtm_clean_message
- * function may help with handling the freeing of message content.
+ * handled by you, using the zdtm_clean_message function. If the
+ * function returns in error freeing the message is still required via
+ * the zdtm_clean_message function.
  * @param cur_env Pointer to the current zdtm library environment.
  * @param p_msg Pointer to a zdtm_message structure to store message in.
  * @return An integer representing success (zero) or failure (non-zero).
@@ -463,7 +461,7 @@ int zdtm_clean_message(zdtm_msg *p_msg) {
  * @retval 2 Successfully received a request message from the Zaurus.
  * @retval 3 Successfully received an abort message from the Zaurus.
  * @retval -1 Failed to allocate mem for temp message buffer.
- * @retval -2 Falied to read, reached end-of-file on a socket.
+ * @retval -2 Reached end-of-file on a socket, a.k.a. socket was closed.
  * @retval -3 Failed to successfully read message from connection.
  * @retval -4 Failed to identify 7 byte message.
  * @retval -5 Failed to identify less than 20 byte message.
@@ -586,16 +584,18 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
 
     // Set the zdtm_message cont_size and the zdtm_message_body content
     p_msg->cont_size = p_msg->body_size - MSG_TYPE_SIZE;
-    p_msg->body.p_raw_content = malloc((size_t)p_msg->cont_size);
-    if (p_msg->body.p_raw_content == NULL) {
-        free((void *)buff);
-        // return signifying that malloc failed
-        perror("zdtm_recv_message - malloc");
-        return RET_MEM_CONTENT;
+    if (p_msg->cont_size > 0) {
+        p_msg->body.p_raw_content = malloc((size_t)p_msg->cont_size);
+        if (p_msg->body.p_raw_content == NULL) {
+            free((void *)buff);
+            // return signifying that malloc failed
+            perror("zdtm_recv_message - malloc");
+            return RET_MEM_CONTENT;
+        }
+        memcpy(p_msg->body.p_raw_content, (const void *)cur_buff_pos,
+            p_msg->cont_size);
+        cur_buff_pos = cur_buff_pos + p_msg->cont_size;
     }
-    memcpy(p_msg->body.p_raw_content, (const void *)cur_buff_pos,
-        p_msg->cont_size);
-    cur_buff_pos = cur_buff_pos + p_msg->cont_size;
 
     // Set the zdtm_message check_sum
     p_msg->check_sum = *((uint16_t *)(cur_buff_pos));
@@ -787,7 +787,7 @@ int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
  *
  * The zdtm_parse_raw_msg function is designed to take in a raw message
  * that has just been read from the network and parse it into the proper
- * compents filling out the proper message type structure so that it may
+ * components filling out the proper message type structure so that it may
  * easily be accessed at a later point in time.
  * @param p_msg Pointer to zdtm_message struct containing raw message.
  * @return An integer representing success (zero) or failure (non-zero).

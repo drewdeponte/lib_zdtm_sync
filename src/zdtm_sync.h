@@ -186,7 +186,7 @@ int zdtm_close_zaurus_conn(zdtm_lib_env *cur_env);
 int zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip);
 
 int zdtm_open_log(zdtm_lib_env *cur_env);
-int zdtm_write_log(zdtm_lib_env *cur_env, const unsigned char *buff,
+int zdtm_write_log(zdtm_lib_env *cur_env, const char *buff,
     unsigned int size);
 int zdtm_close_log(zdtm_lib_env *cur_env);
 
@@ -198,8 +198,6 @@ int zdtm_clean_message(zdtm_msg *p_msg);
 int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 //int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
-
-int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 
 int zdtm_parse_raw_msg(zdtm_msg *p_msg);
 
