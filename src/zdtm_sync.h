@@ -197,7 +197,7 @@ int zdtm_is_abrt_message(const unsigned char *buff);
 int zdtm_clean_message(zdtm_msg *p_msg);
 int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
-//int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
+int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 
 int zdtm_parse_raw_msg(zdtm_msg *p_msg);
 

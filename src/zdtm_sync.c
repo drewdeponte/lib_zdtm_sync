@@ -770,20 +770,95 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     return 0; 
 }
 
-/*
+/**
+ * Send Message.
+ *
+ * The zdtm_send_message function handles sending a message to the
+ * Zaurus after a connection from the Zaurus has already been handled
+ * via the zdtm_handle_zaurus_conn function. This function takes message
+ * which has its type, and cont filled out and compiles it into the
+ * proper format and sends it to the Zaurus.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param p_msg Pointer to a zdtm_message structure to store message in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully sent the message via the connection socket.
+ * @retval -1 Failed to prepare message.
+ * @retval RET_MALLOC_FAIL Failed to allocate memory for raw message.
+ * @retval -2 Failed to write raw message to the connection socket.
+ * @retval -3 Wrote zero (0) bytes to the connection socket.
+ * @retval -4 Wrote less bytes than should have written to the socket.
+ */
 int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
-    unsigned char *wire_msg;
+    void *p_wire_msg;
+    void *p_cur_pos;
     unsigned int msg_size;
+    int bytes_written, retval;
 
-    wire_msg = NULL;
+    p_wire_msg = NULL;
+
+    retval = zdtm_prepare_message(cur_env, p_msg);
+    if (retval != 0) {
+        zdtm_clean_message(p_msg);
+        return -1;
+    }
+    
+    msg_size = MSG_HDR_SIZE + sizeof(uint16_t) +p_msg->body_size + \
+               sizeof(uint16_t);
+
+    p_wire_msg = malloc((size_t)msg_size);
+    if (p_wire_msg == NULL) {
+        zdtm_clean_message(p_msg);
+        return RET_MALLOC_FAIL;
+    }
+
+    p_cur_pos = p_wire_msg;
+
+    // Copy the header into the raw message
+    memcpy(p_cur_pos, (void *)p_msg->header, (size_t)MSG_HDR_SIZE);
+    p_cur_pos = p_cur_pos + MSG_HDR_SIZE;
+    
+    // Copy the body size into the raw message
+    memcpy(p_cur_pos, (void *)&p_msg->body_size, sizeof(uint16_t));
+    p_cur_pos = p_cur_pos + sizeof(uint16_t);
+
+    // Copy the message type into the raw message
+    memcpy(p_cur_pos, (void *)p_msg->body.type, (size_t)MSG_TYPE_SIZE);
+    p_cur_pos = p_cur_pos + MSG_TYPE_SIZE;
+
+    // Copy the message content into the raw message.
+    memcpy(p_cur_pos, p_msg->body.p_raw_content, (size_t)p_msg->cont_size);
+    p_cur_pos = p_cur_pos + p_msg->cont_size;
+
+    // Copy the message check sum into the raw message.
+    memcpy(p_cur_pos, (void *)&p_msg->check_sum, sizeof(uint16_t));
+    p_cur_pos = p_cur_pos + sizeof(uint16_t);
+
+    // At this point the wire message should be properly built.
+
+    bytes_written = write(cur_env->connfd, p_wire_msg, msg_size);
+    if (bytes_written == -1) {
+        perror("zdtm_send_message - write");
+        zdtm_clean_message(p_msg);
+        free(p_wire_msg);
+        return -2;
+    } else if (bytes_written == 0) {
+        zdtm_clean_message(p_msg);
+        free(p_wire_msg);
+        return -3;
+    } else if (bytes_written < msg_size) {
+        zdtm_clean_message(p_msg);
+        free(p_wire_msg);
+        return -4;
+    }
+    
+    zdtm_clean_message(p_msg);
+    free(p_wire_msg);
 
     return 0;
 }
-*/
-
 
 /**
- * Parsae a raw message.
+ * Parse a raw message.
  *
  * The zdtm_parse_raw_msg function is designed to take in a raw message
  * that has just been read from the network and parse it into the proper
