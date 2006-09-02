@@ -178,7 +178,7 @@ typedef struct zdtm_message {
     uint16_t cont_size;             // msg body size - msg type size
 } zdtm_msg;
 
-uint16_t zdtm_checksum(unsigned char *buf, uint16_t n);
+uint16_t zdtm_checksum(zdtm_msg *p_msg);
 
 int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env);
 int zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env);
@@ -189,6 +189,7 @@ int zdtm_open_log(zdtm_lib_env *cur_env);
 int zdtm_write_log(zdtm_lib_env *cur_env, const char *buff,
     unsigned int size);
 int zdtm_close_log(zdtm_lib_env *cur_env);
+int zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 
 int zdtm_is_ack_message(const unsigned char *buff);
 int zdtm_is_rqst_message(const unsigned char *buff);

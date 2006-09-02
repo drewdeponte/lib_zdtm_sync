@@ -1,29 +1,9 @@
 #include "zdtm_sync.h"
 #include <stdio.h>
 
-void dump_msg(zdtm_msg *msg)
-{
-    int i;
-
-    /* Dump the header: */
-    printf("Header: ");
-    for(i = 0; i < MSG_HDR_SIZE; ++i)
-        printf("0x%x ", (unsigned char)msg->header[i]);
-    printf("\n");
-
-    /* Dump the raw body in hex. */
-    printf("Body (Hex): ");
-    for(i = 0; i < msg->body_size; ++i)
-        printf("0x%x ", ((unsigned char*)(msg->body.p_raw_content))[i]);
-    printf("\n");
-
-    printf("Content Size: %u\n", msg->cont_size);
-    printf("Checksum: 0x%x\n", msg->check_sum);
-}
-
 int main(int argc, char *argv[])
 {
-    int r;
+    int r, retval;
 
     /* Set up a fake message */
     zdtm_lib_env cur_env;
@@ -31,13 +11,18 @@ int main(int argc, char *argv[])
     
     memset(&cur_env, 0, sizeof(zdtm_lib_env));
 
+    retval = zdtm_open_log(&cur_env);
+    printf("zdtm_open_log returned (%d).\n", retval);
+
     /* Make a simple RAY msg. */
     printf("RAY\n");
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RAY_MSG_TYPE, MSG_TYPE_SIZE);
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
+    
 
     /* Make a simple RIG msg. */
     printf("RIG\n");
@@ -45,7 +30,8 @@ int main(int argc, char *argv[])
     memcpy(msg.body.type, RIG_MSG_TYPE, MSG_TYPE_SIZE);
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
     /* Make a simple RRL msg. */
     printf("RRL pw abcd\n");
@@ -55,7 +41,8 @@ int main(int argc, char *argv[])
     msg.body.cont.rrl.pw = "abcd";
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
     
     /* Make a simple RMG msg. */
     printf("RMG\n");
@@ -65,7 +52,8 @@ int main(int argc, char *argv[])
     msg.body.cont.rmg.sync_type = SYNC_TYPE_TODO;
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
     
     /* Make a simple RMS msg. */
     printf("RMS\n");
@@ -75,7 +63,8 @@ int main(int argc, char *argv[])
     memset(msg.body.cont.rms.log, 0xfe, 12);
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
     /* Make a simple RTG msg. */
     printf("RTG\n");
@@ -83,7 +72,8 @@ int main(int argc, char *argv[])
     memcpy(msg.body.type, RTG_MSG_TYPE, MSG_TYPE_SIZE);
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
     
     /* Make a simple RTS msg. */
     printf("RTS\n");
@@ -92,7 +82,8 @@ int main(int argc, char *argv[])
     memcpy(msg.body.cont.rts.date, "20060521010000", RTS_DATE_LEN);
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
     
     /* Make a simple RDI msg. */
     printf("RDI\n");
@@ -102,7 +93,8 @@ int main(int argc, char *argv[])
     msg.body.cont.rdi.uk = 0x07;
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
     /* Make a simple RSY msg. */
     printf("RSY\n");
@@ -112,7 +104,8 @@ int main(int argc, char *argv[])
     msg.body.cont.rsy.uk = 0x07;
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
     /* Make a simple RDR msg. */
     printf("RDR\n");
@@ -123,7 +116,8 @@ int main(int argc, char *argv[])
     msg.body.cont.rdr.sync_id = 0xdeadbeef;
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
     /* Make a simple RDW msg var 1. */
     printf("RDW - 1\n");
@@ -148,7 +142,8 @@ int main(int argc, char *argv[])
 
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
     /* Make a simple RDW msg var 2. */
     printf("RDW - 2\n");
@@ -163,7 +158,8 @@ int main(int argc, char *argv[])
 
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
 
     /* Make a simple RDW msg var 3. */
@@ -190,7 +186,8 @@ int main(int argc, char *argv[])
 
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
     /* Make a simple RDD msg. */
     printf("RDD\n");
@@ -201,7 +198,8 @@ int main(int argc, char *argv[])
     msg.body.cont.rdd.sync_id = 0xdeadbeef;
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
     /* Make a simple RDD msg. */
     printf("RDD\n");
@@ -212,7 +210,8 @@ int main(int argc, char *argv[])
     msg.body.cont.rdd.sync_id = 0xdeadbeef;
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
     /* Make a simple RDS msg. */
     printf("RDS\n");
@@ -224,7 +223,8 @@ int main(int argc, char *argv[])
             sizeof(msg.body.cont.rds.null_bytes));
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
     /* Make a simple RQT msg. */
     printf("RQT\n");
@@ -234,7 +234,8 @@ int main(int argc, char *argv[])
             sizeof(msg.body.cont.rqt.null_bytes));
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
     /* Make a simple RLR msg. */
     printf("RLR\n");
@@ -243,7 +244,8 @@ int main(int argc, char *argv[])
     msg.body.cont.rlr.sync_type = SYNC_TYPE_TODO;
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
     /* Make a simple RGE msg. */
     printf("RGE\n");
@@ -253,8 +255,11 @@ int main(int argc, char *argv[])
     msg.body.cont.rge.path = "/home/zaurus/Applications/dtm/SLTODO.BOX";
     r = zdtm_prepare_message(&cur_env, &msg);
     if(r < 0){ printf("Failed: %d\n", r); return 1; }
-    dump_msg(&msg);
+    retval = zdtm_dump_msg_log(&cur_env, &msg);
+    printf("zdtm_dump_msg_log returned (%d).\n", retval);
 
+    retval = zdtm_close_log(&cur_env);
+    printf("zdtm_close_log returned (%d).\n", retval);
 
     return 0;
 }
