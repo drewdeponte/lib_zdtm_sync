@@ -231,6 +231,31 @@ int zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip) {
 }
 
 /**
+ * Close the connection to the Zaurus.
+ *
+ * The zdtm_close_conn_to_zaurus function closes the connetion which was
+ * made to the Zaurus to request a synchronization. Note: In order to
+ * close a connection using this function a working connection to the
+ * zaurus must already exist. Hence, the zdtm_conn_to_zaurus must have
+ * previously been caled and succeeded.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully closed the connection to the Zaurus.
+ * @retval -1 Failed to close the connection to the Zaurus.
+ */
+int zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env) {
+    int retval;
+
+    retval = close(cur_env->reqfd);
+    if (retval) {
+        perror("zdtm_close_conn_to_zaurus - close");
+        return -1;
+    }
+
+    return 0;
+}
+
+/**
  * Open zdtm library log file.
  *
  * The zdtm_open_log function opens the zdtm libraries log file in
@@ -347,6 +372,8 @@ int zdtm_close_log(zdtm_lib_env *cur_env) {
  * or has been prepared with the zdtm_prepare_message function and
  * outputs the messages header, type, content, content size, body size
  * and check sum in a readable fashion.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param p_msg Pointer to the message to dump to the log.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully dumped zdtm mesasge to log file.
  * @retval -1 Failed to construct data buff to write to log.
@@ -567,6 +594,40 @@ int zdtm_is_ack_message(const unsigned char *buff) {
 
     // return 0 stating that it is NOT an ack message.
     return 0;
+}
+
+int zdtm_send_comm_message_to(int sockfd, char *data) {
+    int bytes_written;
+    
+    bytes_written = write(sockfd, data, COM_MSG_SIZE);
+    if (bytes_written == -1) {
+        perror("zdtm_send_message - write");
+        return -1;
+    } else if (bytes_written == 0) {
+        return -2;
+    } else if (bytes_written < COM_MSG_SIZE) {
+        return -3;
+    }
+
+    return 0;
+}
+
+int zdtm_send_ack_message(zdtm_lib_env *cur_env) {
+    int retval;
+    char msg_data[COM_MSG_SIZE] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x96,
+        0x06};
+
+    retval = zdtm_send_comm_message_to(cur_env->connfd, msg_data);
+    return retval;
+}
+
+int zdtm_send_rqst_message(zdtm_lib_env *cur_env) {
+    int retval;
+    char msg_data[COM_MSG_SIZE] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x96,
+        0x05};
+
+    retval = zdtm_send_comm_message_to(cur_env->connfd, msg_data);
+    return retval;
 }
 
 /**
@@ -975,6 +1036,13 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     return 0; 
 }
 
+int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
+    int retval;
+
+    retval = zdtm_send_message_to(cur_env, p_msg, cur_env->connfd);
+    return retval;
+}
+
 /**
  * Send Message.
  *
@@ -985,6 +1053,7 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
  * proper format and sends it to the Zaurus.
  * @param cur_env Pointer to the current zdtm library environment.
  * @param p_msg Pointer to a zdtm_message structure to store message in.
+ * @param sockfd The socket to send the message over.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully sent the message via the connection socket.
  * @retval -1 Failed to prepare message.
@@ -993,7 +1062,7 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
  * @retval -3 Wrote zero (0) bytes to the connection socket.
  * @retval -4 Wrote less bytes than should have written to the socket.
  */
-int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
+int zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd) {
     void *p_wire_msg;
     void *p_cur_pos;
     unsigned int msg_size;
@@ -1040,7 +1109,7 @@ int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
 
     // At this point the wire message should be properly built.
 
-    bytes_written = write(cur_env->connfd, p_wire_msg, msg_size);
+    bytes_written = write(sockfd, p_wire_msg, msg_size);
     if (bytes_written == -1) {
         perror("zdtm_send_message - write");
         zdtm_clean_message(p_msg);

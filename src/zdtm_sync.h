@@ -184,6 +184,7 @@ int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env);
 int zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env);
 int zdtm_close_zaurus_conn(zdtm_lib_env *cur_env);
 int zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip);
+int zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env);
 
 int zdtm_open_log(zdtm_lib_env *cur_env);
 int zdtm_write_log(zdtm_lib_env *cur_env, const char *buff,
@@ -192,6 +193,9 @@ int zdtm_close_log(zdtm_lib_env *cur_env);
 int zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 
 int zdtm_is_ack_message(const unsigned char *buff);
+int zdtm_send_comm_message_to(int sockfd, char *data);
+int zdtm_send_ack_message(zdtm_lib_env *cur_env);
+int zdtm_send_rqst_message(zdtm_lib_env *cur_env);
 int zdtm_is_rqst_message(const unsigned char *buff);
 int zdtm_is_abrt_message(const unsigned char *buff);
 
@@ -199,6 +203,7 @@ int zdtm_clean_message(zdtm_msg *p_msg);
 int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
+int zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd);
 
 int zdtm_parse_raw_msg(zdtm_msg *p_msg);
 
