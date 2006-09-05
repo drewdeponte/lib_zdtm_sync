@@ -1,6 +1,54 @@
 #include "zdtm_sync.h"
 #include <stdio.h>
 
+int test_send_message(zdtm_lib_env *cur_env, zdtm_msg *msg) {
+    int r;
+    zdtm_msg rmsg;    
+
+    printf("<--- rqst");
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = zdtm_recv_message(cur_env, &rmsg);
+    printf(" - (%d).\n", r);
+    if(r != 2){ return 1; }
+    
+    printf("---> %c%c%c", msg->body.type[0], msg->body.type[1],
+        msg->body.type[2]);
+    r = zdtm_send_message(cur_env, msg);
+    printf(" - (%d).\n", r);
+    if(r != 0){ return 1; }
+
+    printf("<--- ack");
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = zdtm_recv_message(cur_env, &rmsg);
+    printf(" - (%d).\n", r);
+    if(r != 1){ return 1; }
+
+    return 0;
+}
+
+int test_recv_message(zdtm_lib_env *cur_env, zdtm_msg *rmsg) {
+    int r;
+
+    printf("---> rqst");
+    r = zdtm_send_rqst_message(cur_env);
+    printf(" - (%d).\n", r);
+    if(r != 0){ return 1; }
+    
+    memset(rmsg, 0, sizeof(zdtm_msg));
+    r = zdtm_recv_message(cur_env, rmsg);
+    printf("<--- %c%c%c", rmsg->body.type[0], rmsg->body.type[1],
+        rmsg->body.type[2]);
+    printf(" - (%d).\n", r);
+    if(r != 0) { return 1; }
+    
+    printf("---> ack");
+    r = zdtm_send_ack_message(cur_env);
+    printf(" - (%d).\n", r);
+    if(r != 0){ return 1; }
+
+    return 0;
+}
+
 int test_initialize(zdtm_lib_env *cur_env) {
     int r;
 
@@ -51,6 +99,34 @@ int test_connect(zdtm_lib_env *cur_env) {
 
 int test_disconnect(zdtm_lib_env *cur_env) {
     int r;
+    zdtm_msg msg, rmsg;
+
+    /* Make a simple RQT message, send it and recv AEX */
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RQT_MSG_TYPE, MSG_TYPE_SIZE);
+    memset(msg.body.cont.rqt.null_bytes, 0,
+        sizeof(msg.body.cont.rqt.null_bytes));
+
+    r = test_send_message(cur_env, &msg);
+    if(r != 0){ return 1; }
+
+    r = test_recv_message(cur_env, &rmsg);
+    if(r != 0){ return 1; }
+
+    /* receive a request and send a RAY message */
+    printf("<--- rqst");
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = zdtm_recv_message(cur_env, &rmsg);
+    printf(" - (%d).\n", r);
+    if(r != 2){ return 1; }
+
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RAY_MSG_TYPE, MSG_TYPE_SIZE);
+
+    printf("---> RAY");
+    r = zdtm_send_message(cur_env, &msg);
+    printf(" - (%d).\n", r);
+    if(r != 0){ return 1; }
 
     r = zdtm_close_zaurus_conn(cur_env);
     printf("zdtm_close_zaurus_conn - (%d).\n", r);
@@ -65,10 +141,15 @@ int test_disconnect(zdtm_lib_env *cur_env) {
 
 int test_get_changeinfo(zdtm_lib_env *cur_env) {
     int r;
+    int i;
     zdtm_msg msg, rmsg;
     char buff[256];
 
-    /* make simple RAY message */    
+    /* make simple RAY message, send it and recv AAY */
+
+    /* This initial RAY message send does not wait for a rqst message as
+     * all the rest of the send messages do hence, it does not use the
+     * test_send_message() function. */
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RAY_MSG_TYPE, MSG_TYPE_SIZE);
 
@@ -83,65 +164,18 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     printf(" - (%d).\n", r);
     if(r != 1){ return 1; }
 
-
-
-
-    printf("---> rqst");
-    r = zdtm_send_rqst_message(cur_env);
-    printf(" - (%d).\n", r);
+    r = test_recv_message(cur_env, &rmsg);
     if(r != 0){ return 1; }
-
-    printf("<--- AAY");
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
-    printf(" - (%d).\n", r);
-    if(r != 0) { return 1; }
-    r = zdtm_dump_msg_log(cur_env, &rmsg);
-    printf("zdtm_dump_msg_log - (%d).\n", r);
-
-    printf("---> ack");
-    r = zdtm_send_ack_message(cur_env);
-    printf(" - (%d).\n", r);
-    if(r != 0){ return 1; }
-    
-
-
-    printf("<--- rqst");
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
-    printf(" - (%d).\n", r);
-    if(r != 2){ return 1; }
-    
-    /* make a simple RIG message */
+   
+    /* make a simple RIG message, send it and recv AIG */
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RIG_MSG_TYPE, MSG_TYPE_SIZE);
 
-    printf("---> RIG");
-    r = zdtm_send_message(cur_env, &msg);
-    printf(" - (%d).\n", r);
+    r = test_send_message(cur_env, &msg);
     if(r != 0){ return 1; }
 
-    printf("<--- ack");
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
-    printf(" - (%d).\n", r);
-    if(r != 1){ return 1; }
-
-
-
-    
-    printf("---> rqst");
-    r = zdtm_send_rqst_message(cur_env);
-    printf(" - (%d).\n", r);
+    r = test_recv_message(cur_env, &rmsg);
     if(r != 0){ return 1; }
-    
-    printf("<--- AIG");
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
-    printf(" - (%d).\n", r);
-    if(r != 0) { return 1; }
-    r = zdtm_dump_msg_log(cur_env, &rmsg);
-    printf("zdtm_dump_msg_log - (%d).\n", r);
     
     memcpy(buff, rmsg.body.cont.aig.model_str,
         rmsg.body.cont.aig.model_str_len);
@@ -151,51 +185,16 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
         rmsg.body.cont.aig.language[0],
         rmsg.body.cont.aig.language[1]);
     printf("AuthState: 0x%.2x\n", rmsg.body.cont.aig.auth_state);
-
-    printf("---> ack");
-    r = zdtm_send_ack_message(cur_env);
-    printf(" - (%d).\n", r);
-    if(r != 0){ return 1; }
-
-    
-
-
-    printf("<--- rqst");
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
-    printf(" - (%d).\n", r);
-    if(r != 2){ return 1; }
-    
-    /* make a simple RIG message */
+ 
+    /* make a simple RIG message, send it and recv AIG */
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RIG_MSG_TYPE, MSG_TYPE_SIZE);
 
-    printf("---> RIG");
-    r = zdtm_send_message(cur_env, &msg);
-    printf(" - (%d).\n", r);
+    r = test_send_message(cur_env, &msg);
     if(r != 0){ return 1; }
 
-    printf("<--- ack");
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
-    printf(" - (%d).\n", r);
-    if(r != 1){ return 1; }
-
-
-
-    
-    printf("---> rqst");
-    r = zdtm_send_rqst_message(cur_env);
-    printf(" - (%d).\n", r);
+    r = test_recv_message(cur_env, &rmsg);
     if(r != 0){ return 1; }
-    
-    printf("<--- AIG");
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
-    printf(" - (%d).\n", r);
-    if(r != 0) { return 1; }
-    r = zdtm_dump_msg_log(cur_env, &rmsg);
-    printf("zdtm_dump_msg_log - (%d).\n", r);
     
     memcpy(buff, rmsg.body.cont.aig.model_str,
         rmsg.body.cont.aig.model_str_len);
@@ -205,11 +204,77 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
         rmsg.body.cont.aig.language[0],
         rmsg.body.cont.aig.language[1]);
     printf("AuthState: 0x%.2x\n", rmsg.body.cont.aig.auth_state);
+ 
+    /* make a simple RMG message, send it and recv AMG */
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RMG_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rmg.uk = 0x01;
+    msg.body.cont.rmg.sync_type = SYNC_TYPE_TODO;
 
-    printf("---> ack");
-    r = zdtm_send_ack_message(cur_env);
-    printf(" - (%d).\n", r);
+    r = test_send_message(cur_env, &msg);
     if(r != 0){ return 1; }
+
+    r = test_recv_message(cur_env, &rmsg);
+    if(r != 0){ return 1; }
+
+    /* make a  RTG message, send it and recv an ATG */
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RTG_MSG_TYPE, MSG_TYPE_SIZE);
+    
+    r = test_send_message(cur_env, &msg);
+    if(r != 0){ return 1; }
+
+    r = test_recv_message(cur_env, &rmsg);
+    if(r != 0){ return 1; }
+
+    /* make a  RTS message, send it and recv an AEX */
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RTS_MSG_TYPE, MSG_TYPE_SIZE);
+    memcpy(msg.body.cont.rts.date, "20060905011020", RTS_DATE_LEN);
+    
+    r = test_send_message(cur_env, &msg);
+    if(r != 0){ return 1; }
+
+    r = test_recv_message(cur_env, &rmsg);
+    if(r != 0){ return 1; }
+
+    /* BEFORE I GO ANY FURTHER I MUST BE SURE THAT A FULL SYNC IS NOT
+     * REQUIRED. IF A FULL SYNC IS REQUIRED THEN I SHOULD HANDLE THE
+     * FULL SYNC. */
+
+    /* make a  RSY message, send it and recv an ASY */
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RSY_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rsy.sync_type = SYNC_TYPE_TODO;
+    msg.body.cont.rsy.uk = 0x07;
+    
+    r = test_send_message(cur_env, &msg);
+    if(r != 0){ return 1; }
+
+    r = test_recv_message(cur_env, &rmsg);
+    if(r != 0){ return 1; }
+
+    printf("new list id = 0x%.2x\n", rmsg.body.cont.asy.new_list_id);
+    printf("num new sync ids = %u\n", rmsg.body.cont.asy.num_new_sync_ids);
+    for (i = 0; i < rmsg.body.cont.asy.num_new_sync_ids; i++) {
+        printf(" -- new sync id [%d] = (hex) 0x%.8x, (dec) %u\n", i,
+            rmsg.body.cont.asy.new_sync_ids[i],
+            rmsg.body.cont.asy.new_sync_ids[i]);
+    }
+    printf("mod list id = 0x%.2x\n", rmsg.body.cont.asy.mod_list_id);
+    printf("num mod sync ids = %u\n", rmsg.body.cont.asy.num_mod_sync_ids);
+    for (i = 0; i < rmsg.body.cont.asy.num_mod_sync_ids; i++) {
+        printf(" -- mod sync id [%d] = (hex) 0x%.8x, (dec) %u\n", i,
+            rmsg.body.cont.asy.mod_sync_ids[i],
+            rmsg.body.cont.asy.mod_sync_ids[i]);
+    }
+    printf("del list id = 0x%.2x\n", rmsg.body.cont.asy.del_list_id);
+    printf("num del sync ids = %u\n", rmsg.body.cont.asy.num_del_sync_ids);
+    for (i = 0; i < rmsg.body.cont.asy.num_del_sync_ids; i++) {
+        printf(" -- del sync id [%d] = (hex) 0x%.8x, (dec) %u\n", i,
+            rmsg.body.cont.asy.del_sync_ids[i],
+            rmsg.body.cont.asy.del_sync_ids[i]);
+    }
 
     return 0;
 }

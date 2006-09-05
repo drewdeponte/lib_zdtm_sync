@@ -196,6 +196,7 @@ int zdtm_is_ack_message(const unsigned char *buff);
 int zdtm_send_comm_message_to(int sockfd, char *data);
 int zdtm_send_ack_message(zdtm_lib_env *cur_env);
 int zdtm_send_rqst_message(zdtm_lib_env *cur_env);
+int zdtm_send_abrt_message(zdtm_lib_env *cur_env);
 int zdtm_is_rqst_message(const unsigned char *buff);
 int zdtm_is_abrt_message(const unsigned char *buff);
 

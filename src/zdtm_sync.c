@@ -630,6 +630,15 @@ int zdtm_send_rqst_message(zdtm_lib_env *cur_env) {
     return retval;
 }
 
+int zdtm_send_abrt_message(zdtm_lib_env *cur_env) {
+    int retval;
+    char msg_data[COM_MSG_SIZE] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x96,
+        0x18};
+
+    retval = zdtm_send_comm_message_to(cur_env->connfd, msg_data);
+    return retval;
+}
+
 /**
  * Check if a message is a Request message.
  *
@@ -886,6 +895,8 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
         return RET_PARSE_RAW_FAIL;
     }
     
+    zdtm_dump_msg_log(cur_env, p_msg);
+    
     return 0;
 }
 
@@ -1039,6 +1050,8 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
 int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     int retval;
 
+    zdtm_dump_msg_log(cur_env, p_msg);
+
     retval = zdtm_send_message_to(cur_env, p_msg, cur_env->connfd);
     return retval;
 }
@@ -1165,14 +1178,9 @@ int zdtm_parse_raw_msg(zdtm_msg *p_msg) {
                     &p_msg->body.cont.aig))
             return -2;
     } else if (IS_AMG(p_msg)) {
-        /*
-         * For now the following function does not exist because I am
-         * not sure what the meaning of the data inside the AMG message
-         * is. Hence, I have no idea how to parse it, :).
         if (zdtm_parse_raw_amg_msg(p_msg->body.p_raw_content,
                     &p_msg->body.cont.amg))
             return -3;
-         */
     } else if (IS_ATG(p_msg)) {
         if (zdtm_parse_raw_atg_msg(p_msg->body.p_raw_content,
                     &p_msg->body.cont.atg))
