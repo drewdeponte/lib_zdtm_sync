@@ -67,7 +67,7 @@ int zdtm_parse_raw_asy_msg(void *buf, struct zdtm_asy_msg_content *asy) {
     for (i = 0; i < asy->num_mod_sync_ids; i++) {
 #ifdef WORDS_BIGENDIAN
         asy->mod_sync_ids[i] = zdtm_liltobigl(*((uint32_t *)buf));
-        buf += sizeof(uint326_t);
+        buf += sizeof(uint32_t);
 #else
         asy->mod_sync_ids[i] = *((uint32_t *)buf);
         buf += sizeof(uint32_t);
