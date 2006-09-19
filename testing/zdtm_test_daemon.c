@@ -217,6 +217,29 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     r = test_recv_message(cur_env, &rmsg);
     if(r != 0){ return 1; }
 
+    /* Here I check if it is a completely empty sync log */
+    if(rmsg.check_sum == 213) {
+        /* IT IS COMPLETELY EMPTY */
+        printf("Sync Log is Empty!\n");
+        return 1;
+    }
+
+    /* Here I check if ToDo Slow Sync required */
+    if (!(rmsg.body.cont.amg.fullsync_flags && 0x01)) {
+        /* todo slow sync required */
+        printf("ToDo Slow Sync Required!\n");
+    }
+
+    if (!(rmsg.body.cont.amg.fullsync_flags && 0x02)) {
+        /* cal slow sync required */
+        printf("Calendar Slow Sync Required!\n");
+    }
+    
+    if (!(rmsg.body.cont.amg.fullsync_flags && 0x04)) {
+        /* address book slow sync required */
+        printf("Address Book Slow Sync Required!\n");
+    }
+
     /* make a  RTG message, send it and recv an ATG */
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RTG_MSG_TYPE, MSG_TYPE_SIZE);
@@ -230,7 +253,7 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     /* make a  RTS message, send it and recv an AEX */
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RTS_MSG_TYPE, MSG_TYPE_SIZE);
-    memcpy(msg.body.cont.rts.date, "20060905011020", RTS_DATE_LEN);
+    memcpy(msg.body.cont.rts.date, "20060920011020", RTS_DATE_LEN);
     
     r = test_send_message(cur_env, &msg);
     if(r != 0){ return 1; }

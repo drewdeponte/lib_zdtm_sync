@@ -15,11 +15,13 @@
  * content.
  */
 struct zdtm_amg_msg_content {
-    unsigned char empty_sync_type;
+    unsigned char sl[2];
+    unsigned char fullsync_flags;
+    unsigned char uk[46];
 };
 extern const char *AMG_MSG_TYPE;
 #define IS_AMG(x) (memcmp(x->body.type, AMG_MSG_TYPE, MSG_TYPE_SIZE) == 0)
 
-int zdtm_parse_raw_amg_msg(void *buf, struct zdtm_amg_msg_content *amg);
+int zdtm_parse_raw_amg_msg(void *p_cont, struct zdtm_amg_msg_content *amg);
 
 #endif
