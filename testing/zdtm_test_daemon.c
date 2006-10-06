@@ -142,8 +142,11 @@ int test_disconnect(zdtm_lib_env *cur_env) {
 int test_get_changeinfo(zdtm_lib_env *cur_env) {
     int r;
     int i;
+    int slow_sync_required;
     zdtm_msg msg, rmsg;
     char buff[256];
+
+    slow_sync_required = 0;
 
     /* make simple RAY message, send it and recv AAY */
 
@@ -217,27 +220,23 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     r = test_recv_message(cur_env, &rmsg);
     if(r != 0){ return 1; }
 
-    /* Here I check if it is a completely empty sync log */
-    if(rmsg.check_sum == 213) {
-        /* IT IS COMPLETELY EMPTY */
-        printf("Sync Log is Empty!\n");
-        return 1;
-    }
-
-    /* Here I check if ToDo Slow Sync required */
-    if (!(rmsg.body.cont.amg.fullsync_flags && 0x01)) {
+    /* Here I check if ToDo Slow Sync is Required */
+    if ((rmsg.body.cont.amg.fullsync_flags & 0x01) == 0) {
         /* todo slow sync required */
         printf("ToDo Slow Sync Required!\n");
+        slow_sync_required = 1;
     }
 
-    if (!(rmsg.body.cont.amg.fullsync_flags && 0x02)) {
+    if ((rmsg.body.cont.amg.fullsync_flags & 0x02) == 0) {
         /* cal slow sync required */
         printf("Calendar Slow Sync Required!\n");
+        slow_sync_required = 1;
     }
     
-    if (!(rmsg.body.cont.amg.fullsync_flags && 0x04)) {
+    if ((rmsg.body.cont.amg.fullsync_flags & 0x04) == 0) {
         /* address book slow sync required */
         printf("Address Book Slow Sync Required!\n");
+        slow_sync_required = 1;
     }
 
     /* make a  RTG message, send it and recv an ATG */
@@ -264,6 +263,14 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     /* BEFORE I GO ANY FURTHER I MUST BE SURE THAT A FULL SYNC IS NOT
      * REQUIRED. IF A FULL SYNC IS REQUIRED THEN I SHOULD HANDLE THE
      * FULL SYNC. */
+    if (slow_sync_required) {
+        printf("SLOW SYNC REQUIRED!\n");
+        printf("This test_daemon currently does not support slow syncs\n");
+        printf("Hence, you must sync your Zaurus with the Windows sync\n");
+        printf("software and come back and sync with the test_daemon\n");
+        printf("to get beyond this point in the synchronization\n");
+        return 1;
+    }
 
     /* make a  RSY message, send it and recv an ASY */
     memset(&msg, 0, sizeof(zdtm_msg));

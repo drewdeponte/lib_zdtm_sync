@@ -15,8 +15,35 @@
  * content.
  */
 struct zdtm_amg_msg_content {
+    /**
+     * SL Buffer
+     * 
+     * The sl buffer holds the two ascii characters 'S' and 'L' that are
+     * found as the first two bytes of the the AMG message's raw
+     * content.
+     */
     unsigned char sl[2];
+
+    /**
+     * Full Sync Flags
+     *
+     * The fullsync_flags is byte which is designed to be used with
+     * bit-masking to determin what types of synchronizations require a
+     * full (slow) synchronization. Hence, if the associated byt is set
+     * (1) then it  is has been synced since the last manual State
+     * Clearing. Hence, a full sync is NOT necessary if the bit is set
+     * (1). The 1s bit is the flag for Todo data, the 2s bit is the flag
+     * for the Calendar data, and the 4s bit is the flag for the Address
+     * Book data.
+     */
     unsigned char fullsync_flags;
+
+    /**
+     * Unknown Bytes
+     *
+     * This is a buffer which is simply here to hold the 46 unknown
+     * bytes that follow in the raw AMG mesasge content.
+     */
     unsigned char uk[46];
 };
 extern const char *AMG_MSG_TYPE;
