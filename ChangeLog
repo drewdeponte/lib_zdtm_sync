@@ -1,0 +1,78 @@
+2006-10-06 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Changed the names of the zdtm_open_log, zdtm_write_log,
+zdtm_dump_msg_log, zdtm_close_log, and zdtm_listen_for_zaurus by
+prepending an underscore(_) to their names, as to indicate that they are
+theoretically private functions and are not a part of the general API.
+
+* Implemented the zdtm_initialize and zdtm_finalize functions to be part
+of the general API and to encapsulate the usage of the theoretically
+private functions _zdtm_open_log, _zdtm_listen_for_zaurus, and
+_zdtm_close_log.
+
+* Documented the zdtm_initialize and zdtm_finalize functions.
+
+* Changed the names of the zdtm_conn_to_zaurus, zdtm_send_message_to,
+and the zdtm_handle_zaurus_conn functions by prepending an underscore(_)
+to their names, as to indicate that they are theoretically private
+functions and are not a part of the general API.
+
+* Implemented the zdtm_connect function to be part of the general API
+and to encapsulate the usage of the theoretically private functions
+_zdtm_conn_to_zaurus, _zdtm_send_message_to, and
+_zdtm_handle_zaurus_conn.
+
+* Documented the zdtm_connect function.
+
+* Changed the namse of the zdtm_send_rqst_message, zdtm_recv_message,
+zdtm_send_ack_message, zdtm_send_abrt_message, zdtm_send_comm_message_to
+and zdtm_send_message functions by prepending an underscore(_) to their
+names, as to indicate that they are theoretically private functions and
+are not a part of the general API.
+
+* Implemented the zdtm_send_message and zdtm_recv_message function to be
+part of the general API and to encapsulate the usage of the
+theoretically private functions _zdtm_send_message, _zdtm_recv_message,
+_zdtm_send_rqst_message, and _zdtm_send_ack_message.
+
+* Changed the names of the zdtm_close_zaurus_conn and
+zdtm_close_conn_to_zaurus functions by prepending an underscore(_) to
+their names, as to indicate that they are theoretically private
+functions and are not a part of the general API.
+
+* Implemented the zdtm_disconnect function to be part of the general API
+and to encapsulate the usage of the theoretically private functions
+_zdtm_recv_message, _zdtm_send_message, _zdtm_close_zaurus_conn, and
+_zdtm_close_conn_to_zaurus.
+
+* Documented the zdtm_send_message, zdtm_recv_message, and
+zdtm_disconnect functions.
+
+* Converted zdtm_test_daemon.c so that it used the new general API
+functions and used the new private functions when necessary.
+
+* Converted zdtm_prepare_message_test.c so that it used the new general
+API functions and used the new private functions when necessary.
+
+* Changed the names fo the zdtm_checksum, zdtm_is_ack_message,
+zdtm_is_rqst_message, zdtm_is_abrt_message, zdtm_clean_message,
+zdtm_prepare_message, and zdtm_parse_raw_msg functions by prepending an
+underscore(_) to their names, as to indicate that they are theoretically
+private functions and are not a part of the general API.
+
+* Converted zdtm_prepare_message_test.c so that it used
+_zdtm_prepare_message rather than zdtm_prepare_message.
+
+* Documented the _zdtm_send_comm_message_to, _zdtm_send_ack_message,
+_zdtm_send_rqst_message, _zdtm_send_abrt_message, and _zdtm_send_message
+functions, and updated the documentation for the _zdtm_send_message_to
+function so that it better matched it's functionality.
+
+* Implemented the _zdtm_log_error function.
+
+* Added some logging using the _zdtm_log_error function and used
+_zdtm_clean_message where people had neglected to add it.
+
+* Debugged and cleaned up the zdtm_test_daemon application after it was
+converted to use all the new library API functions. Hence, it is now
+functional again!

@@ -39,7 +39,7 @@
  * @param n The number of bytes in the buffer.
  * @return Summation of bytes in passed buffer.
  */
-uint16_t zdtm_checksum(zdtm_msg *p_msg) {
+uint16_t _zdtm_checksum(zdtm_msg *p_msg) {
     uint16_t n;
     unsigned char *buf;
     uint16_t sum = 0;
@@ -59,7 +59,7 @@ uint16_t zdtm_checksum(zdtm_msg *p_msg) {
 /**
  * Listen for an incoming synchronization connection from a Zaurus.
  *
- * The zdtm_listen_for_zaurus function creates a socket and configures
+ * The _zdtm_listen_for_zaurus function creates a socket and configures
  * it to listen for a synchronization connection from a Zaurus. Note:
  * This function does not handle accepting a connection from the Zaurus
  * it just creates a socket and puts it in the proper state so that a
@@ -74,14 +74,14 @@ uint16_t zdtm_checksum(zdtm_msg *p_msg) {
  * @retval -3 Failed to bind the address to the socket.
  * @retval -4 Failed to put socket into a listening state.
  */
-int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env) {
+int _zdtm_listen_for_zaurus(zdtm_lib_env *cur_env) {
     int retval;
     struct sockaddr_in servaddr;
     int reuse_set_flag = 1;
 
     cur_env->listenfd = socket(AF_INET, SOCK_STREAM, 0);
     if (cur_env->listenfd == -1) {
-        perror("zdtm_listen_for_zaurus - socket");
+        perror("_zdtm_listen_for_zaurus - socket");
         return -1;
     }
 
@@ -90,7 +90,7 @@ int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env) {
     retval = setsockopt(cur_env->listenfd, SOL_SOCKET, SO_REUSEADDR,
         (void *)&reuse_set_flag, sizeof(reuse_set_flag));
     if (retval == -1) {
-        perror("zdtm_listen_for_zaurus - setsockopt");
+        perror("_zdtm_listen_for_zaurus - setsockopt");
         return -2;
     }
 
@@ -102,13 +102,13 @@ int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env) {
     retval = bind(cur_env->listenfd, (struct sockaddr *)&servaddr,
         sizeof(servaddr));
     if (retval == -1) {
-        perror("zdtm_listen_for_zaurus - bind");
+        perror("_zdtm_listen_for_zaurus - bind");
         return -3;
     }
 
     retval = listen(cur_env->listenfd, 1);
     if (retval == -1) {
-        perror("zdtm_listen_for_zaurus - listen");
+        perror("_zdtm_listen_for_zaurus - listen");
         return -4;
     }
 
@@ -119,12 +119,12 @@ int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env) {
 /**
  * Handle a Zaurus connection.
  *
- * The zdtm_handle_zaurus_connection function handles a backlogged
+ * The _zdtm_handle_zaurus_connection function handles a backlogged
  * Zaurus connection if one exists. If no backlogged Zaurus connection
- * exists then zdtm_handle_zaurus_connection will block waiting for a
+ * exists then _zdtm_handle_zaurus_connection will block waiting for a
  * Zaurus connection, at which point it will release after accepting the
  * connection from the Zaurus. Note: In order to handle a Zaurus
- * connection one must first call zdtm_listen_for_zaurus to be in the
+ * connection one must first call _zdtm_listen_for_zaurus to be in the
  * correct state.
  * @param cur_env Pointer to the current zdtm library environment.
  * @return An integer representing success (zero) or failure (non-zero).
@@ -132,7 +132,7 @@ int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env) {
  * @retval -1 Failed to accept a Zaurus connection.
  * @retval -2 Failed to convert client address to quad dot format.
  */
-int zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env) {
+int _zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env) {
     struct sockaddr_in clntaddr;
     char source_addr[16];
     socklen_t len;
@@ -143,19 +143,19 @@ int zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env) {
     cur_env->connfd = accept(cur_env->listenfd,
         (struct sockaddr *)&clntaddr, &len);
     if (cur_env->connfd == -1) {
-        perror("zdtm_handle_zaurus_connection - accept");
+        perror("_zdtm_handle_zaurus_connection - accept");
         return -1;
     }
 
     retval = (char *)inet_ntop(AF_INET, &clntaddr.sin_addr,
         source_addr, 16);
     if (retval == NULL) {
-        perror("zdtm_handle_zaurus_connection - inet_ntop");
+        perror("_zdtm_handle_zaurus_connection - inet_ntop");
         return -2;
     }
 
     /*
-    printf("zdtm_handle_zaurus_connection: Received connection from \
+    printf("_zdtm_handle_zaurus_connection: Received connection from \
         %s, port %d.\n", source_addr, ntohs(clntaddr.sin_port));
     */
 
@@ -166,22 +166,22 @@ int zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env) {
 /**
  * Close the Zaurus connection.
  *
- * The zdtm_close_zaurus_conn function closes the Zaurus connection.
+ * The _zdtm_close_zaurus_conn function closes the Zaurus connection.
  * Note: In order to close a zaurus connection, a working zaurus
- * connection must already exist. Hence, the zdtm_listen_for_zaurus and
- * the zdtm_handle_zaurus_conn must have previously been called and
+ * connection must already exist. Hence, the _zdtm_listen_for_zaurus and
+ * the _zdtm_handle_zaurus_conn must have previously been called and
  * succeeded.
  * @param cur_env Pointer to the current zdtm library environment.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully closed the Zaurus connection.
  * @retval -1 Failed to close the Zaurus connection.
  */
-int zdtm_close_zaurus_conn(zdtm_lib_env *cur_env) {
+int _zdtm_close_zaurus_conn(zdtm_lib_env *cur_env) {
     int retval;
 
     retval = close(cur_env->connfd);
     if (retval) {
-        perror("zdtm_close_zaurus_conn - close");
+        perror("_zdtm_close_zaurus_conn - close");
         return -1;
     }
     
@@ -191,7 +191,7 @@ int zdtm_close_zaurus_conn(zdtm_lib_env *cur_env) {
 /**
  * Connect to Zaurus
  *
- * The zdtm_conn_to_zaurus function initiates a connection to the
+ * The _zdtm_conn_to_zaurus function initiates a connection to the
  * Zaurus. This connection is used to initiate a synchornization
  * originating from the desktop.
  * @param cur_env Pointer to the current zdtm library environment.
@@ -202,13 +202,13 @@ int zdtm_close_zaurus_conn(zdtm_lib_env *cur_env) {
  * @retval -2 Failed to convert the zaurus ip address.
  * @retval -3 Failed to connect to the zaurus.
  */
-int zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip) {
+int _zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip) {
     struct sockaddr_in servaddr;
     int retval;
 
     cur_env->reqfd = socket(AF_INET, SOCK_STREAM, 0);
     if (cur_env->reqfd == -1) {
-        perror("zdtm_conn_to_zaurus - socket");
+        perror("_zdtm_conn_to_zaurus - socket");
         return -1;
     }
 
@@ -216,14 +216,14 @@ int zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip) {
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(ZLISTPORT);
     if (inet_pton(AF_INET, zaurus_ip, &servaddr.sin_addr) <= 0) {
-        perror("zdtm_conn_to_zaurus - inet_pton");
+        perror("_zdtm_conn_to_zaurus - inet_pton");
         return -2;
     }
 
     retval = connect(cur_env->reqfd, (struct sockaddr *)&servaddr,
         sizeof(servaddr));
     if(retval == -1) {
-        perror("zdtm_conn_to_zaurus - connect");
+        perror("_zdtm_conn_to_zaurus - connect");
         return -3;
     }
 
@@ -233,22 +233,22 @@ int zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip) {
 /**
  * Close the connection to the Zaurus.
  *
- * The zdtm_close_conn_to_zaurus function closes the connetion which was
+ * The _zdtm_close_conn_to_zaurus function closes the connetion which was
  * made to the Zaurus to request a synchronization. Note: In order to
  * close a connection using this function a working connection to the
- * zaurus must already exist. Hence, the zdtm_conn_to_zaurus must have
+ * zaurus must already exist. Hence, the _zdtm_conn_to_zaurus must have
  * previously been caled and succeeded.
  * @param cur_env Pointer to the current zdtm library environment.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully closed the connection to the Zaurus.
  * @retval -1 Failed to close the connection to the Zaurus.
  */
-int zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env) {
+int _zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env) {
     int retval;
 
     retval = close(cur_env->reqfd);
     if (retval) {
-        perror("zdtm_close_conn_to_zaurus - close");
+        perror("_zdtm_close_conn_to_zaurus - close");
         return -1;
     }
 
@@ -258,7 +258,7 @@ int zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env) {
 /**
  * Open zdtm library log file.
  *
- * The zdtm_open_log function opens the zdtm libraries log file in
+ * The _zdtm_open_log function opens the zdtm libraries log file in
  * append mode so that the log may be written to.
  * @param cur_env Pointer to the current zdtm library environment.
  * @return An integer representing success (zero) or failure (non-zero).
@@ -267,7 +267,7 @@ int zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env) {
  * @retval -2 Not enough free bytes in internal buff to create file path.
  * @retval -3 Failed to open the created file path to append.
  */
-int zdtm_open_log(zdtm_lib_env *cur_env) {
+int _zdtm_open_log(zdtm_lib_env *cur_env) {
     char *home_env;
     char file_path[256];
     int free_bytes;
@@ -294,7 +294,7 @@ int zdtm_open_log(zdtm_lib_env *cur_env) {
 
     cur_env->logfp = fopen(file_path, "w");
     if (cur_env->logfp == NULL) {
-        perror("zdtm_open_log - fopen");
+        perror("_zdtm_open_log - fopen");
         return -3;
     }
 
@@ -304,7 +304,7 @@ int zdtm_open_log(zdtm_lib_env *cur_env) {
 /**
  * Write log to zdtm library log file.
  *
- * The zdtm_write_log function writes content to the zdtm libraries log
+ * The _zdtm_write_log function writes content to the zdtm libraries log
  * file in append mode. This function also flushes the file stream so
  * that the content is written to the log file right away, rather than
  * waiting in a buffer somewhere.
@@ -317,7 +317,7 @@ int zdtm_open_log(zdtm_lib_env *cur_env) {
  * @retval -2 Wrote fewer bytes to the log than were requested.
  * @retval -3 Failed to flush the log file stream.
  */
-int zdtm_write_log(zdtm_lib_env *cur_env, const char *buff,
+int _zdtm_write_log(zdtm_lib_env *cur_env, const char *buff,
     unsigned int size) {
     int bytes_written;  // The number of bytes written
 
@@ -332,30 +332,51 @@ int zdtm_write_log(zdtm_lib_env *cur_env, const char *buff,
     }
 
     if (fflush(cur_env->logfp) != 0) {
-        perror("zdtm_write_log - fflush");
+        perror("_zdtm_write_log - fflush");
         return -3;
     }
    
     return 0;
 }
 
+int _zdtm_log_error(zdtm_lib_env *cur_env, const char *func_name, int err) {
+    char buff[256];
+    int buff_size;
+    int retval;
+
+    buff_size = 256;
+
+    retval = snprintf(buff, buff_size, "Error: %s - %d", func_name, err);
+    if (retval == -1) {
+        return -1;
+    } else if (retval == buff_size) {
+        return -2;
+    }
+    retval = _zdtm_write_log(cur_env, buff, retval);
+    if (retval != 0) {
+        return -3;
+    }
+
+    return 0;
+}
+
 /**
  * Close zdtm library log file.
  *
- * The zdtm_close_log function closes the zdtm libraries log file.
+ * The _zdtm_close_log function closes the zdtm libraries log file.
  * @param cur_env Pointer to the current zdtm library environment.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully closed the zdtm library log file.
  * @retval -1 Failed to close zdtm library log file.
  * @retval -2 Failed, zdtm library log file was NOT open.
  */
-int zdtm_close_log(zdtm_lib_env *cur_env) {
+int _zdtm_close_log(zdtm_lib_env *cur_env) {
     int retval;
 
     if (cur_env->logfp != NULL) {
         retval = fclose(cur_env->logfp);
         if (retval != 0) {
-            perror("zdtm_close_log - fclose");
+            perror("_zdtm_close_log - fclose");
             return -1;
         }
         return 0;
@@ -367,9 +388,9 @@ int zdtm_close_log(zdtm_lib_env *cur_env) {
 /**
  * Dump a zdtm message to the log file.
  *
- * The zdtm_dump_msg_log function takes a zdtm_msg which has either been
- * read from the network connection using the zdtm_recv_message function
- * or has been prepared with the zdtm_prepare_message function and
+ * The _zdtm_dump_msg_log function takes a zdtm_msg which has either been
+ * read from the network connection using the _zdtm_recv_message function
+ * or has been prepared with the _zdtm_prepare_message function and
  * outputs the messages header, type, content, content size, body size
  * and check sum in a readable fashion.
  * @param cur_env Pointer to the current zdtm library environment.
@@ -380,7 +401,7 @@ int zdtm_close_log(zdtm_lib_env *cur_env) {
  * @retval -2 Failed, truncated data to fit in buff to write to log.
  * @retval -3 Failed to write data to log.
  */
-int zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
+int _zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     int i, j;       /* loop counters */
     char buff[256]; /* temp buffer to hold output data */
     int buff_size;  /* the size of buff in bytes */
@@ -396,7 +417,7 @@ int zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     } else if (retval == buff_size) {
         return -2;
     }
-    retval = zdtm_write_log(cur_env, buff, retval);
+    retval = _zdtm_write_log(cur_env, buff, retval);
     if (retval != 0) {
         return -3;
     }
@@ -428,7 +449,7 @@ int zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
         return -2;
     }
     buff_bytes = buff_bytes + retval;
-    retval = zdtm_write_log(cur_env, buff, buff_bytes);
+    retval = _zdtm_write_log(cur_env, buff, buff_bytes);
     if (retval != 0) {
         return -3;
     }
@@ -444,7 +465,7 @@ int zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     } else if (retval == buff_size) {
         return -2;
     }
-    retval = zdtm_write_log(cur_env, buff, retval);
+    retval = _zdtm_write_log(cur_env, buff, retval);
     if (retval != 0) {
         return -3;
     }
@@ -456,7 +477,7 @@ int zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     } else if (retval == buff_size) {
         return -2;
     }
-    retval = zdtm_write_log(cur_env, buff, retval);
+    retval = _zdtm_write_log(cur_env, buff, retval);
     if (retval != 0) {
         return -3;
     }
@@ -527,7 +548,7 @@ int zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
             i = j;
         }
 
-        retval = zdtm_write_log(cur_env, buff, buff_bytes);
+        retval = _zdtm_write_log(cur_env, buff, buff_bytes);
         if (retval != 0) {
             return -3;
         }
@@ -561,7 +582,7 @@ int zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
         return -2;
     }
     buff_bytes = buff_bytes + retval;
-    retval = zdtm_write_log(cur_env, buff, buff_bytes);
+    retval = _zdtm_write_log(cur_env, buff, buff_bytes);
     if (retval != 0) {
         return -3;
     }
@@ -572,7 +593,7 @@ int zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
 /**
  * Check if a message is an Ack message.
  *
- * The zdtm_is_ack_message function checks if a message is an ack
+ * The _zdtm_is_ack_message function checks if a message is an ack
  * message. This function is designed to test if the first n bytes are
  * equivalent, where n is the size in bytes of the common messages. This
  * would allow for buffers of greater length to be passed to this
@@ -583,7 +604,7 @@ int zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
  * @retval 1 True, the message is an Ack message.
  * @retval 0 False, the message is NOT an ack message.
  */
-int zdtm_is_ack_message(const unsigned char *buff) {
+int _zdtm_is_ack_message(const unsigned char *buff) {
     char msg_data[COM_MSG_SIZE] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x96,
         0x06};
 
@@ -596,7 +617,19 @@ int zdtm_is_ack_message(const unsigned char *buff) {
     return 0;
 }
 
-int zdtm_send_comm_message_to(int sockfd, char *data) {
+/**
+ * Send a raw common message.
+ *
+ * Send a specified raw common message to a specified socket.
+ * @param sockfd Socket descriptor to write the raw common message to.
+ * @param data Pointe to buffer containing raw common message.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully sent common messaeg.
+ * @retval -1 Failed to write raw common message to socket descriptor.
+ * @retval -2 Failed to write message, reached EOF.
+ * @retval -3 Failed, fewer than COM_MSG_SIZE bytes written.
+ */
+int _zdtm_send_comm_message_to(int sockfd, char *data) {
     int bytes_written;
     
     bytes_written = write(sockfd, data, COM_MSG_SIZE);
@@ -612,37 +645,64 @@ int zdtm_send_comm_message_to(int sockfd, char *data) {
     return 0;
 }
 
-int zdtm_send_ack_message(zdtm_lib_env *cur_env) {
+/**
+ * Send acknowledgement message.
+ *
+ * Send an acknowledgement message to the Zaurus. For, details about
+ * specific return values please refer to the return values of the
+ * _zdtm_send_comm_message function.
+ * @param cur_env Pointer to current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ */
+int _zdtm_send_ack_message(zdtm_lib_env *cur_env) {
     int retval;
     char msg_data[COM_MSG_SIZE] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x96,
         0x06};
 
-    retval = zdtm_send_comm_message_to(cur_env->connfd, msg_data);
+    retval = _zdtm_send_comm_message_to(cur_env->connfd, msg_data);
     return retval;
 }
 
-int zdtm_send_rqst_message(zdtm_lib_env *cur_env) {
+/**
+ * Send request message.
+ *
+ * Send a request message to the Zaurus. For, details about specific
+ * return values please refer to the return values of the
+ * _zdtm_send_comm_message function.
+ * @param cur_env Pointer to current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ */
+int _zdtm_send_rqst_message(zdtm_lib_env *cur_env) {
     int retval;
     char msg_data[COM_MSG_SIZE] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x96,
         0x05};
 
-    retval = zdtm_send_comm_message_to(cur_env->connfd, msg_data);
+    retval = _zdtm_send_comm_message_to(cur_env->connfd, msg_data);
     return retval;
 }
 
-int zdtm_send_abrt_message(zdtm_lib_env *cur_env) {
+/**
+ * Send abort message.
+ *
+ * Send an abort message to the Zaurus. For, details about specific
+ * return values please refer to the return values of the
+ * _zdtm_send_comm_message function.
+ * @param cur_env Pointer to current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ */
+int _zdtm_send_abrt_message(zdtm_lib_env *cur_env) {
     int retval;
     char msg_data[COM_MSG_SIZE] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x96,
         0x18};
 
-    retval = zdtm_send_comm_message_to(cur_env->connfd, msg_data);
+    retval = _zdtm_send_comm_message_to(cur_env->connfd, msg_data);
     return retval;
 }
 
 /**
  * Check if a message is a Request message.
  *
- * The zdtm_is_rqst_message function checks if a message is a request
+ * The _zdtm_is_rqst_message function checks if a message is a request
  * message. This function is designed to test if the first n bytes are
  * equivalent, where n is the size in bytes of the common messages. This
  * would allow for buffers of greater length to be passed to this
@@ -653,7 +713,7 @@ int zdtm_send_abrt_message(zdtm_lib_env *cur_env) {
  * @retval 1 True, the message is a rqst message.
  * @retval 0 False, the message is NOT a rqst message.
  */
-int zdtm_is_rqst_message(const unsigned char *buff) {
+int _zdtm_is_rqst_message(const unsigned char *buff) {
     char msg_data[COM_MSG_SIZE] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x96,
         0x05};
 
@@ -669,7 +729,7 @@ int zdtm_is_rqst_message(const unsigned char *buff) {
 /**
  * Check if a message is an Abort message.
  *
- * The zdtm_is_abrt_message function checks if a message is an abort
+ * The _zdtm_is_abrt_message function checks if a message is an abort
  * message. This function is designed to test if the first n bytes are
  * equivalent, where n is the size in bytes of the common messages. This
  * would allow for buffers of greater length to be passed to this
@@ -680,7 +740,7 @@ int zdtm_is_rqst_message(const unsigned char *buff) {
  * @retval 1 True, the message is an abrt message.
  * @retval 0 False, the message is NOT an abrt message.
  */
-int zdtm_is_abrt_message(const unsigned char *buff) {
+int _zdtm_is_abrt_message(const unsigned char *buff) {
     char msg_data[COM_MSG_SIZE] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x96,
         0x18};
 
@@ -696,13 +756,13 @@ int zdtm_is_abrt_message(const unsigned char *buff) {
 /**
  * Clean Message
  *
- * The zdtm_clean_message function handles the checking and freeing of
+ * The _zdtm_clean_message function handles the checking and freeing of
  * any members of the message that have been dynamically allocated. Such
- * dynamic allocation occurs in the zdtm_recv_message function.
+ * dynamic allocation occurs in the _zdtm_recv_message function.
  * @param p_msg Pointer to a zdtm_message structure to free members of.
  * @return An integer representing success (zero) or failure (non-zero).
  */
-int zdtm_clean_message(zdtm_msg *p_msg) {
+int _zdtm_clean_message(zdtm_msg *p_msg) {
     if (p_msg->body.p_raw_content != NULL) {
         free(p_msg->body.p_raw_content);
         p_msg->body.p_raw_content = NULL;
@@ -722,17 +782,17 @@ int zdtm_clean_message(zdtm_msg *p_msg) {
 /**
  * Receive Message.
  *
- * The zdtm_recv_message function handles receiving a message from the
+ * The _zdtm_recv_message function handles receiving a message from the
  * Zaurus after a connection from the Zaurus has already been handled
- * via the zdtm_handle_zaurus_conn function. This function supports
+ * via the _zdtm_handle_zaurus_conn function. This function supports
  * receiving common messages as well as non-common messages. When,
  * receiving a common message the structure pointed to by p_msg is not
  * altered. Note: When this function alters the structure pointed to by
  * p_msg it dynamically allocates memory for the message content. The
  * freeing of this allocated memory for the message content must be
- * handled by you, using the zdtm_clean_message function. If the
+ * handled by you, using the _zdtm_clean_message function. If the
  * function returns in error freeing the message is still required via
- * the zdtm_clean_message function.
+ * the _zdtm_clean_message function.
  * @param cur_env Pointer to the current zdtm library environment.
  * @param p_msg Pointer to a zdtm_message structure to store message in.
  * @return An integer representing success (zero) or failure (non-zero).
@@ -753,7 +813,7 @@ int zdtm_clean_message(zdtm_msg *p_msg) {
  * @retval RET_MEM_CONTENT Failed to allocate mem for message content.
  * @retval RET_PARSE_RAW_FAIL Failed to parse the raw message.
  */
-int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
+int _zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     ssize_t bytes_read;
     uint32_t max_buff_size;
     unsigned char *buff;
@@ -766,7 +826,7 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
    
     buff = (unsigned char *)malloc((size_t)max_buff_size);
     if (buff == NULL) {
-        perror("zdtm_recv_message - malloc");
+        perror("_zdtm_recv_message - malloc");
         return -1;
     }
    
@@ -778,20 +838,20 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     } else if (bytes_read == -1) {
         // read - returned an error and set errno
         free((void *)buff);
-        perror("zdtm_recv_message - read");
+        perror("_zdtm_recv_message - read");
         return -3;
     }
 
     // Check for common messages and unknown messages based on size
     if (bytes_read < 20) {
         if (bytes_read == COM_MSG_SIZE) {
-            if (zdtm_is_ack_message(buff)) {
+            if (_zdtm_is_ack_message(buff)) {
                 free((void *)buff);
                 return 1;
-            } else if (zdtm_is_rqst_message(buff)) {
+            } else if (_zdtm_is_rqst_message(buff)) {
                 free((void *)buff);
                 return 2;
-            } else if (zdtm_is_abrt_message(buff)) {
+            } else if (_zdtm_is_abrt_message(buff)) {
                 free((void *)buff);
                 return 3;
             } else {
@@ -869,7 +929,7 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
         if (p_msg->body.p_raw_content == NULL) {
             free((void *)buff);
             // return signifying that malloc failed
-            perror("zdtm_recv_message - malloc");
+            perror("_zdtm_recv_message - malloc");
             return RET_MEM_CONTENT;
         }
         memcpy(p_msg->body.p_raw_content, (const void *)cur_buff_pos,
@@ -891,11 +951,11 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
      * except for the p_msg->body.cont.
      */
 
-    if (zdtm_parse_raw_msg(p_msg) != 0) {
+    if (_zdtm_parse_raw_msg(p_msg) != 0) {
         return RET_PARSE_RAW_FAIL;
     }
     
-    zdtm_dump_msg_log(cur_env, p_msg);
+    _zdtm_dump_msg_log(cur_env, p_msg);
     
     return 0;
 }
@@ -915,7 +975,7 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
  * @retval -1 Failed to allocate memory for raw content.
  * @return RET_UNK_VAR  Failed, unknown variation for RDW message.
  */
-int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
+int _zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     
     void *p_body;
     uint16_t *p_cont_size;
@@ -1042,28 +1102,41 @@ int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     }
 
     // Compute the checksum -- sill in host byte order
-    p_msg->check_sum = zdtm_checksum(p_msg);
+    p_msg->check_sum = _zdtm_checksum(p_msg);
 
     return 0; 
 }
 
-int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
+/**
+ * Send Message to Zaurus.
+ *
+ * The _zdtm_send_message function is a general send message function
+ * which sends the provided message to the Zaurus via the connection
+ * which is established from the Zaurus. For specifics of return values
+ * please refer to the return values of the _zdtm_send_message_to
+ * function.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param p_msg Pointer to the zdtm_message struct containing message.
+ * @return An integer representing success (zero) or failure (non-zero).
+ */
+int _zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     int retval;
 
-    zdtm_dump_msg_log(cur_env, p_msg);
+    _zdtm_dump_msg_log(cur_env, p_msg);
 
-    retval = zdtm_send_message_to(cur_env, p_msg, cur_env->connfd);
+    retval = _zdtm_send_message_to(cur_env, p_msg, cur_env->connfd);
     return retval;
 }
 
 /**
  * Send Message.
  *
- * The zdtm_send_message function handles sending a message to the
+ * The _zdtm_send_message_to function handles sending a message to the
  * Zaurus after a connection from the Zaurus has already been handled
- * via the zdtm_handle_zaurus_conn function. This function takes message
+ * via the _zdtm_handle_zaurus_conn function. This function takes a message
  * which has its type, and cont filled out and compiles it into the
- * proper format and sends it to the Zaurus.
+ * proper format and sends it over the socket specified by the given
+ * socket descriptor.
  * @param cur_env Pointer to the current zdtm library environment.
  * @param p_msg Pointer to a zdtm_message structure to store message in.
  * @param sockfd The socket to send the message over.
@@ -1075,7 +1148,7 @@ int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
  * @retval -3 Wrote zero (0) bytes to the connection socket.
  * @retval -4 Wrote less bytes than should have written to the socket.
  */
-int zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd) {
+int _zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd) {
     void *p_wire_msg;
     void *p_cur_pos;
     unsigned int msg_size;
@@ -1083,9 +1156,9 @@ int zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd) {
 
     p_wire_msg = NULL;
 
-    retval = zdtm_prepare_message(cur_env, p_msg);
+    retval = _zdtm_prepare_message(cur_env, p_msg);
     if (retval != 0) {
-        zdtm_clean_message(p_msg);
+        _zdtm_clean_message(p_msg);
         return -1;
     }
     
@@ -1094,7 +1167,7 @@ int zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd) {
 
     p_wire_msg = malloc((size_t)msg_size);
     if (p_wire_msg == NULL) {
-        zdtm_clean_message(p_msg);
+        _zdtm_clean_message(p_msg);
         return RET_MALLOC_FAIL;
     }
 
@@ -1124,21 +1197,21 @@ int zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd) {
 
     bytes_written = write(sockfd, p_wire_msg, msg_size);
     if (bytes_written == -1) {
-        perror("zdtm_send_message - write");
-        zdtm_clean_message(p_msg);
+        perror("_zdtm_send_message_to - write");
+        _zdtm_clean_message(p_msg);
         free(p_wire_msg);
         return -2;
     } else if (bytes_written == 0) {
-        zdtm_clean_message(p_msg);
+        _zdtm_clean_message(p_msg);
         free(p_wire_msg);
         return -3;
     } else if (bytes_written < msg_size) {
-        zdtm_clean_message(p_msg);
+        _zdtm_clean_message(p_msg);
         free(p_wire_msg);
         return -4;
     }
     
-    zdtm_clean_message(p_msg);
+    _zdtm_clean_message(p_msg);
     free(p_wire_msg);
 
     return 0;
@@ -1147,7 +1220,7 @@ int zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd) {
 /**
  * Parse a raw message.
  *
- * The zdtm_parse_raw_msg function is designed to take in a raw message
+ * The _zdtm_parse_raw_msg function is designed to take in a raw message
  * that has just been read from the network and parse it into the proper
  * components filling out the proper message type structure so that it may
  * easily be accessed at a later point in time.
@@ -1167,7 +1240,7 @@ int zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd) {
  * @retval -12 Failed to parse AGE messaeg.
  * @retval -255 Failed, unkown message type.
  */
-int zdtm_parse_raw_msg(zdtm_msg *p_msg) {
+int _zdtm_parse_raw_msg(zdtm_msg *p_msg) {
 
     if (IS_AAY(p_msg)) {
         if (zdtm_parse_raw_aay_msg(p_msg->body.p_raw_content,
@@ -1210,5 +1283,221 @@ int zdtm_parse_raw_msg(zdtm_msg *p_msg) {
         return -255;
     }
     
+    return 0;
+}
+
+/* General API functions exist below this line */
+
+/**
+ * Initialize the library.
+ *
+ * The zdtm_initialize function prepares the current library environment
+ * to be used by all other lib_zdtm_sync API functions.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully initialized library environment.
+ * @retval -1 Failed to open log file.
+ * @retval -2 Failed to listen for Zaurus connections.
+ */
+int zdtm_initialize(zdtm_lib_env *cur_env) {
+    int r;
+
+    r = _zdtm_open_log(cur_env);
+    if (r != 0) { return -1; }
+
+    r = _zdtm_listen_for_zaurus(cur_env);
+    if (r != 0) { return -2; }
+
+    return 0;
+}
+
+/**
+ * Finalize the library.
+ *
+ * The zdtm_finalize function finalizes the current library environment
+ * so that all the loose ends are taken care of.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully finalized library environment.
+ * @retval -1 Failed to close log file.
+ */
+int zdtm_finalize(zdtm_lib_env *cur_env) {
+    int r;
+
+    r = _zdtm_close_log(cur_env);
+    if (r != 0) { return -1; }
+
+    return 0;
+}
+
+/**
+ * Connect to Zaurus.
+ *
+ * The zdtm_connect function connects the current library environment to
+ * the Zaurus so that a synchronization may be performed.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param ip_addr IP address of Zaurus to connect to in dotted-quad.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully connected to the Zaurus.
+ * @retval -1 Failed to make TCP/IP connection to the Zaurus.
+ * @retval -2 Failed to send RAY message to the Zaurus.
+ * @retval -3 Falied to handle the incoming Zaurus connection.
+ */
+int zdtm_connect(zdtm_lib_env *cur_env, const char *ip_addr) {
+    int r;
+    zdtm_msg msg;
+
+    /* Create a TCP/IP connection to the synchronization daemon that is
+     * running on the Zaurus. */
+    r = _zdtm_conn_to_zaurus(cur_env, ip_addr);
+    if (r != 0) { return -1; }
+
+    /* Create a RAY message and send it to the synchronization daemon on
+     * the Zaurus, to request that it instruct the synchronization
+     * client on the Zaurus connect back to the Desktop synchronization
+     * daemon which was initialized in the _zdtm_initialize function. */
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RAY_MSG_TYPE, MSG_TYPE_SIZE);
+    r = _zdtm_send_message_to(cur_env, &msg, cur_env->reqfd);
+    if (r != 0) { return -2; }
+   
+    /* Handle any back logged connections from the synchronization
+     * client on the Zaurus, or block waiting for a connection from the
+     * synchronization client on the Zaurus. */
+    r = _zdtm_handle_zaurus_conn(cur_env);
+    if (r != 0) { return -3; }
+
+    return 0;
+}
+
+/**
+ * Send a Message
+ *
+ * The zdtm_send_message function sends a message to the Zaurus after
+ * first receiving a request message, and terminates with success only
+ * after receiving an acknowledegment message from the Zaurus.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param msg Pointer to zdtm_msg structure to send to the Zaurus.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully sent message to the Zaurus.
+ * @retval -1 Failed to receive request message from the Zaurus.
+ * @retval -2 Failed to send the message to the Zaurus.
+ * @retval -3 Failed to receive acknowledgement message from Zaurus.
+ */
+int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *msg) {
+    int r;
+    zdtm_msg rmsg;
+
+    /* recv rqst message */
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_recv_message(cur_env, &rmsg);
+    if (r != 2) { _zdtm_clean_message(&rmsg); return -1; }
+
+    /* send general message */
+    r = _zdtm_send_message(cur_env, msg);
+    if (r != 0) { return -2; }
+
+    /* recv ack message */
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_recv_message(cur_env, &rmsg);
+    if (r != 1) { _zdtm_clean_message(&rmsg); return -3; }
+
+    return 0;
+}
+
+/**
+ * Receive a Message
+ *
+ * The zdtm_recv_message function receives a message from the Zaurus
+ * after first sending a request message, and terminates with success
+ * only after sending an acknowledegment message to the Zaurus.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param msg Pointer to zdtm_msg struct to store received message in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully received message to the Zaurus.
+ * @retval -1 Failed to send request message to the Zaurus.
+ * @retval -2 Failed to receive message from the Zaurus.
+ * @retval -3 Failed to send acknowledgement message to the Zaurus.
+ */
+int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *msg) {
+    int r;
+
+    /* send rqst message */
+    r = _zdtm_send_rqst_message(cur_env);
+    if (r != 0) {
+        _zdtm_log_error(cur_env, "_zdtm_send_rqst_message", r);
+        return -1;
+    }
+
+    /* recv general message */
+    r = _zdtm_recv_message(cur_env, msg);
+    if (r != 0) {
+        _zdtm_log_error(cur_env, "_zdtm_recv_message", r);
+        return -2;
+    }
+
+    /* send ack message */
+    r = _zdtm_send_ack_message(cur_env);
+    if (r != 0) {
+        _zdtm_log_error(cur_env, "_zdtm_send_ack_message", r);
+        return -3;
+    }
+
+    return 0;
+}
+
+/**
+ * Disconnect from Zaurus.
+ *
+ * The zdtm_disconnect function disconnects the current library
+ * environment from the Zaurus terminating the capability of
+ * synchronizing over the current library environment.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully disconnected from the Zaurus.
+ * @retval -1 Failed to send RQT message to the Zaurus.
+ * @retval -2 Failed to receive AEX message from the Zaurus.
+ * @retval -3 Failed to receive request message from the Zaurus.
+ * @retval -4 Failed to send RAY message to the Zaurus.
+ * @retval -5 Failed to close TCP/IP connection from Zaurus.
+ * @retval -6 Failed to close TCP/IP connection to Zaurus.
+ */
+int zdtm_disconnect(zdtm_lib_env *cur_env) {
+    int r;
+    zdtm_msg msg, rmsg;
+
+    /* send RQT message */
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RQT_MSG_TYPE, MSG_TYPE_SIZE);
+    memset(msg.body.cont.rqt.null_bytes, 0,
+        sizeof(msg.body.cont.rqt.null_bytes));
+
+    r = zdtm_send_message(cur_env, &msg);
+    if (r != 0) { return -1; }
+
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = zdtm_recv_message(cur_env, &rmsg);
+    _zdtm_clean_message(&rmsg);
+    if (r != 0) { return -2; }
+
+    /* recv rqst message */
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_recv_message(cur_env, &rmsg);
+    if (r != 2) { _zdtm_clean_message(&rmsg); return -3; }
+
+    /* send RAY message */
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RAY_MSG_TYPE, MSG_TYPE_SIZE);
+    r = _zdtm_send_message(cur_env, &msg);
+    if (r != 0) { return -4; }
+
+    /* close connection from the Zaurus */
+    r = _zdtm_close_zaurus_conn(cur_env);
+    if (r != 0) { return -5; }
+
+    /* close connection to the Zaurus */
+    r = _zdtm_close_conn_to_zaurus(cur_env);
+    if (r != 0) { return -6; }
+
     return 0;
 }

@@ -178,34 +178,42 @@ typedef struct zdtm_message {
     uint16_t cont_size;             // msg body size - msg type size
 } zdtm_msg;
 
-uint16_t zdtm_checksum(zdtm_msg *p_msg);
+uint16_t _zdtm_checksum(zdtm_msg *p_msg);
 
-int zdtm_listen_for_zaurus(zdtm_lib_env *cur_env);
-int zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env);
-int zdtm_close_zaurus_conn(zdtm_lib_env *cur_env);
-int zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip);
-int zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env);
+int _zdtm_listen_for_zaurus(zdtm_lib_env *cur_env);
+int _zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env);
+int _zdtm_close_zaurus_conn(zdtm_lib_env *cur_env);
+int _zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip);
+int _zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env);
 
-int zdtm_open_log(zdtm_lib_env *cur_env);
-int zdtm_write_log(zdtm_lib_env *cur_env, const char *buff,
+int _zdtm_open_log(zdtm_lib_env *cur_env);
+int _zdtm_write_log(zdtm_lib_env *cur_env, const char *buff,
     unsigned int size);
-int zdtm_close_log(zdtm_lib_env *cur_env);
-int zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
+int _zdtm_log_error(zdtm_lib_env *cur_env, const char *func_name, int err);
+int _zdtm_close_log(zdtm_lib_env *cur_env);
+int _zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 
-int zdtm_is_ack_message(const unsigned char *buff);
-int zdtm_send_comm_message_to(int sockfd, char *data);
-int zdtm_send_ack_message(zdtm_lib_env *cur_env);
-int zdtm_send_rqst_message(zdtm_lib_env *cur_env);
-int zdtm_send_abrt_message(zdtm_lib_env *cur_env);
-int zdtm_is_rqst_message(const unsigned char *buff);
-int zdtm_is_abrt_message(const unsigned char *buff);
+int _zdtm_is_ack_message(const unsigned char *buff);
+int _zdtm_send_comm_message_to(int sockfd, char *data);
+int _zdtm_send_ack_message(zdtm_lib_env *cur_env);
+int _zdtm_send_rqst_message(zdtm_lib_env *cur_env);
+int _zdtm_send_abrt_message(zdtm_lib_env *cur_env);
+int _zdtm_is_rqst_message(const unsigned char *buff);
+int _zdtm_is_abrt_message(const unsigned char *buff);
 
-int zdtm_clean_message(zdtm_msg *p_msg);
-int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
-int zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
-int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
-int zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd);
+int _zdtm_clean_message(zdtm_msg *p_msg);
+int _zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
+int _zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
+int _zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
+int _zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd);
+int _zdtm_parse_raw_msg(zdtm_msg *p_msg);
 
-int zdtm_parse_raw_msg(zdtm_msg *p_msg);
+/* The general API functions are below this line */
+int zdtm_initialize(zdtm_lib_env *cur_env);
+int zdtm_finalize(zdtm_lib_env *cur_env);
+int zdtm_connect(zdtm_lib_env *cur_env, const char *ip_addr);
+int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *msg);
+int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *msg);
+int zdtm_disconnect(zdtm_lib_env *cur_env);
 
 #endif
