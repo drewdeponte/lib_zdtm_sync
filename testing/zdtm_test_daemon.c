@@ -6,102 +6,54 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     int i;
     int slow_sync_required;
     zdtm_msg msg, rmsg;
-    char buff[256];
 
     slow_sync_required = 0;
 
-    /* make simple RAY message, send it and recv AAY */
-
-    /* This initial RAY message send does not wait for a rqst message as
-     * all the rest of the send messages do hence, it does not use the
-     * zdtm_send_message() function. */
-    memset(&msg, 0, sizeof(zdtm_msg));
-    memcpy(msg.body.type, RAY_MSG_TYPE, MSG_TYPE_SIZE);
-    r = _zdtm_send_message(cur_env, &msg);
+    /* Initiate the Synchronization */
+    r = zdtm_initiate_sync(cur_env);
     if (r != 0) {
-        printf("Error(%d): Failed to send RAY message to Zaurus.\n", r);
+        printf("Error(%d): Failed to initiate the synchronization.\n", r);
         return 1;
     }
-    printf("- Sent RAY message to Zaurus.\n");
+    printf("- Initiated Synchronization\n");
 
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = _zdtm_recv_message(cur_env, &rmsg);
-    if (r != 1) {
-        printf("Error(%d): Failed to receive ack from Zaurus.\n", r);
-        return 1;
-    }
-    printf("- Received ack message from Zaurus.\n");
-    _zdtm_clean_message(&rmsg);
-
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
+    /* Obtain Device Info from Zaurus */
+    r = zdtm_obtain_device_info(cur_env);
     if (r != 0) {
-        printf("Error(%d): Failed to received AAY message from Zaurus.\n", r);
+        printf("Error(%d): Failed to obtain device info from Zaurus.\n", r);
         return 1;
     }
-    printf("- Received AAY message from the Zaurus.\n");
-    _zdtm_clean_message(&rmsg);
-   
-    /* make a simple RIG message, send it and recv AIG */
-    memset(&msg, 0, sizeof(zdtm_msg));
-    memcpy(msg.body.type, RIG_MSG_TYPE, MSG_TYPE_SIZE);
-    r = zdtm_send_message(cur_env, &msg);
-    if (r != 0) {
-        printf("Error(%d): Failed to send RIG message to Zaurus.\n", r);
-        return 1;
-    }
-    printf("- Sent RIG message to Zaurus.\n");
+    printf("- Obtained Device Info\n");
+    printf("\tModel String: %s\n", cur_env->model);
+    printf("\tLanguage: %c%c\n", cur_env->language[0], cur_env->language[1]);
+    printf("\tCurrent Auth State: 0x%.2x\n", cur_env->cur_auth_state);
 
-    memset(&msg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
-    if (r != 0) {
-        _zdtm_clean_message(&rmsg);
-        printf("Error(%d): Failed to receive AIG message from Zaurus.\n", r);
-        return 1;
-    }
-    printf("- Received AIG message from Zaurus.\n");
-    
-    memcpy(buff, rmsg.body.cont.aig.model_str,
-        rmsg.body.cont.aig.model_str_len);
-    buff[rmsg.body.cont.aig.model_str_len] = '\0';
-    printf("Model String: %s\n", buff);
-    printf("Language: %c%c\n",
-        rmsg.body.cont.aig.language[0],
-        rmsg.body.cont.aig.language[1]);
-    printf("AuthState: 0x%.2x\n", rmsg.body.cont.aig.auth_state);
-
-    if (rmsg.body.cont.aig.auth_state == 0x0b ||
-        rmsg.body.cont.aig.auth_state == 0x07) {
+    if (cur_env->cur_auth_state == 0x0b || cur_env->cur_auth_state == 0x07) {
         printf("The authentication state requires a passcode to sync.\n");
         printf("The test_daemon currently does not support passcode\n");
         printf("authentication. Please disable the passcode on your\n");
         printf("Zaurus and try again.\n");
-        _zdtm_clean_message(&rmsg);
         return 0;
     }
-    _zdtm_clean_message(&rmsg);
  
-    /* make a simple RIG message, send it and recv AIG */
-    memset(&msg, 0, sizeof(zdtm_msg));
-    memcpy(msg.body.type, RIG_MSG_TYPE, MSG_TYPE_SIZE);
+    /* Obtain Device Info from Zaurus */
+    r = zdtm_obtain_device_info(cur_env);
+    if (r != 0) {
+        printf("Error(%d): Failed to obtain device info from Zaurus.\n", r);
+        return 1;
+    }
+    printf("- Obtained Device Info\n");
+    printf("\tModel String: %s\n", cur_env->model);
+    printf("\tLanguage: %c%c\n", cur_env->language[0], cur_env->language[1]);
+    printf("\tCurrent Auth State: 0x%.2x\n", cur_env->cur_auth_state);
 
-    r = zdtm_send_message(cur_env, &msg);
-    if(r != 0){ return 1; }
-
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
-    if(r != 0){ _zdtm_clean_message(&rmsg); return 1; }
-    
-    memcpy(buff, rmsg.body.cont.aig.model_str,
-        rmsg.body.cont.aig.model_str_len);
-    buff[rmsg.body.cont.aig.model_str_len] = '\0';
-    printf("Model String: %s\n", buff);
-    printf("Language: %c%c\n",
-        rmsg.body.cont.aig.language[0],
-        rmsg.body.cont.aig.language[1]);
-    printf("AuthState: 0x%.2x\n", rmsg.body.cont.aig.auth_state);
-
-    _zdtm_clean_message(&rmsg);
+    if (cur_env->cur_auth_state == 0x0b || cur_env->cur_auth_state == 0x07) {
+        printf("The authentication state requires a passcode to sync.\n");
+        printf("The test_daemon currently does not support passcode\n");
+        printf("authentication. Please disable the passcode on your\n");
+        printf("Zaurus and try again.\n");
+        return 0;
+    }
  
     /* make a simple RMG message, send it and recv AMG */
     memset(&msg, 0, sizeof(zdtm_msg));

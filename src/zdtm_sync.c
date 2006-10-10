@@ -1447,6 +1447,126 @@ int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *msg) {
 }
 
 /**
+ * Initiate Synchronization
+ *
+ * The zdtm_initiate_sync function initiates the synchronization process
+ * by handling the initial handshake of the synchronization protocol.
+ * This function should be the first function called after calling the
+ * zdtm_connect function.
+ * @param cur_env Pointer to currenty zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully initiated the synchronization process.
+ * @retval -1 Received message other than an ack when expecting an ack.
+ * @retval -2 Failed to receive ack message.
+ * @retval -3 Failed to receive AAY message.
+ * @retval -4 Received message other than an AAY when expeccting an AAY.
+ */
+int zdtm_initiate_sync(zdtm_lib_env *cur_env) {
+    int r;
+    zdtm_msg msg, rmsg;
+
+    /* Send RAY message to the Zaurus */
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RAY_MSG_TYPE, MSG_TYPE_SIZE);
+    r = _zdtm_send_message(cur_env, &msg);
+    if (r != 0) {
+        _zdtm_log_error(cur_env, "zdtm_initiate_sync: _zdtm_send_message",
+            r);
+        return -1;
+    }
+
+    /* receive an ack */
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_recv_message(cur_env, &rmsg);
+    if (r != 1) {
+        _zdtm_log_error(cur_env, "zdtm_initiate_sync: _zdtm_recv_message",
+            r);
+        if (r == 0) {
+            _zdtm_clean_message(&rmsg);
+            return -1;  /* received message other than an ack */
+        } else {
+            _zdtm_clean_message(&rmsg);
+            return -2;
+        }
+    }
+    _zdtm_clean_message(&rmsg);
+
+    /* Receive a AAY message */
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = zdtm_recv_message(cur_env, &rmsg);
+    if (r != 0) {
+        _zdtm_log_error(cur_env, "zdtm_initiate_sync: zdtm_recv_message",
+            r);
+        _zdtm_clean_message(&rmsg);
+        return -3;
+    }
+
+    /* Check if the received message is an AAY message */
+    if (!IS_AAY((&rmsg))) {
+        _zdtm_clean_message(&rmsg);
+        return -4;
+    }
+
+    _zdtm_clean_message(&rmsg);
+
+    return 0;
+}
+
+/**
+ * Obtain Device Information
+ *
+ * The zdtm_obtain_device_info function obtains the device info (Model,
+ * Language, Authentication State, etc). This function updates the key
+ * device information stored in the current zdtm library environment.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained and updated device information.
+ * @retval -1 Failed to send RIG message.
+ * @retval -2 Failed to send AIG message.
+ * @retval -3 Received message other than AIG after sending RIG message.
+ */
+int zdtm_obtain_device_info(zdtm_lib_env *cur_env) {
+    int r;
+    zdtm_msg msg, rmsg;
+
+    /* Send RIG message to the Zaurus */
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RIG_MSG_TYPE, MSG_TYPE_SIZE);
+    r = zdtm_send_message(cur_env, &msg);
+    if (r != 0) {
+        _zdtm_log_error(cur_env, "zdtm_obtain_device_info: zdtm_send_message",
+            r);
+        return -1;
+    }
+
+    /* Receive message back from the Zaurus */
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = zdtm_recv_message(cur_env, &rmsg);
+    if (r != 0) {
+        _zdtm_log_error(cur_env, "zdtm_obtain_device_info: zdtm_recv_message",
+            r);
+        return -2;
+    }
+
+    /* Check to make sure receive back an AIG message */
+    if (!IS_AIG((&rmsg))) {
+        _zdtm_clean_message(&rmsg);
+        return -3;
+    }
+
+    /* copy to the content out of the AIG message */
+    memcpy(cur_env->model, rmsg.body.cont.aig.model_str,
+        rmsg.body.cont.aig.model_str_len);
+    cur_env->model[rmsg.body.cont.aig.model_str_len] = '\0';
+    memcpy(cur_env->language, rmsg.body.cont.aig.language, 2);
+    cur_env->cur_auth_state = rmsg.body.cont.aig.auth_state;
+
+    _zdtm_clean_message(&rmsg);
+
+    return 0;
+}
+
+/**
  * Disconnect from Zaurus.
  *
  * The zdtm_disconnect function disconnects the current library

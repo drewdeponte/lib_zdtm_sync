@@ -122,6 +122,10 @@ typedef struct zdtm_environment {
     int connfd;     // socket - connection from zaurus to desktop
     int reqfd;      // socket - connection to zaurus from the desktop
     FILE *logfp;    // file pointer - used as the log file.
+    // General Device Information
+    char model[256];    // c-string to hold the devices model
+    char language[2];   // language abreviation of the device
+    unsigned char cur_auth_state;   // current authentication state
 } zdtm_lib_env;
 
 /**
@@ -214,6 +218,8 @@ int zdtm_finalize(zdtm_lib_env *cur_env);
 int zdtm_connect(zdtm_lib_env *cur_env, const char *ip_addr);
 int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *msg);
 int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *msg);
+int zdtm_initiate_sync(zdtm_lib_env *cur_env);
+int zdtm_obtain_device_info(zdtm_lib_env *cur_env);
 int zdtm_disconnect(zdtm_lib_env *cur_env);
 
 #endif

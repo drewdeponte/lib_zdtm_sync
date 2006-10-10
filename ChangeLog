@@ -1,3 +1,15 @@
+2006-10-09 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Implemented the zdtm_obtain_device_info() function as part of the
+general API and documented it.
+
+* Implemented and documented the zdtm_initialize_sync() function as part
+of the general API and documented it.
+
+* Updated the zdtm_test_daemon such that zdtm_initialize_sync() and
+zdtm_obtain_device_info() where used to replace the code that is now
+obfuscated by those general API functions.
+
 2006-10-06 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Changed the names of the zdtm_open_log, zdtm_write_log,
