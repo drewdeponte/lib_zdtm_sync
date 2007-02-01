@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2006 Andrew De Ponte
+ * Copyright 2005-2007 Andrew De Ponte
  * 
  * This file is part of lib_zdtm_sync.
  * 
@@ -94,12 +94,14 @@
 #define COM_MSG_SIZE 7
 
 
-// This is the static message header for the Zaurus
+/* This is a static message header to be used for messages that
+ * originate from the Zaurus side of the synchronization. */
 const unsigned char ZMSG_HDR[MSG_HDR_SIZE] =
 {0x00, 0x00, 0x00, 0x00, 0x00, 0x96, 0x01, 0x01, 0x00, 0xff, 0xff, 0xff, 0xff};
 
-// This is the static message header for the Desktop
-// The two 0xff bytes are to be replaced by the message content size later
+/* This is a static message header to be used for messages that
+ * originate from the Desktop side of the synchronization. The two 0xff
+ * bytes are to be replaced by the message content size later. */
 const unsigned char DMSG_HDR[MSG_HDR_SIZE] =
 {0x00, 0x00, 0x00, 0x00, 0x00, 0x96, 0x01, 0x01, 0x0c, 0xff, 0xff, 0x00, 0x00};
 
@@ -182,14 +184,14 @@ typedef struct zdtm_message {
     uint16_t cont_size;             // msg body size - msg type size
 } zdtm_msg;
 
-uint16_t _zdtm_checksum(zdtm_msg *p_msg);
-
+/* The private connection handling functions */
 int _zdtm_listen_for_zaurus(zdtm_lib_env *cur_env);
 int _zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env);
 int _zdtm_close_zaurus_conn(zdtm_lib_env *cur_env);
 int _zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip);
 int _zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env);
 
+/* The private log handling functions */
 int _zdtm_open_log(zdtm_lib_env *cur_env);
 int _zdtm_write_log(zdtm_lib_env *cur_env, const char *buff,
     unsigned int size);
@@ -197,6 +199,7 @@ int _zdtm_log_error(zdtm_lib_env *cur_env, const char *func_name, int err);
 int _zdtm_close_log(zdtm_lib_env *cur_env);
 int _zdtm_dump_msg_log(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 
+/* The private common message handling functions */
 int _zdtm_is_ack_message(const unsigned char *buff);
 int _zdtm_send_comm_message_to(int sockfd, char *data);
 int _zdtm_send_ack_message(zdtm_lib_env *cur_env);
@@ -205,6 +208,8 @@ int _zdtm_send_abrt_message(zdtm_lib_env *cur_env);
 int _zdtm_is_rqst_message(const unsigned char *buff);
 int _zdtm_is_abrt_message(const unsigned char *buff);
 
+/* The private general message handling functions */
+uint16_t _zdtm_checksum(zdtm_msg *p_msg);
 int _zdtm_clean_message(zdtm_msg *p_msg);
 int _zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 int _zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
@@ -212,7 +217,7 @@ int _zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
 int _zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd);
 int _zdtm_parse_raw_msg(zdtm_msg *p_msg);
 
-/* The general API functions are below this line */
+/* The general public API functions are below this line */
 int zdtm_initialize(zdtm_lib_env *cur_env);
 int zdtm_finalize(zdtm_lib_env *cur_env);
 int zdtm_connect(zdtm_lib_env *cur_env, const char *ip_addr);

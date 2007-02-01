@@ -1,3 +1,8 @@
+2007-01-31 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* I created all the files for the new code base structure and added them
+to the Makefile.am.
+
 2006-10-09 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Implemented the zdtm_obtain_device_info() function as part of the
