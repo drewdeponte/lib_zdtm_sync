@@ -21,9 +21,10 @@ AC_PREREQ(2.59)
 AC_INIT(Zaurus DTM Sync Library, 0.1.0, cyphactor@socal.rr.com, lib_zdtm_sync)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/zdtm_sync.c])
-AC_CONFIG_HEADER([src/config.h])
+AC_CONFIG_HEADER([src/zdtm_config.h])
 
 # checks for programs
+AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_PROG_CC
 

@@ -31,4 +31,210 @@
 #ifndef ZDTM_NET_H
 #define ZDTM_NET_H
 
+#include "zdtm_types.h"
+#include "zdtm_log.h"
+
+/**
+ * Listen for an incoming synchronization connection from a Zaurus.
+ *
+ * The _zdtm_listen_for_zaurus function creates a socket and configures
+ * it to listen for a synchronization connection from a Zaurus. Note:
+ * This function does not handle accepting a connection from the Zaurus
+ * it just creates a socket and puts it in the proper state so that a
+ * Zaurus may make a connection to it, which will be backlogged and can
+ * be handled at a later point in time by a function which handles
+ * accepting a connection from a Zaurus.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully listening for a Zaurus connection.
+ * @retval -1 Failed to create a socket.
+ * @retval -2 Failed to set the socket REUSEADDR option.
+ * @retval -3 Failed to bind the address to the socket.
+ * @retval -4 Failed to put socket into a listening state.
+ */
+int _zdtm_listen_for_zaurus(zdtm_lib_env *cur_env);
+
+/**
+ * Handle a Zaurus connection.
+ *
+ * The _zdtm_handle_zaurus_connection function handles a backlogged
+ * Zaurus connection if one exists. If no backlogged Zaurus connection
+ * exists then _zdtm_handle_zaurus_connection will block waiting for a
+ * Zaurus connection, at which point it will release after accepting the
+ * connection from the Zaurus. Note: In order to handle a Zaurus
+ * connection one must first call _zdtm_listen_for_zaurus to be in the
+ * correct state.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully accepted a Zaurus connection.
+ * @retval -1 Failed to accept a Zaurus connection.
+ * @retval -2 Failed to convert client address to quad dot format.
+ */
+int _zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env);
+
+/**
+ * Close the Zaurus connection.
+ *
+ * The _zdtm_close_zaurus_conn function closes the Zaurus connection.
+ * Note: In order to close a zaurus connection, a working zaurus
+ * connection must already exist. Hence, the _zdtm_listen_for_zaurus and
+ * the _zdtm_handle_zaurus_conn must have previously been called and
+ * succeeded.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully closed the Zaurus connection.
+ * @retval -1 Failed to close the Zaurus connection.
+ */
+int _zdtm_close_zaurus_conn(zdtm_lib_env *cur_env);
+
+/**
+ * Connect to Zaurus
+ *
+ * The _zdtm_conn_to_zaurus function initiates a connection to the
+ * Zaurus. This connection is used to initiate a synchornization
+ * originating from the desktop.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param zaurus_ip A string containing dotted quad zaurus ip address.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully connected to the Zaurus.
+ * @retval -1 Failed to create a socket to use to connect to the zaurus.
+ * @retval -2 Failed to convert the zaurus ip address.
+ * @retval -3 Failed to connect to the zaurus.
+ */
+int _zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip);
+
+/**
+ * Close the connection to the Zaurus.
+ *
+ * The _zdtm_close_conn_to_zaurus function closes the connetion which was
+ * made to the Zaurus to request a synchronization. Note: In order to
+ * close a connection using this function a working connection to the
+ * zaurus must already exist. Hence, the _zdtm_conn_to_zaurus must have
+ * previously been caled and succeeded.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully closed the connection to the Zaurus.
+ * @retval -1 Failed to close the connection to the Zaurus.
+ */
+int _zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env);
+
+/**
+ * Send a raw common message.
+ *
+ * Send a specified raw common message to a specified socket.
+ * @param sockfd Socket descriptor to write the raw common message to.
+ * @param data Pointe to buffer containing raw common message.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully sent common messaeg.
+ * @retval -1 Failed to write raw common message to socket descriptor.
+ * @retval -2 Failed to write message, reached EOF.
+ * @retval -3 Failed, fewer than COM_MSG_SIZE bytes written.
+ */
+int _zdtm_send_comm_message_to(int sockfd, char *data);
+
+/**
+ * Send acknowledgement message.
+ *
+ * Send an acknowledgement message to the Zaurus. For, details about
+ * specific return values please refer to the return values of the
+ * _zdtm_send_comm_message function.
+ * @param cur_env Pointer to current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ */
+int _zdtm_send_ack_message(zdtm_lib_env *cur_env);
+
+/**
+ * Send request message.
+ *
+ * Send a request message to the Zaurus. For, details about specific
+ * return values please refer to the return values of the
+ * _zdtm_send_comm_message function.
+ * @param cur_env Pointer to current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ */
+int _zdtm_send_rqst_message(zdtm_lib_env *cur_env);
+
+/**
+ * Send abort message.
+ *
+ * Send an abort message to the Zaurus. For, details about specific
+ * return values please refer to the return values of the
+ * _zdtm_send_comm_message function.
+ * @param cur_env Pointer to current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ */
+int _zdtm_send_abrt_message(zdtm_lib_env *cur_env);
+
+/**
+ * Receive Message.
+ *
+ * The _zdtm_recv_message function handles receiving a message from the
+ * Zaurus after a connection from the Zaurus has already been handled
+ * via the _zdtm_handle_zaurus_conn function. This function supports
+ * receiving common messages as well as non-common messages. When,
+ * receiving a common message the structure pointed to by p_msg is not
+ * altered. Note: When this function alters the structure pointed to by
+ * p_msg it dynamically allocates memory for the message content. The
+ * freeing of this allocated memory for the message content must be
+ * handled by you, using the _zdtm_clean_message function. If the
+ * function returns in error freeing the message is still required via
+ * the _zdtm_clean_message function.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param p_msg Pointer to a zdtm_message structure to store message in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully received a message from the Zaurus.
+ * @retval 1 Successfully received an ack message from the Zaurus.
+ * @retval 2 Successfully received a request message from the Zaurus.
+ * @retval 3 Successfully received an abort message from the Zaurus.
+ * @retval -1 Failed to allocate mem for temp message buffer.
+ * @retval -2 Reached end-of-file on a socket, a.k.a. socket was closed.
+ * @retval -3 Failed to successfully read message from connection.
+ * @retval -4 Failed to identify 7 byte message.
+ * @retval -5 Failed to identify less than 20 byte message.
+ * @retval -6 Failed, p_msg is NULL (no where to store message).
+ * @retval RET_NNULL_RAW Failed, message raw content is not initialized to NULL.
+ * @retval RET_SIZE_MISMATCH  Failed, bytes in != expected size 
+ *                            (based on body size).
+ *
+ * @retval RET_MEM_CONTENT Failed to allocate mem for message content.
+ * @retval RET_PARSE_RAW_FAIL Failed to parse the raw message.
+ */
+int _zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
+
+/**
+ * Send Message to Zaurus.
+ *
+ * The _zdtm_send_message function is a general send message function
+ * which sends the provided message to the Zaurus via the connection
+ * which is established from the Zaurus. For specifics of return values
+ * please refer to the return values of the _zdtm_send_message_to
+ * function.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param p_msg Pointer to the zdtm_message struct containing message.
+ * @return An integer representing success (zero) or failure (non-zero).
+ */
+int _zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
+
+/**
+ * Send Message.
+ *
+ * The _zdtm_send_message_to function handles sending a message to the
+ * Zaurus after a connection from the Zaurus has already been handled
+ * via the _zdtm_handle_zaurus_conn function. This function takes a message
+ * which has its type, and cont filled out and compiles it into the
+ * proper format and sends it over the socket specified by the given
+ * socket descriptor.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param p_msg Pointer to a zdtm_message structure to store message in.
+ * @param sockfd The socket to send the message over.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully sent the message via the connection socket.
+ * @retval -1 Failed to prepare message.
+ * @retval RET_MALLOC_FAIL Failed to allocate memory for raw message.
+ * @retval -2 Failed to write raw message to the connection socket.
+ * @retval -3 Wrote zero (0) bytes to the connection socket.
+ * @retval -4 Wrote less bytes than should have written to the socket.
+ */
+int _zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd);
+
 #endif

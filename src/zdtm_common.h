@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "config.h"
+#include "zdtm_config.h"
 
 // Return values
 #define RET_NNULL_RAW     -7

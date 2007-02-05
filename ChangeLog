@@ -1,3 +1,12 @@
+2007-02-05 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* I moved the appropriate portions of zdtm_sync.h and zdtm_sync.c into
+the newley created files to create better structure and organization to
+the code base.
+
+* I also added the zdtm_types.c file which was necessary to define some
+extern variables.
+
 2007-01-31 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * I created all the files for the new code base structure and added them

@@ -33,4 +33,15 @@
 #ifndef ZDTM_EXPORT_H
 #define ZDTM_EXPORT_H
 
+#ifdef DLL_EXPORT
+    #define ZDTM_EXPORT __declspec(dllexport)
+#else
+    #ifdef LIBZDTM_DLL_IMPORT
+        #define ZDTM_EXPORT __declspec(dllimport)
+    #endif
+#endif
+#ifndef ZDTM_EXPORT
+    #define ZDTM_EXPORT 
+#endif
+
 #endif

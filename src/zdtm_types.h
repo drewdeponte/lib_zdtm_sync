@@ -32,4 +32,55 @@
 #ifndef ZDTM_TYPES_H
 #define ZDTM_TYPES_H
 
+#include "zdtm_export.h"
+#include "zdtm_gentypes.h"
+
+// This is the port that the Zaurus listens on waiting for a connection
+// to initiate a synchronization from the Desktop.
+#define ZLISTPORT 4244
+// This is the port that the Desktop synchronization server listens on
+// waiting for a connection from the Zaurus to perform a synchronization.
+#define DLISTPORT 4245
+
+// This is the size, in bytes,  of a Zaurus DTM Message header.
+#define MSG_HDR_SIZE 13
+// This is the size, in bytes,  of a Zaurus DTM Message type.
+#define MSG_TYPE_SIZE 3
+// This is the size, in bytes,  of a common messages.
+#define COM_MSG_SIZE 7
+
+/* This is a static message header to be used for messages that
+ * originate from the Zaurus side of the synchronization. */
+extern const unsigned char ZMSG_HDR[MSG_HDR_SIZE];
+
+/* This is a static message header to be used for messages that
+ * originate from the Desktop side of the synchronization. The two 0xff
+ * bytes are to be replaced by the message content size later. */
+extern const unsigned char DMSG_HDR[MSG_HDR_SIZE];
+
+#define MSG_HDR_CONT_OFFSET 0x09
+
+/**
+ * Zaurus DTM library environment.
+ *
+ * The zdtm_lib_env is a type defined to represent the environment for a
+ * given synchronization. It contains all the data that is required to
+ * be shared among all the different zdtm library functions. Hence,
+ * every synchronization must first have it's own non-shared (not shared
+ * between synchronizations) environment before being able to use
+ * the provided functions. Note: It does not have to be initialized in
+ * any certain way, it can be filled with garbage as long as the
+ * provided functions are called in the proper order.
+ */
+typedef struct ZDTM_EXPORT zdtm_environment {
+    int listenfd;   // socket - listen for zaurus conn request
+    int connfd;     // socket - connection from zaurus to desktop
+    int reqfd;      // socket - connection to zaurus from the desktop
+    FILE *logfp;    // file pointer - used as the log file.
+    // General Device Information
+    char model[256];    // c-string to hold the devices model
+    char language[2];   // language abreviation of the device
+    unsigned char cur_auth_state;   // current authentication state
+} zdtm_lib_env;
+
 #endif
