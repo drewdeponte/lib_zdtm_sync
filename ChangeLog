@@ -7,6 +7,67 @@ the code base.
 * I also added the zdtm_types.c file which was necessary to define some
 extern variables.
 
+* Changed the zdtm_env_t socket members from the unix standard integer
+type to the newly defined cross-platform type SOCKET.
+
+* Modified the _zdtm_listen_for_zaurus() function in the zdtm_net.c file
+to be cross-platform between Unix Varients and Windows.
+
+* Modified the _zdtm_handle_zaurus_conn() function in the zdtm_net.c
+file to be cross-platform between Unix Varients and Windows.
+
+* Modified the _zdtm_close_zaurus_conn() function in the zdtm_net.c file
+to be cross-platform between Unix Varients and Windows.
+
+* Modified the _zdtm_conn_to_zaurus() function in the zdtm_net.c file to
+be cross-platform between Unix Varients and Windows.
+
+* Modified the _zdtm_close_conn_to_zaurus() function in the zdtm_net.c
+file to be cross-platform between Unix Varients and Windows.
+
+* Modified the _zdtm_send_comm_message_to() function in the zdtm_net.c
+file and zdtm_net.h file to be cross-platform between Unix Varients and
+Windows. I also rewrote the algorithm to always write COM_MSG_SIZE
+bytes. It had a problem before where if due to buffer issues less than
+COM_MSG_SIZE bytes were written then it would return in error.
+
+* The _zdtm_send_ack_message(), _zdtm_send_rqst_message(), and
+_zdtm_send_abrt_message() functions needed NO modification since they
+are strictly interface functions to the _zdtm_send_comm_message_to()
+function.
+
+* Rewrote the _zdtm_recv_message() function in the zdtm_net.c file to be
+cross-platform between Unix Varients and Windows. I also rewrote it from
+scratch to make sure we are recving all the necessary/available bytes
+given the that recv() does not gaurante one gets the number of bytes
+they request.
+
+* The _zdtm_send_message() function needed NO modification since it is
+strictly an interface function to the _zdtm_send_message_to() function.
+
+* Modified the _zdtm_send_message_to() function in the zdtm_net.c file
+to be cross-platform between Unix Varients and Windows. I also rewrote a
+portion of it so that it will write all the messages bytes, without
+having to worry about buffering issues.
+
+* Wrote the content for the README file to describe appropriately how to
+build on Unix, Mac OS X, and Windows.
+
+* Modified the configure.ac to handle the host specific build flags.
+
+* Modified the src/Makefile.am to use the new host specific LDFLAGS
+provided in the configure.ac.
+
+* Did both Linux and Windows tests on Debian (Etch = Testing), all
+builds with 0 errors, 0 warnings. However, the functionality has not
+been tested.
+
+* Removed testing directory from the root Makefile.am file so that the
+testing directory wouldn't be built. The testing directory was custom
+testing designed for unix version only, and hence uses functions that
+are not exported via the windows DLL yet. Once, they are ported over
+it will be re-inserted into the root Makefile.am.
+
 2007-01-31 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * I created all the files for the new code base structure and added them

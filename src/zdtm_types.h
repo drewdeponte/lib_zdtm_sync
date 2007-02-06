@@ -73,9 +73,9 @@ extern const unsigned char DMSG_HDR[MSG_HDR_SIZE];
  * provided functions are called in the proper order.
  */
 typedef struct ZDTM_EXPORT zdtm_environment {
-    int listenfd;   // socket - listen for zaurus conn request
-    int connfd;     // socket - connection from zaurus to desktop
-    int reqfd;      // socket - connection to zaurus from the desktop
+    SOCKET listenfd;   // socket - listen for zaurus conn request
+    SOCKET connfd;     // socket - connection from zaurus to desktop
+    SOCKET reqfd;      // socket - connection to zaurus from the desktop
     FILE *logfp;    // file pointer - used as the log file.
     // General Device Information
     char model[256];    // c-string to hold the devices model

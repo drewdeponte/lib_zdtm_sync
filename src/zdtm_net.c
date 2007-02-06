@@ -31,21 +31,28 @@
 #include "zdtm_net.h"
 
 int _zdtm_listen_for_zaurus(zdtm_lib_env *cur_env) {
-    int retval;
     struct sockaddr_in servaddr;
-    int reuse_set_flag = 1;
+    int retval;
+    int reuse_set_flag;
+
+    reuse_set_flag = 1;
 
     cur_env->listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (cur_env->listenfd == -1) {
+    if (cur_env->listenfd == INVALID_SOCKET) {
         perror("_zdtm_listen_for_zaurus - socket");
         return -1;
     }
 
     // Here I set a socket option so that if the applications ends
     // prematurely the socket is not blocked by the TIME_WAIT state.
+#ifdef WIN32
     retval = setsockopt(cur_env->listenfd, SOL_SOCKET, SO_REUSEADDR,
-        (void *)&reuse_set_flag, sizeof(reuse_set_flag));
-    if (retval == -1) {
+        (const char *)&reuse_set_flag, (socklen_t)sizeof(reuse_set_flag));
+#else
+    retval = setsockopt(cur_env->listenfd, SOL_SOCKET, SO_REUSEADDR,
+        (const void *)&reuse_set_flag, (socklen_t)sizeof(reuse_set_flag));
+#endif
+    if (retval == SOCKET_ERROR) {
         perror("_zdtm_listen_for_zaurus - setsockopt");
         return -2;
     }
@@ -56,14 +63,14 @@ int _zdtm_listen_for_zaurus(zdtm_lib_env *cur_env) {
     servaddr.sin_port = htons(DLISTPORT);
 
     retval = bind(cur_env->listenfd, (struct sockaddr *)&servaddr,
-        sizeof(servaddr));
-    if (retval == -1) {
+        (socklen_t)sizeof(servaddr));
+    if (retval == SOCKET_ERROR) {
         perror("_zdtm_listen_for_zaurus - bind");
         return -3;
     }
 
     retval = listen(cur_env->listenfd, 1);
-    if (retval == -1) {
+    if (retval == SOCKET_ERROR) {
         perror("_zdtm_listen_for_zaurus - listen");
         return -4;
     }
@@ -74,19 +81,22 @@ int _zdtm_listen_for_zaurus(zdtm_lib_env *cur_env) {
 
 int _zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env) {
     struct sockaddr_in clntaddr;
-    char source_addr[16];
     socklen_t len;
+    /*
+    char source_addr[16];
     char *retval;
+    */
 
     memset(&clntaddr, 0, sizeof(clntaddr));
     len = sizeof(clntaddr);
     cur_env->connfd = accept(cur_env->listenfd,
         (struct sockaddr *)&clntaddr, &len);
-    if (cur_env->connfd == -1) {
+    if (cur_env->connfd == INVALID_SOCKET) {
         perror("_zdtm_handle_zaurus_connection - accept");
         return -1;
     }
 
+    /*
     retval = (char *)inet_ntop(AF_INET, &clntaddr.sin_addr,
         source_addr, 16);
     if (retval == NULL) {
@@ -94,7 +104,6 @@ int _zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env) {
         return -2;
     }
 
-    /*
     printf("_zdtm_handle_zaurus_connection: Received connection from \
         %s, port %d.\n", source_addr, ntohs(clntaddr.sin_port));
     */
@@ -106,8 +115,12 @@ int _zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env) {
 int _zdtm_close_zaurus_conn(zdtm_lib_env *cur_env) {
     int retval;
 
+#ifdef WIN32
+    retval = closesocket(cur_env->connfd);
+#else
     retval = close(cur_env->connfd);
-    if (retval) {
+#endif
+    if (retval == SOCKET_ERROR) {
         perror("_zdtm_close_zaurus_conn - close");
         return -1;
     }
@@ -120,22 +133,29 @@ int _zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip) {
     int retval;
 
     cur_env->reqfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (cur_env->reqfd == -1) {
+    if (cur_env->reqfd == INVALID_SOCKET) {
         perror("_zdtm_conn_to_zaurus - socket");
         return -1;
     }
 
-    memset(&servaddr, 0, sizeof(servaddr));
+    memset(&servaddr, 0, sizeof(struct sockaddr_in));
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(ZLISTPORT);
+#ifdef WIN32
+    servaddr.sin_addr.s_addr = inet_addr(zaurus_ip);
+    if (servaddr.sin_addr.s_addr == INADDR_NONE) {
+        return -2;
+    }
+#else
     if (inet_pton(AF_INET, zaurus_ip, &servaddr.sin_addr) <= 0) {
         perror("_zdtm_conn_to_zaurus - inet_pton");
         return -2;
     }
+#endif
 
     retval = connect(cur_env->reqfd, (struct sockaddr *)&servaddr,
-        sizeof(servaddr));
-    if(retval == -1) {
+        sizeof(struct sockaddr));
+    if(retval == SOCKET_ERROR) {
         perror("_zdtm_conn_to_zaurus - connect");
         return -3;
     }
@@ -146,8 +166,12 @@ int _zdtm_conn_to_zaurus(zdtm_lib_env *cur_env, const char *zaurus_ip) {
 int _zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env) {
     int retval;
 
+#ifdef WIN32
+    retval = closesocket(cur_env->reqfd);
+#else
     retval = close(cur_env->reqfd);
-    if (retval) {
+#endif
+    if (retval == SOCKET_ERROR) {
         perror("_zdtm_close_conn_to_zaurus - close");
         return -1;
     }
@@ -155,17 +179,23 @@ int _zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env) {
     return 0;
 }
 
-int _zdtm_send_comm_message_to(int sockfd, char *data) {
-    int bytes_written;
-    
-    bytes_written = write(sockfd, data, COM_MSG_SIZE);
-    if (bytes_written == -1) {
-        perror("zdtm_send_message - write");
-        return -1;
-    } else if (bytes_written == 0) {
-        return -2;
-    } else if (bytes_written < COM_MSG_SIZE) {
-        return -3;
+int _zdtm_send_comm_message_to(SOCKET sockfd, char *data) {
+    int bytes_to_send;
+    zdtm_ssize_t bytes_sent;
+    zdtm_ssize_t tot_bytes_sent;
+
+    bytes_to_send = COM_MSG_SIZE;
+
+    tot_bytes_sent = 0;
+    while (tot_bytes_sent < bytes_to_send) {
+        bytes_sent = send(sockfd, (const zdtm_buf_t)data,
+            (zdtm_size_t)(bytes_to_send - tot_bytes_sent), 0);
+        if (bytes_sent < 0) {
+            perror("_zdtm_send_comm_message_to - send");
+            return -1;
+        }
+
+        tot_bytes_sent += bytes_sent;
     }
 
     return 0;
@@ -199,57 +229,127 @@ int _zdtm_send_abrt_message(zdtm_lib_env *cur_env) {
 }
 
 int _zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
-    ssize_t bytes_read;
-    uint32_t max_buff_size;
+    unsigned char header[MSG_HDR_SIZE + sizeof(uint16_t)];
     unsigned char *buff;
     unsigned char *cur_buff_pos;
+    unsigned char *tmp_p;
+    uint16_t body_size;
+    uint16_t check_sum;
+    zdtm_ssize_t bytes_to_read;
+    zdtm_ssize_t tot_bytes_read;
+    zdtm_ssize_t bytes_read;
 
-    cur_buff_pos = NULL;
+    bytes_to_read = COM_MSG_SIZE;
+    tot_bytes_read = 0;
+    /* Attempt to read in a 7 byte common message. If the seven bytes
+     * are a common message then return with a value representing which
+     * common message was recveived. If the seven bytes read in are not
+     * a common message then assume that it is a general message and
+     * read the following 6 bytes of header in as well as the following
+     * 2 bytes representing the body size. */
+    while(tot_bytes_read < bytes_to_read) {
+        bytes_read = recv(cur_env->connfd,
+            (zdtm_buf_t)(header + tot_bytes_read),
+            (zdtm_size_t)(bytes_to_read - tot_bytes_read), 0);
+        if (bytes_read == 0) {
+            if (tot_bytes_read == 0) {
+                /* Socket was closed cleanly by opposite end. */
+                return -1;
+            } else {
+                /* Socket was closed on opposite end in mid of msg. */
+                return -2;
+            }
+        } else if (bytes_read == SOCKET_ERROR) {
+            /* error */
+            return -3;
+        }
+        tot_bytes_read += bytes_read;
+    }
 
-    max_buff_size = MSG_HDR_SIZE + sizeof(uint16_t) + UINT16_MAX + \
-        sizeof(uint16_t);
-   
-    buff = (unsigned char *)malloc((size_t)max_buff_size);
+    /* If I made it this far then I know that 7 bytes have successfully
+     * been read in and I want to compare the 7 bytes to known common
+     * messages to see if it is one of the common messages or not. */
+    if (_zdtm_is_ack_message(header)) {
+        return 1;
+    } else if (_zdtm_is_rqst_message(header)) {
+        return 2;
+    } else if (_zdtm_is_abrt_message(header)) {
+        return 3;
+    }
+
+    bytes_to_read = MSG_HDR_SIZE + sizeof(uint16_t);
+    /* If I made it this far then I know that it is none of the know
+     * common messages. Hence, I assume that it is a general message and
+     * read in the reast of the message header and the body size. */
+    while(tot_bytes_read < bytes_to_read) {
+        bytes_read = recv(cur_env->connfd,
+            (zdtm_buf_t)(header + tot_bytes_read),
+            (zdtm_size_t)(bytes_to_read - tot_bytes_read), 0);
+        if (bytes_read == 0) {
+            if (tot_bytes_read == 0) {
+                /* Socket was closed cleanly by opposite end. */
+                return -1;
+            } else {
+                /* Socket was closed on opposite end in mid of msg. */
+                return -2;
+            }
+        } else if (bytes_read == SOCKET_ERROR) {
+            /* error */
+            return -3;
+        }
+        tot_bytes_read += bytes_read;
+    }
+
+    /* If I made it this far then I know that I have successfully read
+     * in the number of bytes used in a general message header as well
+     * as the following body size. */
+    tmp_p = header + MSG_HDR_SIZE;
+    body_size = *((uint16_t *)tmp_p);
+#ifdef WORDS_BIGENDIAN
+    body_size = zdtm_liltobigs(body_size);
+#endif
+
+    /* Now, I want to allocate memory necessary to temporarily store the
+     * body of the general message. Read in the general messages body
+     * and checksum. */
+    bytes_to_read = body_size + sizeof(uint16_t);
+    tot_bytes_read = 0;
+    buff = (unsigned char *)malloc((zdtm_size_t)bytes_to_read);
     if (buff == NULL) {
         perror("_zdtm_recv_message - malloc");
-        return -1;
+        return -4;
     }
-   
-    bytes_read = read(cur_env->connfd, (void *)buff, max_buff_size);
-    if (bytes_read == 0) {
-        // Reached the end of file
-        free((void *)buff);
-        return -2;
-    } else if (bytes_read == -1) {
-        // read - returned an error and set errno
-        free((void *)buff);
-        perror("_zdtm_recv_message - read");
-        return -3;
+    
+    while(tot_bytes_read < bytes_to_read) {
+        bytes_read = recv(cur_env->connfd,
+            (zdtm_buf_t)(buff + tot_bytes_read),
+            (zdtm_size_t)(bytes_to_read - tot_bytes_read), 0);
+        if (bytes_read == 0) {
+            if (tot_bytes_read == 0) {
+                /* Socket was closed cleanly by opposite end. */
+                free((void *)buff);
+                return -1;
+            } else {
+                /* Socket was closed on opposite end in mid of msg. */
+                free((void *)buff);
+                return -2;
+            }
+        } else if (bytes_read == SOCKET_ERROR) {
+            /* error */
+            free((void *)buff);
+            return -3;
+        }
+        tot_bytes_read += bytes_read;
     }
 
-    // Check for common messages and unknown messages based on size
-    if (bytes_read < 20) {
-        if (bytes_read == COM_MSG_SIZE) {
-            if (_zdtm_is_ack_message(buff)) {
-                free((void *)buff);
-                return 1;
-            } else if (_zdtm_is_rqst_message(buff)) {
-                free((void *)buff);
-                return 2;
-            } else if (_zdtm_is_abrt_message(buff)) {
-                free((void *)buff);
-                return 3;
-            } else {
-                free((void *)buff);
-                // return signifying received 7 bytes of unknown msg data
-                return -4;
-            }
-        } else {
-            free((void *)buff);
-            // signifying received less than 20 bytes of unkown data
-            return -5;
-        }
-    }
+    /* If I made it this far I know that I have successfully read in the
+     * body size number of bytes as well as the following 2 bytes
+     * representing the checksum. */
+    tmp_p = buff + body_size;
+    check_sum = *((uint16_t *)tmp_p);
+#ifdef WORDS_BIGENDIAN
+    check_sum = zdtm_liltobigs(check_sum);
+#endif
 
     /*
      * Since it made it this far I know that it is an acceptable message
@@ -258,7 +358,7 @@ int _zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
      */
     if (p_msg == NULL) {
         free((void *)buff);
-        return -6;
+        return -5;
     }
 
     /*
@@ -268,7 +368,7 @@ int _zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
      */
     if (p_msg->body.p_raw_content != NULL) {
         free((void *)buff);
-        return -7;
+        return -6;
     }
 
     /*
@@ -279,29 +379,13 @@ int _zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
      * in a seperate function for each specific type of message.
      */
 
-    cur_buff_pos = buff;
-
     // Set the zdtm_message header
-    memcpy((void *)p_msg->header, (const void *)cur_buff_pos,
-        MSG_HDR_SIZE);
-    cur_buff_pos = cur_buff_pos + MSG_HDR_SIZE;
+    memcpy((void *)p_msg->header, header, MSG_HDR_SIZE);
 
     // Set the zdtm_message body size
-    p_msg->body_size = *((uint16_t *)(cur_buff_pos));
-#ifdef WORDS_BIGENDIAN
-    p_msg->body_size = zdtm_liltobigs(p_msg->body_size);
-#endif
-    cur_buff_pos = cur_buff_pos + sizeof(uint16_t);
+    p_msg->body_size = body_size;
 
-    // Check to see if the number of bytes read in coincides with the
-    // body size that was just obtained from the raw message data.
-    if (bytes_read != (MSG_HDR_SIZE + sizeof(uint16_t) + \
-        p_msg->body_size + sizeof(uint16_t))) {
-        free((void *)buff);
-        // return signifying that body size miss-match
-        return RET_SIZE_MISMATCH;
-    }
-
+    cur_buff_pos = buff;
     // Set the zdtm_message_body type
     memcpy((void *)p_msg->body.type, (const void *)cur_buff_pos,
         MSG_TYPE_SIZE);
@@ -323,10 +407,7 @@ int _zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     }
 
     // Set the zdtm_message check_sum
-    p_msg->check_sum = *((uint16_t *)(cur_buff_pos));
-#ifdef WORDS_BIGENDIAN
-    p_msg->check_sum = zdtm_liltobigs(p_msg->check_sum);
-#endif
+    p_msg->check_sum = check_sum;
 
     // Free the temp message buffer since I am done with it
     free((void *)buff);
@@ -358,7 +439,10 @@ int _zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd) {
     void *p_wire_msg;
     void *p_cur_pos;
     unsigned int msg_size;
-    int bytes_written, retval;
+    int retval;
+    zdtm_ssize_t bytes_written;
+    zdtm_ssize_t tot_bytes_written;
+    zdtm_ssize_t bytes_to_write;
 
     p_wire_msg = NULL;
 
@@ -401,22 +485,21 @@ int _zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd) {
 
     // At this point the wire message should be properly built.
 
-    bytes_written = write(sockfd, p_wire_msg, msg_size);
-    if (bytes_written == -1) {
-        perror("_zdtm_send_message_to - write");
-        _zdtm_clean_message(p_msg);
-        free(p_wire_msg);
-        return -2;
-    } else if (bytes_written == 0) {
-        _zdtm_clean_message(p_msg);
-        free(p_wire_msg);
-        return -3;
-    } else if (bytes_written < msg_size) {
-        _zdtm_clean_message(p_msg);
-        free(p_wire_msg);
-        return -4;
+    bytes_to_write = msg_size;
+    tot_bytes_written = 0;
+    while (tot_bytes_written < bytes_to_write) {
+        bytes_written = send(sockfd, (const zdtm_buf_t)p_wire_msg,
+            (zdtm_size_t)(bytes_to_write - tot_bytes_written), 0);
+        if (bytes_written < 0) {
+            perror("_zdtm_send_message_to - send");
+            _zdtm_clean_message(p_msg);
+            free(p_wire_msg);
+            return -2;
+        }
+
+        tot_bytes_written += bytes_written;
     }
-    
+
     _zdtm_clean_message(p_msg);
     free(p_wire_msg);
 

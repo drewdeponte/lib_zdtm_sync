@@ -30,6 +30,13 @@ AC_PROG_CC
 
 # checks for libraries
 
+case $host in
+    *mingw32*) ZDTM_SYSTEM='-Wl,--output-def,.libs/libzdtmsync.def,-s -lws2_32' ;;
+    *) ZDTM_SYSTEM='' ;;
+esac
+
+AC_SUBST([ZDTM_SYSTEM])
+
 # checks for header files
 AC_HEADER_STDC
 AC_CHECK_HEADERS([arpa/inet.h netinet/in.h string.h sys/socket.h stdint.h])

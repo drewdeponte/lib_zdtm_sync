@@ -143,22 +143,22 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     printf("num new sync ids = %u\n", rmsg.body.cont.asy.num_new_sync_ids);
     for (i = 0; i < rmsg.body.cont.asy.num_new_sync_ids; i++) {
         printf(" -- new sync id [%d] = (hex) 0x%.8x, (dec) %u\n", i,
-            rmsg.body.cont.asy.new_sync_ids[i],
-            rmsg.body.cont.asy.new_sync_ids[i]);
+            (int)rmsg.body.cont.asy.new_sync_ids[i],
+            (int)rmsg.body.cont.asy.new_sync_ids[i]);
     }
     printf("mod list id = 0x%.2x\n", rmsg.body.cont.asy.mod_list_id);
     printf("num mod sync ids = %u\n", rmsg.body.cont.asy.num_mod_sync_ids);
     for (i = 0; i < rmsg.body.cont.asy.num_mod_sync_ids; i++) {
         printf(" -- mod sync id [%d] = (hex) 0x%.8x, (dec) %u\n", i,
-            rmsg.body.cont.asy.mod_sync_ids[i],
-            rmsg.body.cont.asy.mod_sync_ids[i]);
+            (int)rmsg.body.cont.asy.mod_sync_ids[i],
+            (int)rmsg.body.cont.asy.mod_sync_ids[i]);
     }
     printf("del list id = 0x%.2x\n", rmsg.body.cont.asy.del_list_id);
     printf("num del sync ids = %u\n", rmsg.body.cont.asy.num_del_sync_ids);
     for (i = 0; i < rmsg.body.cont.asy.num_del_sync_ids; i++) {
         printf(" -- del sync id [%d] = (hex) 0x%.8x, (dec) %u\n", i,
-            rmsg.body.cont.asy.del_sync_ids[i],
-            rmsg.body.cont.asy.del_sync_ids[i]);
+            (int)rmsg.body.cont.asy.del_sync_ids[i],
+            (int)rmsg.body.cont.asy.del_sync_ids[i]);
     }
 
     _zdtm_clean_message(&rmsg);

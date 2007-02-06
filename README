@@ -1,0 +1,86 @@
+FileName: README
+Author(s): Andrew De Ponte <cyphactor@socal.rr.com>
+
+Table of Contents
+
+    1. What Is It? .....................................................
+    2. Building Win32 Pre-Reqs .........................................
+    3. Building MacOS X Pre-Reqs .......................................
+    4. Building ........................................................
+    5. Systems Tested On ...............................................
+    6. Directory Contents ..............................................
+
+1.  What Is It?
+
+    lib_zdtm_sync is a library which implements the synchronization
+    protocol used by Zaurus DTM based ROMs.
+
+2. Building Win32 Pre-Reqs
+
+    There currently exist no Win32 building pre-reqs.
+    
+3. Building MacOS X Pre-Reqs
+
+    Building lib_zdtm_sync on MacOS X requires only one  minor change.
+    Because MacOS X is a BSD Unix derivative, building lib_zdtm_sync
+    from the command line with the GNU autotools is straightforward.
+    However, there is one issue to be aware of before proceeding. When
+    we run bootstrap.sh, at some point it invokes (either directly or
+    indirectly - see bootstrap.sh) automake. Automake in turn invokes
+    libtoolize. libtoolize adds some files to the distribution which are
+    required for creating a custom libtool script on the hosts machine.
+    Ofcourse this is very important because libtool takes care of
+    generating the correct types of libraries on MacOS X. However, for
+    some reason, on MacOS X the libtoolize program is not called
+    'libtoolize', but instead called 'glibtoolize'. Because autoreconf
+    (and automake - see bootstrap.sh) honor the environment variable
+    LIBTOOLIZE, we can solve this problem in the following way. On the
+    command line:
+
+    $ export LIBTOOLIZE=/usr/bin/glibtoolize
+
+    Thats it! Now follow the build procedures outlined in step 4.
+
+4.  Building
+
+    This project's build sequence is managed by the autotools. Hence,
+    the following command sequence can be used to build the project in
+    any of the unix varients (include Mac OS-X).
+    
+    $ ./bootstrap.sh && ./configure && make
+
+    One, may also build a static version of the library by using the
+    --enable-static flag and --disable-shared flag when running the
+    ./configure script. The following is an example of this.
+
+    $ ./bootstrap.sh && ./configure --disable-shared --enable-static
+
+    However, to build a version for windows system from a Debian Linux
+    Etch (testing) box, one needs to first install the mingw32 package
+    via the following:
+
+    # apt-get install mingw32
+
+    Once, the mingw32 package is installed one can trivially build
+    Windows binaries of the project by using the following command
+    sequence:
+
+    $ ./bootstrap.sh && ./configure --host=i586-mingw32msvc && make
+
+    One could also build this on a Windows computer which has cygwin
+    installed on it and the necessary autotools, however this is too
+    large of a subject to cover in this README. Or, one could even build
+    it using Microsoft Visual Studio however this would require
+    configure and building a project appropriately to correctly build
+    it.
+
+5.  Systems Tested On
+
+    The following systems are all the systems which lib_pmf has been
+    successfully run on.
+
+    - Linux Debian Etch (Testing)
+
+6. Directory Contents
+
+    src - Constains all lib_pmf source files.

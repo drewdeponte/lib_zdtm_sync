@@ -124,13 +124,13 @@ int _zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env);
  * Send a specified raw common message to a specified socket.
  * @param sockfd Socket descriptor to write the raw common message to.
  * @param data Pointe to buffer containing raw common message.
- * @return An integer representing success (zero) or failure (non-zero).
+ * @return An SOCKET representing success (zero) or failure (non-zero).
  * @retval 0 Successfully sent common messaeg.
  * @retval -1 Failed to write raw common message to socket descriptor.
  * @retval -2 Failed to write message, reached EOF.
  * @retval -3 Failed, fewer than COM_MSG_SIZE bytes written.
  */
-int _zdtm_send_comm_message_to(int sockfd, char *data);
+int _zdtm_send_comm_message_to(SOCKET sockfd, char *data);
 
 /**
  * Send acknowledgement message.
@@ -186,16 +186,12 @@ int _zdtm_send_abrt_message(zdtm_lib_env *cur_env);
  * @retval 1 Successfully received an ack message from the Zaurus.
  * @retval 2 Successfully received a request message from the Zaurus.
  * @retval 3 Successfully received an abort message from the Zaurus.
- * @retval -1 Failed to allocate mem for temp message buffer.
- * @retval -2 Reached end-of-file on a socket, a.k.a. socket was closed.
+ * @retval -1 Socket cleanly closed by opposing side.
+ * @retval -2 Socket closed by opposing side in middle of recving a message.
  * @retval -3 Failed to successfully read message from connection.
- * @retval -4 Failed to identify 7 byte message.
- * @retval -5 Failed to identify less than 20 byte message.
- * @retval -6 Failed, p_msg is NULL (no where to store message).
- * @retval RET_NNULL_RAW Failed, message raw content is not initialized to NULL.
- * @retval RET_SIZE_MISMATCH  Failed, bytes in != expected size 
- *                            (based on body size).
- *
+ * @retval -4 Failed to allocate memory for temporary buffer.
+ * @retval -5 Failed, p_msg is NULL (no where to store message).
+ * @retval -6 Failed, message raw content is not initialized to NULL.
  * @retval RET_MEM_CONTENT Failed to allocate mem for message content.
  * @retval RET_PARSE_RAW_FAIL Failed to parse the raw message.
  */
@@ -232,8 +228,6 @@ int _zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
  * @retval -1 Failed to prepare message.
  * @retval RET_MALLOC_FAIL Failed to allocate memory for raw message.
  * @retval -2 Failed to write raw message to the connection socket.
- * @retval -3 Wrote zero (0) bytes to the connection socket.
- * @retval -4 Wrote less bytes than should have written to the socket.
  */
 int _zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd);
 

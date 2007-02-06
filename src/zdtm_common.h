@@ -1,10 +1,7 @@
 #ifndef ZDTM_COMMON_H
 #define ZDTM_COMMON_H
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-
+#include "zdtm_gentypes.h"
 #include "zdtm_config.h"
 
 // Return values
