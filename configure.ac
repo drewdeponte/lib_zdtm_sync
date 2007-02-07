@@ -35,7 +35,13 @@ case $host in
     *) ZDTM_SYSTEM='' ;;
 esac
 
+case $host in
+    *mingw32*) ZDTM_BDIRS='src' ;;
+    *) ZDTM_BDIRS='src testing' ;;
+esac
+
 AC_SUBST([ZDTM_SYSTEM])
+AC_SUBST([ZDTM_BDIRS])
 
 # checks for header files
 AC_HEADER_STDC

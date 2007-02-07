@@ -1,1 +1,1 @@
-SUBDIRS = src
+SUBDIRS = @ZDTM_BDIRS@

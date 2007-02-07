@@ -1,5 +1,12 @@
 2007-02-05 Andrew De Ponte <cyphactor@socal.rr.com>
 
+* Modified the build configuration so that the testing sub-directory is
+build conditionally depending on if it is a Unix Variant or Windows.
+Hence, the testing sub-directory will be built on Unix Variants and will
+NOT be built for Windows.
+
+2007-02-05 Andrew De Ponte <cyphactor@socal.rr.com>
+
 * I moved the appropriate portions of zdtm_sync.h and zdtm_sync.c into
 the newley created files to create better structure and organization to
 the code base.
