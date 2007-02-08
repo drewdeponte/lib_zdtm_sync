@@ -231,4 +231,36 @@ int _zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg);
  */
 int _zdtm_send_message_to(zdtm_lib_env *cur_env, zdtm_msg *p_msg, int sockfd);
 
+/**
+ * Send a Message
+ *
+ * The zdtm_wrapped_send_message function sends a message to the Zaurus
+ * after first receiving a request message, and terminates with success
+ * only after receiving an acknowledegment message from the Zaurus.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param msg Pointer to zdtm_msg structure to send to the Zaurus.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully sent message to the Zaurus.
+ * @retval -1 Failed to receive request message from the Zaurus.
+ * @retval -2 Failed to send the message to the Zaurus.
+ * @retval -3 Failed to receive acknowledgement message from Zaurus.
+ */
+int _zdtm_wrapped_send_message(zdtm_lib_env *cur_env, zdtm_msg *msg);
+
+/**
+ * Receive a Message
+ *
+ * The zdtm_wrapped_recv_message function receives a message from the
+ * Zaurus after first sending a request message, and terminates with
+ * success only after sending an acknowledegment message to the Zaurus.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param msg Pointer to zdtm_msg struct to store received message in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully received message to the Zaurus.
+ * @retval -1 Failed to send request message to the Zaurus.
+ * @retval -2 Failed to receive message from the Zaurus.
+ * @retval -3 Failed to send acknowledgement message to the Zaurus.
+ */
+int _zdtm_wrapped_recv_message(zdtm_lib_env *cur_env, zdtm_msg *msg);
+
 #endif

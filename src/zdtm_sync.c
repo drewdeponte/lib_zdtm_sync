@@ -44,15 +44,6 @@ int zdtm_initialize(zdtm_lib_env *cur_env) {
     return 0;
 }
 
-int zdtm_finalize(zdtm_lib_env *cur_env) {
-    int r;
-
-    r = _zdtm_close_log(cur_env);
-    if (r != 0) { return -1; }
-
-    return 0;
-}
-
 int zdtm_connect(zdtm_lib_env *cur_env, const char *ip_addr) {
     int r;
     zdtm_msg msg;
@@ -80,51 +71,7 @@ int zdtm_connect(zdtm_lib_env *cur_env, const char *ip_addr) {
     return 0;
 }
 
-int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *msg) {
-    int r;
-    zdtm_msg rmsg;
-
-    /* recv rqst message */
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = _zdtm_recv_message(cur_env, &rmsg);
-    if (r != 2) { _zdtm_clean_message(&rmsg); return -1; }
-
-    /* send general message */
-    r = _zdtm_send_message(cur_env, msg);
-    if (r != 0) { return -2; }
-
-    /* recv ack message */
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = _zdtm_recv_message(cur_env, &rmsg);
-    if (r != 1) { _zdtm_clean_message(&rmsg); return -3; }
-
-    return 0;
-}
-
-int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *msg) {
-    int r;
-
-    /* send rqst message */
-    r = _zdtm_send_rqst_message(cur_env);
-    if (r != 0) {
-        _zdtm_log_error(cur_env, "_zdtm_send_rqst_message", r);
-        return -1;
-    }
-
-    /* recv general message */
-    r = _zdtm_recv_message(cur_env, msg);
-    if (r != 0) {
-        _zdtm_log_error(cur_env, "_zdtm_recv_message", r);
-        return -2;
-    }
-
-    /* send ack message */
-    r = _zdtm_send_ack_message(cur_env);
-    if (r != 0) {
-        _zdtm_log_error(cur_env, "_zdtm_send_ack_message", r);
-        return -3;
-    }
-
+int zdtm_handle_connection(zdtm_lib_env *cur_env) {
     return 0;
 }
 
@@ -160,9 +107,9 @@ int zdtm_initiate_sync(zdtm_lib_env *cur_env) {
 
     /* Receive a AAY message */
     memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
     if (r != 0) {
-        _zdtm_log_error(cur_env, "zdtm_initiate_sync: zdtm_recv_message",
+        _zdtm_log_error(cur_env, "zdtm_initiate_sync: _zdtm_wrapped_recv_message",
             r);
         _zdtm_clean_message(&rmsg);
         return -3;
@@ -186,18 +133,18 @@ int zdtm_obtain_device_info(zdtm_lib_env *cur_env) {
     /* Send RIG message to the Zaurus */
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RIG_MSG_TYPE, MSG_TYPE_SIZE);
-    r = zdtm_send_message(cur_env, &msg);
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
     if (r != 0) {
-        _zdtm_log_error(cur_env, "zdtm_obtain_device_info: zdtm_send_message",
+        _zdtm_log_error(cur_env, "zdtm_obtain_device_info: _zdtm_wrapped_send_message",
             r);
         return -1;
     }
 
     /* Receive message back from the Zaurus */
     memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
     if (r != 0) {
-        _zdtm_log_error(cur_env, "zdtm_obtain_device_info: zdtm_recv_message",
+        _zdtm_log_error(cur_env, "zdtm_obtain_device_info: _zdtm_wrapped_recv_message",
             r);
         return -2;
     }
@@ -220,9 +167,12 @@ int zdtm_obtain_device_info(zdtm_lib_env *cur_env) {
     return 0;
 }
 
-int zdtm_disconnect(zdtm_lib_env *cur_env) {
+int zdtm_terminate_sync(zdtm_lib_env *cur_env) {
     int r;
     zdtm_msg msg, rmsg;
+
+    /* HERE the State Finished Synchronizing section should go as well
+     * as a following obtaining of the device information. */
 
     /* send RQT message */
     memset(&msg, 0, sizeof(zdtm_msg));
@@ -230,11 +180,11 @@ int zdtm_disconnect(zdtm_lib_env *cur_env) {
     memset(msg.body.cont.rqt.null_bytes, 0,
         sizeof(msg.body.cont.rqt.null_bytes));
 
-    r = zdtm_send_message(cur_env, &msg);
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
     if (r != 0) { return -1; }
 
     memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
     _zdtm_clean_message(&rmsg);
     if (r != 0) { return -2; }
 
@@ -253,9 +203,24 @@ int zdtm_disconnect(zdtm_lib_env *cur_env) {
     r = _zdtm_close_zaurus_conn(cur_env);
     if (r != 0) { return -5; }
 
+    return 0;
+}
+
+int zdtm_disconnect(zdtm_lib_env *cur_env) {
+    int r;
+
     /* close connection to the Zaurus */
     r = _zdtm_close_conn_to_zaurus(cur_env);
-    if (r != 0) { return -6; }
+    if (r != 0) { return -1; }
+
+    return 0;
+}
+
+int zdtm_finalize(zdtm_lib_env *cur_env) {
+    int r;
+
+    r = _zdtm_close_log(cur_env);
+    if (r != 0) { return -1; }
 
     return 0;
 }

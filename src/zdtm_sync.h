@@ -46,7 +46,10 @@ extern "C" {
  * Initialize the library.
  *
  * The zdtm_initialize function prepares the current library environment
- * to be used by all other lib_zdtm_sync API functions.
+ * to be used by all other lib_zdtm_sync API functions as well as
+ * putting the library in a state of listening for a connection from the
+ * Zaurus. Note: Any connections made to the library are queued until
+ * the zdtm_connect() function is called.
  * @param cur_env Pointer to the current zdtm library environment.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully initialized library environment.
@@ -56,22 +59,12 @@ extern "C" {
 ZDTM_EXPORT int zdtm_initialize(zdtm_lib_env *cur_env);
 
 /**
- * Finalize the library.
- *
- * The zdtm_finalize function finalizes the current library environment
- * so that all the loose ends are taken care of.
- * @param cur_env Pointer to the current zdtm library environment.
- * @return An integer representing success (zero) or failure (non-zero).
- * @retval 0 Successfully finalized library environment.
- * @retval -1 Failed to close log file.
- */
-ZDTM_EXPORT int zdtm_finalize(zdtm_lib_env *cur_env);
-
-/**
  * Connect to Zaurus.
  *
  * The zdtm_connect function connects the current library environment to
- * the Zaurus so that a synchronization may be performed.
+ * the Zaurus so that a synchronization may be performed. Note: This
+ * should be called directly after zdtm_initalize and only if you want
+ * to perform a Desktop initiated synchronization.
  * @param cur_env Pointer to the current zdtm library environment.
  * @param ip_addr IP address of Zaurus to connect to in dotted-quad.
  * @return An integer representing success (zero) or failure (non-zero).
@@ -83,36 +76,19 @@ ZDTM_EXPORT int zdtm_finalize(zdtm_lib_env *cur_env);
 ZDTM_EXPORT int zdtm_connect(zdtm_lib_env *cur_env, const char *ip_addr);
 
 /**
- * Send a Message
+ * Handle Connection.
  *
- * The zdtm_send_message function sends a message to the Zaurus after
- * first receiving a request message, and terminates with success only
- * after receiving an acknowledegment message from the Zaurus.
+ * The zdtm_handle_connection function handles accepting a
+ * synchronization connection that was initation from the Zaurus. If no
+ * connections have been made yet then it blocks waiting for a
+ * connection to be made from the Zaurus. Note: This should be called
+ * directly after zdtm_initialize and only if you are not perform a
+ * Desktop initiated synchronization.
  * @param cur_env Pointer to the current zdtm library environment.
- * @param msg Pointer to zdtm_msg structure to send to the Zaurus.
  * @return An integer representing success (zero) or failure (non-zero).
- * @retval 0 Successfully sent message to the Zaurus.
- * @retval -1 Failed to receive request message from the Zaurus.
- * @retval -2 Failed to send the message to the Zaurus.
- * @retval -3 Failed to receive acknowledgement message from Zaurus.
+ * @retval 0 Successfully connected to the Zaurus.
  */
-ZDTM_EXPORT int zdtm_send_message(zdtm_lib_env *cur_env, zdtm_msg *msg);
-
-/**
- * Receive a Message
- *
- * The zdtm_recv_message function receives a message from the Zaurus
- * after first sending a request message, and terminates with success
- * only after sending an acknowledegment message to the Zaurus.
- * @param cur_env Pointer to the current zdtm library environment.
- * @param msg Pointer to zdtm_msg struct to store received message in.
- * @return An integer representing success (zero) or failure (non-zero).
- * @retval 0 Successfully received message to the Zaurus.
- * @retval -1 Failed to send request message to the Zaurus.
- * @retval -2 Failed to receive message from the Zaurus.
- * @retval -3 Failed to send acknowledgement message to the Zaurus.
- */
-ZDTM_EXPORT int zdtm_recv_message(zdtm_lib_env *cur_env, zdtm_msg *msg);
+ZDTM_EXPORT int zdtm_handle_connection(zdtm_lib_env *cur_env);
 
 /**
  * Initiate Synchronization
@@ -147,6 +123,24 @@ ZDTM_EXPORT int zdtm_initiate_sync(zdtm_lib_env *cur_env);
 ZDTM_EXPORT int zdtm_obtain_device_info(zdtm_lib_env *cur_env);
 
 /**
+ * Terminate Synchronization
+ *
+ * The zdtm_terminate_sync function terminates the synchronization
+ * process by handling the termination handshake of the synchronization
+ * protocol.  This function should be called before calling the
+ * zdtm_disconnect function.
+ * @param cur_env Pointer to currenty zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully disconnected from the Zaurus.
+ * @retval -1 Failed to send RQT message to the Zaurus.
+ * @retval -2 Failed to receive AEX message from the Zaurus.
+ * @retval -3 Failed to receive request message from the Zaurus.
+ * @retval -4 Failed to send RAY message to the Zaurus.
+ * @retval -5 Failed to close TCP/IP connection from Zaurus.
+ */
+ZDTM_EXPORT int zdtm_terminate_sync(zdtm_lib_env *cur_env);
+
+/**
  * Disconnect from Zaurus.
  *
  * The zdtm_disconnect function disconnects the current library
@@ -155,14 +149,21 @@ ZDTM_EXPORT int zdtm_obtain_device_info(zdtm_lib_env *cur_env);
  * @param cur_env Pointer to the current zdtm library environment.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully disconnected from the Zaurus.
- * @retval -1 Failed to send RQT message to the Zaurus.
- * @retval -2 Failed to receive AEX message from the Zaurus.
- * @retval -3 Failed to receive request message from the Zaurus.
- * @retval -4 Failed to send RAY message to the Zaurus.
- * @retval -5 Failed to close TCP/IP connection from Zaurus.
- * @retval -6 Failed to close TCP/IP connection to Zaurus.
+ * @retval -1 Failed to close TCP/IP connection to Zaurus.
  */
 ZDTM_EXPORT int zdtm_disconnect(zdtm_lib_env *cur_env);
+
+/**
+ * Finalize the library.
+ *
+ * The zdtm_finalize function finalizes the current library environment
+ * so that all the loose ends are taken care of.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully finalized library environment.
+ * @retval -1 Failed to close log file.
+ */
+ZDTM_EXPORT int zdtm_finalize(zdtm_lib_env *cur_env);
 
 #ifdef __cplusplus
 }

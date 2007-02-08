@@ -61,11 +61,11 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     msg.body.cont.rmg.uk = 0x01;
     msg.body.cont.rmg.sync_type = SYNC_TYPE_TODO;
 
-    r = zdtm_send_message(cur_env, &msg);
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
     if(r != 0){ return 1; }
 
     memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
     if(r != 0){ _zdtm_clean_message(&rmsg); return 1; }
 
     /* Here I check if ToDo Slow Sync is Required */
@@ -93,11 +93,11 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RTG_MSG_TYPE, MSG_TYPE_SIZE);
     
-    r = zdtm_send_message(cur_env, &msg);
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
     if(r != 0){ return 1; }
 
     memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
     if(r != 0){ _zdtm_clean_message(&rmsg); return 1; }
     _zdtm_clean_message(&rmsg);
 
@@ -106,11 +106,11 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     memcpy(msg.body.type, RTS_MSG_TYPE, MSG_TYPE_SIZE);
     memcpy(msg.body.cont.rts.date, "20060920011020", RTS_DATE_LEN);
     
-    r = zdtm_send_message(cur_env, &msg);
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
     if(r != 0){ return 1; }
 
     memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
     if(r != 0){ _zdtm_clean_message(&rmsg); return 1; }
     _zdtm_clean_message(&rmsg);
 
@@ -132,11 +132,11 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     msg.body.cont.rsy.sync_type = SYNC_TYPE_TODO;
     msg.body.cont.rsy.uk = 0x07;
     
-    r = zdtm_send_message(cur_env, &msg);
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
     if(r != 0){ return 1; }
     
     memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = zdtm_recv_message(cur_env, &rmsg);
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
     if(r != 0){ _zdtm_clean_message(&rmsg); return 1; }
 
     printf("new list id = 0x%.2x\n", rmsg.body.cont.asy.new_list_id);
