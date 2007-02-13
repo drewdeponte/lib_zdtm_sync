@@ -553,4 +553,3 @@ int _zdtm_wrapped_recv_message(zdtm_lib_env *cur_env, zdtm_msg *msg) {
 
     return 0;
 }
-

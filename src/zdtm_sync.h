@@ -87,6 +87,7 @@ ZDTM_EXPORT int zdtm_connect(zdtm_lib_env *cur_env, const char *ip_addr);
  * @param cur_env Pointer to the current zdtm library environment.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully connected to the Zaurus.
+ * @retval -1 Failed to handle the incoming Zaurus connection.
  */
 ZDTM_EXPORT int zdtm_handle_connection(zdtm_lib_env *cur_env);
 

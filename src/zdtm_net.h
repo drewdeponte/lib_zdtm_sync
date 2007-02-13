@@ -68,7 +68,6 @@ int _zdtm_listen_for_zaurus(zdtm_lib_env *cur_env);
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully accepted a Zaurus connection.
  * @retval -1 Failed to accept a Zaurus connection.
- * @retval -2 Failed to convert client address to quad dot format.
  */
 int _zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env);
 
@@ -127,8 +126,6 @@ int _zdtm_close_conn_to_zaurus(zdtm_lib_env *cur_env);
  * @return An SOCKET representing success (zero) or failure (non-zero).
  * @retval 0 Successfully sent common messaeg.
  * @retval -1 Failed to write raw common message to socket descriptor.
- * @retval -2 Failed to write message, reached EOF.
- * @retval -3 Failed, fewer than COM_MSG_SIZE bytes written.
  */
 int _zdtm_send_comm_message_to(SOCKET sockfd, char *data);
 

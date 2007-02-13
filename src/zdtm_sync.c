@@ -72,6 +72,14 @@ int zdtm_connect(zdtm_lib_env *cur_env, const char *ip_addr) {
 }
 
 int zdtm_handle_connection(zdtm_lib_env *cur_env) {
+    int r;
+
+    /* Handle any back logged connections from the synchronization
+     * client on the Zaurus, or block waiting for a connection from the
+     * synchronization client on the Zaurus. */
+    r = _zdtm_handle_zaurus_conn(cur_env);
+    if (r != 0) { return -1; }
+
     return 0;
 }
 

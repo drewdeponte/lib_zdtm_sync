@@ -1,3 +1,11 @@
+2007-02-13 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Implemented the zdtm_handle_connection() function in the zdtm_sync.c
+file and documented it in the zdtm_sync.h so that people reading the
+code can have a better understanding of the general API.
+
+* Fixed some documentation in the zdtm network abstraction layer.
+
 2007-02-07 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Moved the zdtm_send_message() and zdtm_recv_message() functions from
@@ -8,6 +16,10 @@ _zdtm_wrapped_recv_message() respectively.
 * Stubbed out the zdtm_handle_connecion() general API function and
 provided some documentation to it so the general API can easily be
 understood.
+
+* Filled in the content to the zdtm_handle_connection() function and
+fixed all the documentation in the zdtm_net.h file so that it is correct
+to all the modifications I have made in the past few days.
 
 2007-02-05 Andrew De Ponte <cyphactor@socal.rr.com>
 
