@@ -1,0 +1,314 @@
+<?xml version="1.0"?>
+<project name="lib_zdtm_sync - Detailed Plan" company="ZSREP" manager="Andrew De Ponte" phase="" project-start="20070110T000000Z" mrproject-version="2" calendar="1">
+  <properties/>
+  <phases/>
+  <calendars>
+    <day-types>
+      <day-type id="0" name="Working" description="A default working day"/>
+      <day-type id="1" name="Nonworking" description="A default non working day"/>
+      <day-type id="2" name="Use base" description="Use day from base calendar"/>
+    </day-types>
+    <calendar id="1" name="Default">
+      <default-week mon="0" tue="0" wed="0" thu="0" fri="0" sat="1" sun="1"/>
+      <overridden-day-types>
+        <overridden-day-type id="0">
+          <interval start="0800" end="1200"/>
+          <interval start="1300" end="1700"/>
+        </overridden-day-type>
+      </overridden-day-types>
+      <days>
+        <day date="20070204" type="day-type" id="1"/>
+      </days>
+    </calendar>
+    <calendar id="2" name="ZSREP Cal">
+      <default-week mon="0" tue="0" wed="0" thu="0" fri="0" sat="0" sun="0"/>
+      <overridden-day-types>
+        <overridden-day-type id="0">
+          <interval start="0800" end="1200"/>
+          <interval start="1300" end="1700"/>
+        </overridden-day-type>
+      </overridden-day-types>
+      <days>
+        <day date="20070204" type="day-type" id="0"/>
+      </days>
+    </calendar>
+  </calendars>
+  <tasks>
+    <task id="1" name="Implement Cross-Platform Network Layer" note="" work="86400" start="20070110T000000Z" end="20070112T170000Z" work-start="20070110T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+    <task id="2" name="Zaurus  Synchronization API" note="" work="1929600" start="20070112T170000Z" end="20070221T170000Z" work-start="20070115T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+      <predecessors>
+        <predecessor id="1" predecessor-id="1" type="FS"/>
+      </predecessors>
+      <task id="3" name="Initialize Library" note="" work="28800" start="20070112T170000Z" end="20070115T170000Z" work-start="20070115T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+      <task id="4" name="Initiate Sync" note="" work="86400" start="20070112T170000Z" end="20070115T170000Z" work-start="20070115T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work">
+        <task id="5" name="Connect to Zaurus" note="" work="28800" start="20070112T170000Z" end="20070115T170000Z" work-start="20070115T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="6" name="Handle Connection" note="" work="28800" start="20070112T170000Z" end="20070115T170000Z" work-start="20070115T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="7" name="Move Connect Into Initiate" note="" work="28800" start="20070112T170000Z" end="20070115T170000Z" work-start="20070115T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+      </task>
+      <task id="8" name="Obtain Device Information" note="" work="86400" start="20070115T170000Z" end="20070117T170000Z" work-start="20070116T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="4" type="FS"/>
+        </predecessors>
+        <task id="9" name="RIG Message" note="" work="28800" start="20070115T170000Z" end="20070116T170000Z" work-start="20070116T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="10" name="AIG Message" note="" work="28800" start="20070115T170000Z" end="20070116T170000Z" work-start="20070116T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="11" name="Stored Device Info Updating" note="" work="28800" start="20070116T170000Z" end="20070117T170000Z" work-start="20070117T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work">
+          <predecessors>
+            <predecessor id="1" predecessor-id="9" type="FS"/>
+            <predecessor id="1" predecessor-id="10" type="FS"/>
+          </predecessors>
+        </task>
+      </task>
+      <task id="12" name="Check If Requires Authentication" note="" work="28800" start="20070117T170000Z" end="20070118T170000Z" work-start="20070118T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="8" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="13" name="Authenticate Password" note="" work="115200" start="20070118T170000Z" end="20070122T170000Z" work-start="20070119T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="12" type="FS"/>
+        </predecessors>
+        <task id="14" name="AEX Message" note="" work="28800" start="20070118T170000Z" end="20070119T170000Z" work-start="20070119T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="15" name="RRL Message" note="" work="28800" start="20070118T170000Z" end="20070119T170000Z" work-start="20070119T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="16" name="ANG Message" note="" work="28800" start="20070118T170000Z" end="20070119T170000Z" work-start="20070119T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="17" name="Auth Passwd Using Messages" note="" work="28800" start="20070119T170000Z" end="20070122T170000Z" work-start="20070122T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <predecessors>
+            <predecessor id="1" predecessor-id="14" type="FS"/>
+            <predecessor id="1" predecessor-id="15" type="FS"/>
+            <predecessor id="1" predecessor-id="16" type="FS"/>
+          </predecessors>
+        </task>
+      </task>
+      <task id="18" name="Check If Requires Full Sync" note="" work="28800" start="20070117T170000Z" end="20070118T170000Z" work-start="20070118T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="8" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="19" name="Obtain Zaurus Sync State" note="" work="86400" start="20070122T170000Z" end="20070124T170000Z" work-start="20070123T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="13" type="FS"/>
+        </predecessors>
+        <task id="20" name="RMG Message" note="" work="28800" start="20070122T170000Z" end="20070123T170000Z" work-start="20070123T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="21" name="AMG Message" note="" work="28800" start="20070122T170000Z" end="20070123T170000Z" work-start="20070123T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="22" name="Obtain Sync State Using Messages" note="" work="28800" start="20070123T170000Z" end="20070124T170000Z" work-start="20070124T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <predecessors>
+            <predecessor id="1" predecessor-id="20" type="FS"/>
+            <predecessor id="1" predecessor-id="21" type="FS"/>
+          </predecessors>
+        </task>
+      </task>
+      <task id="23" name="Obtain Last Time Synced" note="" work="86400" start="20070124T170000Z" end="20070126T170000Z" work-start="20070125T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="19" type="FS"/>
+        </predecessors>
+        <task id="24" name="RTG Message" note="" work="28800" start="20070124T170000Z" end="20070125T170000Z" work-start="20070125T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="25" name="ATG Message" note="" work="28800" start="20070124T170000Z" end="20070125T170000Z" work-start="20070125T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="26" name="Get Last Time Sync Using Messages" note="" work="28800" start="20070125T170000Z" end="20070126T170000Z" work-start="20070126T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <predecessors>
+            <predecessor id="1" predecessor-id="25" type="FS"/>
+            <predecessor id="1" predecessor-id="24" type="FS"/>
+          </predecessors>
+        </task>
+      </task>
+      <task id="27" name="Set Current Sync Time" note="" work="57600" start="20070126T170000Z" end="20070130T170000Z" work-start="20070129T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="23" type="FS"/>
+        </predecessors>
+        <task id="28" name="RTS Message" note="" work="28800" start="20070126T170000Z" end="20070129T170000Z" work-start="20070129T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="29" name="Set Cur Sync Time Using Messages" note="" work="28800" start="20070129T170000Z" end="20070130T170000Z" work-start="20070130T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <predecessors>
+            <predecessor id="1" predecessor-id="28" type="FS"/>
+          </predecessors>
+        </task>
+      </task>
+      <task id="30" name="Reset Sync Log" note="" work="86400" start="20070215T000000Z" end="20070219T170000Z" work-start="20070215T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <task id="31" name="RMS Message" note="" work="28800" start="20070215T000000Z" end="20070215T170000Z" work-start="20070215T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <constraint type="start-no-earlier-than" time="20070215T000000Z"/>
+        </task>
+        <task id="32" name="RMS (Empty) Message" note="" work="28800" start="20070215T170000Z" end="20070216T170000Z" work-start="20070216T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <constraint type="start-no-earlier-than" time="20070215T000000Z"/>
+          <predecessors>
+            <predecessor id="1" predecessor-id="31" type="FS"/>
+          </predecessors>
+        </task>
+        <task id="33" name="Reset Sync Log Using Messages" note="" work="28800" start="20070216T170000Z" end="20070219T170000Z" work-start="20070219T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <predecessors>
+            <predecessor id="1" predecessor-id="31" type="FS"/>
+            <predecessor id="1" predecessor-id="32" type="FS"/>
+          </predecessors>
+        </task>
+      </task>
+      <task id="34" name="Reset Item States to New" note="" work="57600" start="20070219T170000Z" end="20070221T170000Z" work-start="20070220T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="30" type="FS"/>
+        </predecessors>
+        <task id="35" name="RSS Message" note="" work="28800" start="20070219T170000Z" end="20070220T170000Z" work-start="20070220T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="36" name="Reset Item States Using RSS Message" note="" work="28800" start="20070220T170000Z" end="20070221T170000Z" work-start="20070221T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <predecessors>
+            <predecessor id="1" predecessor-id="35" type="FS"/>
+          </predecessors>
+        </task>
+      </task>
+      <task id="37" name="Obtain Sync Param Format" note="" work="86400" start="20070112T170000Z" end="20070116T170000Z" work-start="20070115T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <task id="38" name="RDI Message" note="" work="28800" start="20070112T170000Z" end="20070115T170000Z" work-start="20070115T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="39" name="ADI Message" note="" work="28800" start="20070112T170000Z" end="20070115T170000Z" work-start="20070115T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="40" name="Get Sync Param Format Using Messages" note="" work="28800" start="20070115T170000Z" end="20070116T170000Z" work-start="20070116T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <predecessors>
+            <predecessor id="1" predecessor-id="39" type="FS"/>
+            <predecessor id="1" predecessor-id="38" type="FS"/>
+          </predecessors>
+        </task>
+      </task>
+      <task id="41" name="Obtain Sync ID List" note="" work="86400" start="20070130T170000Z" end="20070201T170000Z" work-start="20070131T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="27" type="FS"/>
+        </predecessors>
+        <task id="42" name="RSY Message" note="" work="28800" start="20070130T170000Z" end="20070131T170000Z" work-start="20070131T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="43" name="ASY Message" note="" work="28800" start="20070130T170000Z" end="20070131T170000Z" work-start="20070131T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="44" name="Get Sync ID List Using Messages" note="" work="28800" start="20070131T170000Z" end="20070201T170000Z" work-start="20070201T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <predecessors>
+            <predecessor id="1" predecessor-id="43" type="FS"/>
+            <predecessor id="1" predecessor-id="42" type="FS"/>
+          </predecessors>
+        </task>
+      </task>
+      <task id="45" name="Obtain Item Data" note="" work="86400" start="20070201T170000Z" end="20070205T170000Z" work-start="20070202T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="41" type="FS"/>
+        </predecessors>
+        <task id="46" name="RDR Message" note="" work="28800" start="20070201T170000Z" end="20070202T170000Z" work-start="20070202T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="47" name="ADR Message" note="" work="28800" start="20070201T170000Z" end="20070202T170000Z" work-start="20070202T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="48" name="Get Item Data Using Messages" note="" work="28800" start="20070202T170000Z" end="20070205T170000Z" work-start="20070205T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <predecessors>
+            <predecessor id="1" predecessor-id="47" type="FS"/>
+            <predecessor id="1" predecessor-id="46" type="FS"/>
+          </predecessors>
+        </task>
+      </task>
+      <task id="49" name="Add Todo Items" note="" work="86400" start="20070205T170000Z" end="20070208T170000Z" work-start="20070206T080000Z" percent-complete="0" priority="1" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="45" type="FS"/>
+          <predecessor id="1" predecessor-id="41" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="50" name="Add Calendar Items" note="" work="86400" start="20070205T170000Z" end="20070208T170000Z" work-start="20070206T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="45" type="FS"/>
+          <predecessor id="1" predecessor-id="41" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="51" name="Add Address Items" note="" work="86400" start="20070205T170000Z" end="20070208T170000Z" work-start="20070206T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="45" type="FS"/>
+          <predecessor id="1" predecessor-id="41" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="52" name="Mod Todo Items" note="" work="86400" start="20070205T170000Z" end="20070208T170000Z" work-start="20070206T080000Z" percent-complete="0" priority="1" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="45" type="FS"/>
+          <predecessor id="1" predecessor-id="41" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="53" name="Mod Calendar Items" note="" work="86400" start="20070205T170000Z" end="20070208T170000Z" work-start="20070206T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="45" type="FS"/>
+          <predecessor id="1" predecessor-id="41" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="54" name="Mod Address Items" note="" work="86400" start="20070205T170000Z" end="20070208T170000Z" work-start="20070206T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="45" type="FS"/>
+          <predecessor id="1" predecessor-id="41" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="55" name="Del Todo Items" note="" work="86400" start="20070205T170000Z" end="20070208T170000Z" work-start="20070206T080000Z" percent-complete="0" priority="1" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="45" type="FS"/>
+          <predecessor id="1" predecessor-id="41" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="56" name="Del Calendar Items" note="" work="86400" start="20070205T170000Z" end="20070208T170000Z" work-start="20070206T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="45" type="FS"/>
+          <predecessor id="1" predecessor-id="41" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="57" name="Del Address Items" note="" work="86400" start="20070205T170000Z" end="20070208T170000Z" work-start="20070206T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="45" type="FS"/>
+          <predecessor id="1" predecessor-id="41" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="58" name="Terminate Sync" note="" work="115200" start="20070205T170000Z" end="20070207T170000Z" work-start="20070206T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="45" type="FS"/>
+        </predecessors>
+        <task id="59" name="RDS Message" note="" work="28800" start="20070205T170000Z" end="20070206T170000Z" work-start="20070206T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="60" name="Terminate Sync Using Messages" note="" work="28800" start="20070206T170000Z" end="20070207T170000Z" work-start="20070207T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <predecessors>
+            <predecessor id="1" predecessor-id="59" type="FS"/>
+          </predecessors>
+        </task>
+        <task id="61" name="Disconnect from Zaurus" note="" work="28800" start="20070205T170000Z" end="20070206T170000Z" work-start="20070206T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="62" name="Move Disconnect to Terminate" note="" work="28800" start="20070205T170000Z" end="20070206T170000Z" work-start="20070206T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+      </task>
+      <task id="63" name="Finialize Library" note="" work="28800" start="20070206T170000Z" end="20070207T170000Z" work-start="20070207T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="61" type="FS"/>
+        </predecessors>
+      </task>
+    </task>
+    <task id="64" name="Code Freeze" note="" work="0" start="20070424T000000Z" end="20070424T000000Z" work-start="20070424T080000Z" percent-complete="0" priority="0" type="milestone" scheduling="fixed-work">
+      <constraint type="must-start-on" time="20070424T000000Z"/>
+    </task>
+    <task id="65" name="Spring 2007 Semester Ends" note="" work="0" start="20070504T000000Z" end="20070504T000000Z" work-start="20070504T080000Z" percent-complete="0" priority="0" type="milestone" scheduling="fixed-work">
+      <constraint type="must-start-on" time="20070504T000000Z"/>
+    </task>
+  </tasks>
+  <resource-groups>
+    <group id="1" name="Project Leader" admin-name="" admin-phone="" admin-email=""/>
+    <group id="2" name="Developers" admin-name="" admin-phone="" admin-email=""/>
+  </resource-groups>
+  <resources>
+    <resource group="2" id="1" name="John McCullough" short-name="John" type="1" units="0" email="jcmdev0@users.sourceforge.net" note="" std-rate="0"/>
+    <resource group="2" id="2" name="Robert Wohleb" short-name="Rob" type="1" units="0" email="wohleb@users.sourceforge.net" note="" std-rate="0"/>
+    <resource group="1" id="3" name="Andrew De Ponte" short-name="Drew" type="1" units="0" email="cyphactor@socal.rr.com" note="" std-rate="0"/>
+  </resources>
+  <allocations>
+    <allocation task-id="36" resource-id="2" units="100"/>
+    <allocation task-id="35" resource-id="2" units="100"/>
+    <allocation task-id="33" resource-id="2" units="100"/>
+    <allocation task-id="32" resource-id="2" units="100"/>
+    <allocation task-id="31" resource-id="2" units="100"/>
+    <allocation task-id="62" resource-id="3" units="100"/>
+    <allocation task-id="7" resource-id="3" units="100"/>
+    <allocation task-id="29" resource-id="3" units="100"/>
+    <allocation task-id="26" resource-id="3" units="100"/>
+    <allocation task-id="22" resource-id="3" units="100"/>
+    <allocation task-id="18" resource-id="3" units="100"/>
+    <allocation task-id="17" resource-id="3" units="100"/>
+    <allocation task-id="12" resource-id="3" units="100"/>
+    <allocation task-id="1" resource-id="3" units="100"/>
+    <allocation task-id="59" resource-id="3" units="100"/>
+    <allocation task-id="46" resource-id="3" units="100"/>
+    <allocation task-id="43" resource-id="3" units="100"/>
+    <allocation task-id="42" resource-id="3" units="100"/>
+    <allocation task-id="28" resource-id="3" units="100"/>
+    <allocation task-id="25" resource-id="3" units="100"/>
+    <allocation task-id="24" resource-id="3" units="100"/>
+    <allocation task-id="21" resource-id="3" units="100"/>
+    <allocation task-id="20" resource-id="3" units="100"/>
+    <allocation task-id="6" resource-id="3" units="100"/>
+    <allocation task-id="15" resource-id="3" units="100"/>
+    <allocation task-id="16" resource-id="3" units="100"/>
+    <allocation task-id="14" resource-id="3" units="100"/>
+    <allocation task-id="11" resource-id="3" units="100"/>
+    <allocation task-id="10" resource-id="3" units="100"/>
+    <allocation task-id="9" resource-id="3" units="100"/>
+    <allocation task-id="63" resource-id="3" units="100"/>
+    <allocation task-id="61" resource-id="3" units="100"/>
+    <allocation task-id="58" resource-id="3" units="100"/>
+    <allocation task-id="4" resource-id="3" units="100"/>
+    <allocation task-id="3" resource-id="3" units="100"/>
+    <allocation task-id="5" resource-id="3" units="100"/>
+  </allocations>
+</project>
