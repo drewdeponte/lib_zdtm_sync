@@ -55,6 +55,20 @@
 int _zdtm_listen_for_zaurus(zdtm_lib_env *cur_env);
 
 /**
+ * Stop Listening for incoming sync connections from the Zaurus.
+ *
+ * The _zdtm_stop_listening function closes the socket which was created
+ * to listen for connections. Note: In order to stop listening one must
+ * have already started listening by using the _zdtm_listen_for_zaurus()
+ * function.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully stopped listening for the Zaurus.
+ * @retval -1 Failed to close the socket listening for Zaurus conns.
+ */
+int _zdtm_stop_listening(zdtm_lib_env *cur_env);
+
+/**
  * Handle a Zaurus connection.
  *
  * The _zdtm_handle_zaurus_connection function handles a backlogged

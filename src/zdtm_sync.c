@@ -38,47 +38,37 @@ int zdtm_initialize(zdtm_lib_env *cur_env) {
     r = _zdtm_open_log(cur_env);
     if (r != 0) { return -1; }
 
+    /* Set the stored Zaurus IP address to all nulls so that I can check
+     * it at a later point to see if the user has set it yet. */
+    memset(cur_env->zaurus_ip, '\0', IP_STR_SIZE);
+
+    /* Set the sync_type to 0x00, the default value which represents it
+     * not having been set yet. */
+    cur_env->sync_type = 0x00;
+
     r = _zdtm_listen_for_zaurus(cur_env);
     if (r != 0) { return -2; }
 
     return 0;
 }
 
-int zdtm_connect(zdtm_lib_env *cur_env, const char *ip_addr) {
-    int r;
-    zdtm_msg msg;
+int zdtm_set_zaurus_ip(zdtm_lib_env *cur_env, char *ip_addr) {
 
-    /* Create a TCP/IP connection to the synchronization daemon that is
-     * running on the Zaurus. */
-    r = _zdtm_conn_to_zaurus(cur_env, ip_addr);
-    if (r != 0) { return -1; }
-
-    /* Create a RAY message and send it to the synchronization daemon on
-     * the Zaurus, to request that it instruct the synchronization
-     * client on the Zaurus connect back to the Desktop synchronization
-     * daemon which was initialized in the _zdtm_initialize function. */
-    memset(&msg, 0, sizeof(zdtm_msg));
-    memcpy(msg.body.type, RAY_MSG_TYPE, MSG_TYPE_SIZE);
-    r = _zdtm_send_message_to(cur_env, &msg, cur_env->reqfd);
-    if (r != 0) { return -2; }
-   
-    /* Handle any back logged connections from the synchronization
-     * client on the Zaurus, or block waiting for a connection from the
-     * synchronization client on the Zaurus. */
-    r = _zdtm_handle_zaurus_conn(cur_env);
-    if (r != 0) { return -3; }
+    memcpy(cur_env->zaurus_ip, ip_addr, IP_STR_SIZE);
 
     return 0;
 }
 
-int zdtm_handle_connection(zdtm_lib_env *cur_env) {
-    int r;
-
-    /* Handle any back logged connections from the synchronization
-     * client on the Zaurus, or block waiting for a connection from the
-     * synchronization client on the Zaurus. */
-    r = _zdtm_handle_zaurus_conn(cur_env);
-    if (r != 0) { return -1; }
+int zdtm_set_sync_type(zdtm_lib_env *cur_env, unsigned int type) {
+    if (type == 0) {            /* ToDo */
+        cur_env->sync_type = 0x06;
+    } else if (type == 1) {     /* Calendar */
+        cur_env->sync_type = 0x01;
+    } else if (type == 2) {     /* Address Book */
+        cur_env->sync_type = 0x07;
+    } else {                    /* Default (Not Set Flag) */
+        cur_env->sync_type = 0x00;
+    }
 
     return 0;
 }
@@ -86,6 +76,23 @@ int zdtm_handle_connection(zdtm_lib_env *cur_env) {
 int zdtm_initiate_sync(zdtm_lib_env *cur_env) {
     int r;
     zdtm_msg msg, rmsg;
+    char ip_cmp[IP_STR_SIZE];
+
+    if (cur_env->sync_type == 0x00) {
+        return -7;
+    }
+    
+    memset(ip_cmp, '\0', IP_STR_SIZE);
+
+    if (memcmp(cur_env->zaurus_ip, ip_cmp, IP_STR_SIZE) == 0) {
+        /* The Zaurus IP address has not been set yet */
+        return -5;
+    }
+
+    r = _zdtm_connect(cur_env, cur_env->zaurus_ip);
+    if (r != 0) {
+        return -6;
+    }
 
     /* Send RAY message to the Zaurus */
     memset(&msg, 0, sizeof(zdtm_msg));
@@ -134,43 +141,11 @@ int zdtm_initiate_sync(zdtm_lib_env *cur_env) {
     return 0;
 }
 
-int zdtm_obtain_device_info(zdtm_lib_env *cur_env) {
-    int r;
-    zdtm_msg msg, rmsg;
-
-    /* Send RIG message to the Zaurus */
-    memset(&msg, 0, sizeof(zdtm_msg));
-    memcpy(msg.body.type, RIG_MSG_TYPE, MSG_TYPE_SIZE);
-    r = _zdtm_wrapped_send_message(cur_env, &msg);
-    if (r != 0) {
-        _zdtm_log_error(cur_env, "zdtm_obtain_device_info: _zdtm_wrapped_send_message",
-            r);
-        return -1;
+int zdtm_check_cur_auth_state(zdtm_lib_env *cur_env) {
+    if ((cur_env->cur_auth_state == 0x0b) ||
+        (cur_env->cur_auth_state == 0x07)) {
+        return 1;
     }
-
-    /* Receive message back from the Zaurus */
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
-    if (r != 0) {
-        _zdtm_log_error(cur_env, "zdtm_obtain_device_info: _zdtm_wrapped_recv_message",
-            r);
-        return -2;
-    }
-
-    /* Check to make sure receive back an AIG message */
-    if (!IS_AIG((&rmsg))) {
-        _zdtm_clean_message(&rmsg);
-        return -3;
-    }
-
-    /* copy to the content out of the AIG message */
-    memcpy(cur_env->model, rmsg.body.cont.aig.model_str,
-        rmsg.body.cont.aig.model_str_len);
-    cur_env->model[rmsg.body.cont.aig.model_str_len] = '\0';
-    memcpy(cur_env->language, rmsg.body.cont.aig.language, 2);
-    cur_env->cur_auth_state = rmsg.body.cont.aig.auth_state;
-
-    _zdtm_clean_message(&rmsg);
 
     return 0;
 }
@@ -214,18 +189,11 @@ int zdtm_terminate_sync(zdtm_lib_env *cur_env) {
     return 0;
 }
 
-int zdtm_disconnect(zdtm_lib_env *cur_env) {
-    int r;
-
-    /* close connection to the Zaurus */
-    r = _zdtm_close_conn_to_zaurus(cur_env);
-    if (r != 0) { return -1; }
-
-    return 0;
-}
-
 int zdtm_finalize(zdtm_lib_env *cur_env) {
     int r;
+
+    r = _zdtm_stop_listening(cur_env);
+    if (r != 0) { return -2; }
 
     r = _zdtm_close_log(cur_env);
     if (r != 0) { return -1; }

@@ -79,6 +79,22 @@ int _zdtm_listen_for_zaurus(zdtm_lib_env *cur_env) {
     return 0;
 }
 
+int _zdtm_stop_listening(zdtm_lib_env *cur_env) {
+    int retval;
+
+#ifdef WIN32
+    retval = closesocket(cur_env->listenfd);
+#else
+    retval = close(cur_env->listenfd);
+#endif
+    if (retval == SOCKET_ERROR) {
+        perror("_zdtm_stop_listening - close");
+        return -1;
+    }
+    
+    return 0;
+}
+
 int _zdtm_handle_zaurus_conn(zdtm_lib_env *cur_env) {
     struct sockaddr_in clntaddr;
     socklen_t len;

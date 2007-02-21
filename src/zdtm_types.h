@@ -49,6 +49,8 @@
 // This is the size, in bytes,  of a common messages.
 #define COM_MSG_SIZE 7
 
+#define IP_STR_SIZE 16
+
 /* This is a static message header to be used for messages that
  * originate from the Zaurus side of the synchronization. */
 extern const unsigned char ZMSG_HDR[MSG_HDR_SIZE];
@@ -81,6 +83,8 @@ typedef struct ZDTM_EXPORT zdtm_environment {
     char model[256];    // c-string to hold the devices model
     char language[2];   // language abreviation of the device
     unsigned char cur_auth_state;   // current authentication state
+    char zaurus_ip[IP_STR_SIZE]; // zaurus IP address & flag for net backend
+    unsigned char sync_type; // synchronization type
 } zdtm_lib_env;
 
 #endif

@@ -18,7 +18,7 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     printf("- Initiated Synchronization\n");
 
     /* Obtain Device Info from Zaurus */
-    r = zdtm_obtain_device_info(cur_env);
+    r = _zdtm_obtain_device_info(cur_env);
     if (r != 0) {
         printf("Error(%d): Failed to obtain device info from Zaurus.\n", r);
         return 1;
@@ -37,7 +37,7 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     }
  
     /* Obtain Device Info from Zaurus */
-    r = zdtm_obtain_device_info(cur_env);
+    r = _zdtm_obtain_device_info(cur_env);
     if (r != 0) {
         printf("Error(%d): Failed to obtain device info from Zaurus.\n", r);
         return 1;
@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
 
     printf("Succsessfully initialized zdtm sync library.\n");
 
-    r = zdtm_connect(&cur_env, "192.168.129.201");
+    r = _zdtm_connect(&cur_env, "192.168.129.201");
     if(r != 0) {
         printf("Error(%d): Failed to connect to Zaurus.\n", r);
         return 1;
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
     printf("get_changeinfo - (%d).\n", r);
     if(r != 0) { return 1; }
 
-    r = zdtm_disconnect(&cur_env);
+    r = _zdtm_disconnect(&cur_env);
     if(r != 0) {
         printf("Error(%d): Failed to disconnect from the Zaurus.\n", r);
         return 1;

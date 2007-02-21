@@ -1,3 +1,50 @@
+2007-02-20 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Created the zdtm_proto.h and zdtm_proto.c files and added them to the
+project.
+
+* Moved the proper functions from the zdtm_sync.h and zdtm_sync.c files
+into the zdtm_proto.h and zdtm_proto.c files so that only functions that
+are in the zdtm_sync.h and zdtm_sync.c files are the general api
+functions. I also renamed the moved functions by prepending an
+underscore(_) to them to represent them as private functions. I also
+correct the calls to the functions to match the new naming scheme in
+testing/zdtm_test_daemon.c.
+
+* Added code to the zdtm_environment structure to handle storing the
+Zaurus IP address and added code to the zdtm_initiate_sync() function to
+test for the IP address and return in failure if it hasn't been set.
+
+* Added the function _zdtm_stop_listening() to the zdtm_net.h and
+zdtm_net.c file which allows for proper closing of the listening socket.
+I also added a call to it in the zdtm_finalize() function in the
+zdtm_sync.h and zdtm_sync.c files so that it is handled by the general
+API.
+
+* Wrote a function called zdtm_set_zaurus_ip() in the general API which
+not only sets the Zaurus IP in the current zdtm library environment but
+also acts as a flag stating that the backend that is going to be used is
+the network based rather than the direct USB backend.
+
+* Added a call to the recently renamed _zdtm_connect() function inside
+the zdtm_initiate_sync() function in the general API to better provide a
+more generic general API.
+
+* Wrote a function called zdtm_set_sync_type() in the general API which
+handles setting the synchronization type in the current library
+environment. I also modified zdtm_intialize() to set the stored
+sync_type to an initial value of 0x00 so that I could check for the
+value 0x00 in the zdtm_initiate_sync() function and return in error if
+the client program hasn't set the sync type.
+
+* Wrote a function called zdtm_check_cur_auth_state() which checks the
+stared cur_auth_state in the current zdtm library environment and
+returns values representing the known possible authentication states.
+This function was added to the general API.
+
+* Updated the planner file with the tasks that I completed in this
+coding session.
+
 2007-02-13 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Implemented the zdtm_handle_connection() function in the zdtm_sync.c
