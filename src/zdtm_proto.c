@@ -113,6 +113,49 @@ int _zdtm_obtain_device_info(zdtm_lib_env *cur_env) {
     return 0;
 }
 
+int _zdtm_obtain_sync_state(zdtm_lib_env *cur_env) {
+    int r;
+    zdtm_msg msg, rmsg;
+
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RMG_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rmg.uk = 0x01;
+    msg.body.cont.rmg.sync_type = cur_env->sync_type;
+
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
+    if (r != 0) { return -1; }
+
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
+    if (r != 0) { _zdtm_clean_message(&rmsg); return -2; }
+
+    if (memcmp(rmsg.body.type, AMG_MSG_TYPE, MSG_TYPE_SIZE) != 0) {
+        _zdtm_clean_message(&rmsg);
+        return -3;
+    }
+
+    /* check if todo slow sync is required */
+    if ((rmsg.body.cont.amg.fullsync_flags & AMG_TODO_MASK) == 0) {
+        cur_env->todo_slow_sync_required = 1;
+    }
+
+    /* check if calendar slow sync is required */
+    if ((rmsg.body.cont.amg.fullsync_flags & AMG_CAL_MASK) == 0) {
+        cur_env->calendar_slow_sync_required = 1;
+    }
+
+    /* check if address book slow sync is required */
+    if ((rmsg.body.cont.amg.fullsync_flags & AMG_ADDR_MASK) == 0) {
+        cur_env->address_book_slow_sync_required = 1;
+    }
+
+    cur_env->retrieved_sync_state = 1;
+
+    _zdtm_clean_message(&rmsg);
+
+    return 0;
+}
+
 int _zdtm_disconnect(zdtm_lib_env *cur_env) {
     int r;
 

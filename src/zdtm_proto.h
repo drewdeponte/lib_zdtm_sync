@@ -87,6 +87,21 @@ int _zdtm_handle_connection(zdtm_lib_env *cur_env);
 int _zdtm_obtain_device_info(zdtm_lib_env *cur_env);
 
 /**
+ * Obtain Sync State
+ *
+ * The _zdtm_obtain_sync_state function obtains the current sync state
+ * from the device and up dates all the necessary sync state fields
+ * stored within the current zdtm library environment.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained and updated sync state.
+ * @retval -1 Failed to send RMG message.
+ * @retval -2 Failed to recv AMG message.
+ * @retval -3 Failed, message recv'd was not an AMG message.
+ */
+int _zdtm_obtain_sync_state(zdtm_lib_env *cur_env);
+
+/**
  * Disconnect from Zaurus.
  *
  * The zdtm_disconnect function disconnects the current library

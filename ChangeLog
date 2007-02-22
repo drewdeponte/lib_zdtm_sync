@@ -1,3 +1,27 @@
+2007-02-22 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Added the retrieved_sync_state, todo_slow_sync_required,
+calendar_slow_sync_required, and address_book_slow_sync_required flags
+to the zdtm_environment structure so that I may use them to store and
+track the sync stata. I also added code to zdtm_initialize() in
+zdtm_sync.c to appropriately initialize them to logical values.
+
+* Wrote and documented the _zdtm_obtain_sync_state() function in the
+zdtm_proto.h and zdtm_proto.c files. It is basically a function which is
+designed to obtain the sync state from the Zaurus and store it in the
+state tracking variables which I recently added to the zdtm_environment
+structure to define the state.
+
+* Added the SYNC_TODO, SYNC_CALENDAR, and SYNC_ADDRESSBOOK macro
+definitions to the zdtm_types.h file. They are macros which define the
+values for each synchronization type.
+
+* Wrote and documented the zdtm_requires_slow_sync() function in the
+zdtm_sync.h and zdtm_sync.c files. It is currently designed to check if
+a slow sync is required for the current sync type. If the sync state has
+however not been retrieved from the Zaurus yet, it attempts to retrieve
+the sync state and then determine if a slow sync is required.
+
 2007-02-20 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Created the zdtm_proto.h and zdtm_proto.c files and added them to the

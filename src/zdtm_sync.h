@@ -123,6 +123,21 @@ ZDTM_EXPORT int zdtm_initiate_sync(zdtm_lib_env *cur_env);
 ZDTM_EXPORT int zdtm_check_cur_auth_state(zdtm_lib_env *cur_env);
 
 /**
+ * Check if requires a slow sync.
+ *
+ * The zdtm_requires_slow_sync function checks the sync state obtained
+ * from the Zaurus to see if a slow sync is required for the current
+ * synchronization type.
+ * @param cur_env Pointer to current zdtm library environment.
+ * @return An integer representing true/false/error (1/0/negative num).
+ * @retval 0 Does NOT require a slow sync.
+ * @retval 1 DOES require a slow sync.
+ * @retval -1 Failed to obtain sync state.
+ * @retval -2 Sync type is not a recognized sync type.
+ */
+ZDTM_EXPORT int zdtm_requires_slow_sync(zdtm_lib_env *cur_env);
+
+/**
  * Terminate Synchronization
  *
  * The zdtm_terminate_sync function terminates the synchronization

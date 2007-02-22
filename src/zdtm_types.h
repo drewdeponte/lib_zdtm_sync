@@ -51,6 +51,10 @@
 
 #define IP_STR_SIZE 16
 
+#define SYNC_TODO 0x06
+#define SYNC_CALENDAR 0x01
+#define SYNC_ADDRESSBOOK 0x07
+
 /* This is a static message header to be used for messages that
  * originate from the Zaurus side of the synchronization. */
 extern const unsigned char ZMSG_HDR[MSG_HDR_SIZE];
@@ -85,6 +89,10 @@ typedef struct ZDTM_EXPORT zdtm_environment {
     unsigned char cur_auth_state;   // current authentication state
     char zaurus_ip[IP_STR_SIZE]; // zaurus IP address & flag for net backend
     unsigned char sync_type; // synchronization type
+    int retrieved_sync_state; // flag stating sync state has been obtained 
+    int todo_slow_sync_required; // flag if slow sync is required
+    int calendar_slow_sync_required; // flag if slow sync is required
+    int address_book_slow_sync_required; // flag if slow sync is required
 } zdtm_lib_env;
 
 #endif

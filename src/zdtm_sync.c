@@ -46,6 +46,12 @@ int zdtm_initialize(zdtm_lib_env *cur_env) {
      * not having been set yet. */
     cur_env->sync_type = 0x00;
 
+    /* Set the Sync State flags to appropriate initial values. */
+    cur_env->retrieved_sync_state = 0;
+    cur_env->todo_slow_sync_required = 0;
+    cur_env->calendar_slow_sync_required = 0;
+    cur_env->address_book_slow_sync_required = 0;
+
     r = _zdtm_listen_for_zaurus(cur_env);
     if (r != 0) { return -2; }
 
@@ -148,6 +154,27 @@ int zdtm_check_cur_auth_state(zdtm_lib_env *cur_env) {
     }
 
     return 0;
+}
+
+int zdtm_requires_slow_sync(zdtm_lib_env *cur_env) {
+    int r;
+
+    if (!cur_env->retrieved_sync_state) { /* get sync state, it is needed */
+        r = _zdtm_obtain_sync_state(cur_env);
+        if (r != 0) {
+            return -1;
+        }
+    }
+
+    if (cur_env->sync_type == SYNC_TODO) {
+        return cur_env->todo_slow_sync_required;
+    } else if (cur_env->sync_type == SYNC_CALENDAR) {
+        return cur_env->calendar_slow_sync_required;
+    } else if (cur_env->sync_type == SYNC_ADDRESSBOOK) {
+        return cur_env->address_book_slow_sync_required;
+    } else {
+        return -2;
+    }
 }
 
 int zdtm_terminate_sync(zdtm_lib_env *cur_env) {
