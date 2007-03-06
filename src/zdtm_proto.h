@@ -110,7 +110,7 @@ int _zdtm_obtain_sync_state(zdtm_lib_env *cur_env);
  * @param cur_env Pointer to the current zdtm library environment.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully authenticated passcode.
- * @retval 1 Passcode was authentication was denied.
+ * @retval 1 Passcode authentication was denied.
  * @retval -1 Failed to allocate memory for RRL message.
  * @retval -2 Failed to send RRL message.
  * @retval -3 Failed to recv response message.

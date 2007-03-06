@@ -84,6 +84,7 @@ typedef struct ZDTM_EXPORT zdtm_environment {
     SOCKET reqfd;      // socket - connection to zaurus from the desktop
     FILE *logfp;    // file pointer - used as the log file.
     // General Device Information
+    int retreived_device_info; // flag stating device info has been obtained
     char model[256];    // c-string to hold the devices model
     char language[2];   // language abreviation of the device
     unsigned char cur_auth_state;   // current authentication state

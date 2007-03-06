@@ -108,6 +108,8 @@ int _zdtm_obtain_device_info(zdtm_lib_env *cur_env) {
     memcpy(cur_env->language, rmsg.body.cont.aig.language, 2);
     cur_env->cur_auth_state = rmsg.body.cont.aig.auth_state;
 
+    cur_env->retreived_device_info = 1;
+
     _zdtm_clean_message(&rmsg);
 
     return 0;
@@ -158,7 +160,7 @@ int _zdtm_obtain_sync_state(zdtm_lib_env *cur_env) {
 
 int _zdtm_authenticate_passcode(zdtm_lib_env *cur_env, char *passcode) {
     int r, pw_size;
-    zdtm_msg msg, rmsg;
+    zdtm_msg msg, rmsg, angmsg;
 
     pw_size = strlen(passcode);
 
@@ -178,20 +180,35 @@ int _zdtm_authenticate_passcode(zdtm_lib_env *cur_env, char *passcode) {
 
     free(msg.body.cont.rrl.pw);
 
-    /* recv response message (AEX if succeeded, ANG if failed) */
+    /* recv response message (AEX if succeeded, abort common msg) */
     memset(&rmsg, 0, sizeof(zdtm_msg));
     r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
-    if (r != 0) { _zdtm_clean_message(&rmsg); return -3; }
+    if (r == 3) {
+        memset(&angmsg, 0, sizeof(zdtm_msg));
+        r = _zdtm_wrapped_recv_message(cur_env, &angmsg);
+        if (r != 0) {
+            _zdtm_clean_message(&angmsg);
+            _zdtm_clean_message(&rmsg);
+            return -3;
+        }
+
+        if (memcmp(angmsg.body.type, ANG_MSG_TYPE, MSG_TYPE_SIZE) == 0) {
+            _zdtm_clean_message(&angmsg);
+            _zdtm_clean_message(&rmsg);
+            return 1;
+        } else {
+            _zdtm_clean_message(&angmsg);
+            _zdtm_clean_message(&rmsg);
+            return -4; 
+        }
+    } else if (r != 0) { _zdtm_clean_message(&rmsg); return -5; }
 
     if (memcmp(rmsg.body.type, AEX_MSG_TYPE, MSG_TYPE_SIZE) == 0) {
         _zdtm_clean_message(&rmsg);
         return 0;
-    } else if (memcmp(rmsg.body.type, ANG_MSG_TYPE, MSG_TYPE_SIZE) == 0) {
-        _zdtm_clean_message(&rmsg);
-        return 1;
     } else {
         _zdtm_clean_message(&rmsg);
-        return -4;
+        return -6;
     }
 }
 
@@ -239,7 +256,7 @@ int _zdtm_obtain_last_time_synced(zdtm_lib_env *cur_env, time_t *p_time) {
 
     memcpy(tmp_buf, rmsg.body.cont.atg.seconds, 2);
     tmp_buf[2] = '\0';
-    tmp_time.tm_min = atoi(tmp_buf);
+    tmp_time.tm_sec = atoi(tmp_buf);
 
     tmp_time.tm_isdst = -1;
 

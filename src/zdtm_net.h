@@ -268,6 +268,9 @@ int _zdtm_wrapped_send_message(zdtm_lib_env *cur_env, zdtm_msg *msg);
  * @param msg Pointer to zdtm_msg struct to store received message in.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully received message to the Zaurus.
+ * @retval 1 Successfully received an ack message from the Zaurus.
+ * @retval 2 Successfully received a request message from the Zaurus.
+ * @retval 3 Successfully received an abort message from the Zaurus.
  * @retval -1 Failed to send request message to the Zaurus.
  * @retval -2 Failed to receive message from the Zaurus.
  * @retval -3 Failed to send acknowledgement message to the Zaurus.

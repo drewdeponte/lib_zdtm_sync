@@ -555,9 +555,11 @@ int _zdtm_wrapped_recv_message(zdtm_lib_env *cur_env, zdtm_msg *msg) {
 
     /* recv general message */
     r = _zdtm_recv_message(cur_env, msg);
-    if (r != 0) {
+    if (r < 0) {
         _zdtm_log_error(cur_env, "_zdtm_recv_message", r);
         return -2;
+    } else if (r > 0) {
+        return r;
     }
 
     /* send ack message */

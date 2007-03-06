@@ -32,6 +32,43 @@ _zdtm_state_sync_done() function.
 * Made a correction for resource allocation to the termnate sync task
 since I just completed it.
 
+* Added a data member called retreived_device_info to the zdtm library
+environment structure so that I can determine if the device info has
+been retreived. I also modified the zdtm_initialize() function to
+initialize this data member to a proper value of not set. Beyond that I
+modified the _zdtm_obtain_device_info() function in zdtm_proto.c so that
+it updates the retreived_device_info member when it successfully obtains
+the device information. I also modified the zdtm_check_cur_auth_state()
+function to check this flag and if it is not set then call
+_zdtm_obtain_device_info() and then check the auth state.
+
+* Did some testing and decided to move _zdtm_state_sync_done() call
+outside of zdtm_terminate_sync() because _zdtm_state_sync_done() should
+only get called if it successfully finished the sync and
+zdtm_terminate_sync() needs to be able to be called to terminate the
+sync in cases where it did not succeed.
+
+* Corrected an issue with _zdtm_authenticate_passcode() and modified
+_zdtm_wrapped_recv_message() to return the posetive return values from
+_zdtm_recv_message() so that one can determine if they recv common
+messages.
+
+* Modified zdtm_test_daemon.c to test zdtm_initalize(),
+zdtm_set_zaurus_ip(), zdtm_set_sync_type(), zdtm_initiate_sync(),
+zdtm_check_cur_auth_state(), _zdtm_authenticate_passcode(),
+_zdtm_obtain_sync_state(), _zdtm_obtain_last_time_synced(),
+_zdtm_set_last_time_synced(), zdtm_requires_slow_sync(),
+zdtm_terminate_sync(), and zdtm_finalize().
+
+* Tested the latest modifications to zdtm_test_daemon which is now in a
+state which it can actually be used to test the Zaurus synchronization.
+The following functions look to be working properly: zdtm_initialize(),
+zdtm_set_zaurus_ip(), zdtm_set_sync_type(), zdtm_initiate_sync(),
+zdtm_check_cur_auth_state(), _zdtm_authenticate_passcode(),
+_zdtm_obtain_sync_state(), _zdtm_obtain_last_time_synced(),
+_zdtm_set_last_time_synced(), zdtm_requires_slow_sync(),
+zdtm_terminate_sync(), and zdtm_finalize().
+
 2007-02-22 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Added the retrieved_sync_state, todo_slow_sync_required,

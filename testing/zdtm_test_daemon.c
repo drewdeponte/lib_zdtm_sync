@@ -2,128 +2,97 @@
 #include <stdio.h>
 
 int test_get_changeinfo(zdtm_lib_env *cur_env) {
-    int r;
-    int i;
-    int slow_sync_required;
+    time_t last_time_synced, time_synced;
     zdtm_msg msg, rmsg;
-
-    slow_sync_required = 0;
-
-    /* Initiate the Synchronization */
-    r = zdtm_initiate_sync(cur_env);
-    if (r != 0) {
-        printf("Error(%d): Failed to initiate the synchronization.\n", r);
-        return 1;
-    }
-    printf("- Initiated Synchronization\n");
+    int r, i, retval;
+    char buff[256];
 
     /* Obtain Device Info from Zaurus */
-    r = _zdtm_obtain_device_info(cur_env);
-    if (r != 0) {
-        printf("Error(%d): Failed to obtain device info from Zaurus.\n", r);
-        return 1;
+    r = zdtm_check_cur_auth_state(cur_env);
+    if (r < 0) {
+        fprintf(stderr, "ERR(%d): zdtm_check_cur_auth_state() failed.\n", r);
+        return 5;
     }
     printf("- Obtained Device Info\n");
     printf("\tModel String: %s\n", cur_env->model);
     printf("\tLanguage: %c%c\n", cur_env->language[0], cur_env->language[1]);
     printf("\tCurrent Auth State: 0x%.2x\n", cur_env->cur_auth_state);
-
-    if (cur_env->cur_auth_state == 0x0b || cur_env->cur_auth_state == 0x07) {
-        printf("The authentication state requires a passcode to sync.\n");
-        printf("The test_daemon currently does not support passcode\n");
-        printf("authentication. Please disable the passcode on your\n");
-        printf("Zaurus and try again.\n");
-        return 0;
+    if (r == 1) { /* does require passcode */
+        retval = _zdtm_authenticate_passcode(cur_env, "1234");
+        if (retval == 0) {
+            printf("Successfully authenticated passcode \"1234\".\n");
+        } else if (retval == 1) {
+            printf("Passcode \"1234\"'s authentication was denied.\n");
+            return 5;
+        } else {
+            fprintf(stderr,
+                "ERR(%d): _zdtm_authenticate_passcode() failed.\n", r);
+            return 5;
+        }
     }
- 
-    /* Obtain Device Info from Zaurus */
-    r = _zdtm_obtain_device_info(cur_env);
+    /* doesn't require passcode */
+
+    /* Obtain Zaurus Sync State */
+    r = _zdtm_obtain_sync_state(cur_env);
     if (r != 0) {
-        printf("Error(%d): Failed to obtain device info from Zaurus.\n", r);
-        return 1;
+        fprintf(stderr, "ERR(%d): _zdtm_obtain_sync_state() failed.\n", r);
+        return 5;
     }
-    printf("- Obtained Device Info\n");
-    printf("\tModel String: %s\n", cur_env->model);
-    printf("\tLanguage: %c%c\n", cur_env->language[0], cur_env->language[1]);
-    printf("\tCurrent Auth State: 0x%.2x\n", cur_env->cur_auth_state);
-
-    if (cur_env->cur_auth_state == 0x0b || cur_env->cur_auth_state == 0x07) {
-        printf("The authentication state requires a passcode to sync.\n");
-        printf("The test_daemon currently does not support passcode\n");
-        printf("authentication. Please disable the passcode on your\n");
-        printf("Zaurus and try again.\n");
-        return 0;
-    }
- 
-    /* make a simple RMG message, send it and recv AMG */
-    memset(&msg, 0, sizeof(zdtm_msg));
-    memcpy(msg.body.type, RMG_MSG_TYPE, MSG_TYPE_SIZE);
-    msg.body.cont.rmg.uk = 0x01;
-    msg.body.cont.rmg.sync_type = SYNC_TYPE_TODO;
-
-    r = _zdtm_wrapped_send_message(cur_env, &msg);
-    if(r != 0){ return 1; }
-
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
-    if(r != 0){ _zdtm_clean_message(&rmsg); return 1; }
 
     /* Here I check if ToDo Slow Sync is Required */
-    if ((rmsg.body.cont.amg.fullsync_flags & 0x01) == 0) {
+    if (cur_env->todo_slow_sync_required) {
         /* todo slow sync required */
         printf("ToDo Slow Sync Required!\n");
-        slow_sync_required = 1;
     }
 
-    if ((rmsg.body.cont.amg.fullsync_flags & 0x02) == 0) {
+    if (cur_env->calendar_slow_sync_required) {
         /* cal slow sync required */
         printf("Calendar Slow Sync Required!\n");
-        slow_sync_required = 1;
     }
     
-    if ((rmsg.body.cont.amg.fullsync_flags & 0x04) == 0) {
+    if (cur_env->address_book_slow_sync_required) {
         /* address book slow sync required */
         printf("Address Book Slow Sync Required!\n");
-        slow_sync_required = 1;
     }
 
-    _zdtm_clean_message(&rmsg);
+    /* Here I get the last time it was synced */
+    r = _zdtm_obtain_last_time_synced(cur_env, &last_time_synced);
+    if (r != 0) {
+        fprintf(stderr, "ERR(%d): _zdtm_obtain_last_time_synced() failed.\n",
+            r);
+        return 5;
+    }
+    ctime_r(&last_time_synced, buff);
+    printf("Obtained Last Time Synced: %s", buff);
 
-    /* make a  RTG message, send it and recv an ATG */
-    memset(&msg, 0, sizeof(zdtm_msg));
-    memcpy(msg.body.type, RTG_MSG_TYPE, MSG_TYPE_SIZE);
-    
-    r = _zdtm_wrapped_send_message(cur_env, &msg);
-    if(r != 0){ return 1; }
-
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
-    if(r != 0){ _zdtm_clean_message(&rmsg); return 1; }
-    _zdtm_clean_message(&rmsg);
-
-    /* make a  RTS message, send it and recv an AEX */
-    memset(&msg, 0, sizeof(zdtm_msg));
-    memcpy(msg.body.type, RTS_MSG_TYPE, MSG_TYPE_SIZE);
-    memcpy(msg.body.cont.rts.date, "20060920011020", RTS_DATE_LEN);
-    
-    r = _zdtm_wrapped_send_message(cur_env, &msg);
-    if(r != 0){ return 1; }
-
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
-    if(r != 0){ _zdtm_clean_message(&rmsg); return 1; }
-    _zdtm_clean_message(&rmsg);
+    /* Get the current time of the system and set the last time synced
+     * to it. */
+    time_synced = time(NULL);
+    r = _zdtm_set_last_time_synced(cur_env, time_synced);
+    if (r != 0) {
+        fprintf(stderr, "ERR(%d): _zdtm_set_last_time_synced() failed.\n",
+            r);
+        return 6;
+    }
+    ctime_r(&time_synced, buff);
+    printf("Set Last Time Synced: %s", buff);
 
     /* BEFORE I GO ANY FURTHER I MUST BE SURE THAT A FULL SYNC IS NOT
      * REQUIRED. IF A FULL SYNC IS REQUIRED THEN I SHOULD HANDLE THE
      * FULL SYNC. */
-    if (slow_sync_required) {
+    r = zdtm_requires_slow_sync(cur_env);
+    if (r < 0) {
+        fprintf(stderr, "ERR(%d): _zdtm_requires_slow_sync() failed.\n",
+            r);
+        return 7;
+    }
+    if (r == 1) {
         printf("SLOW SYNC REQUIRED!\n");
         printf("This test_daemon currently does not support slow syncs\n");
         printf("Hence, you must sync your Zaurus with the Windows sync\n");
         printf("software and come back and sync with the test_daemon\n");
         printf("to get beyond this point in the synchronization\n");
-        return 0;
+        return -2;
     }
 
     /* make a  RSY message, send it and recv an ASY */
@@ -167,44 +136,65 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
 }
 
 int main(int argc, char *argv[]) {
+    zdtm_lib_env cur_env;
     int r;
     
-    zdtm_lib_env cur_env;
-    
     memset(&cur_env, 0, sizeof(zdtm_lib_env));
-
+    
     r = zdtm_initialize(&cur_env);
-    if(r != 0) {
-        printf("Error(%d): Failed to initialized zdtm library.\n", r);
+    if (r != 0) {
+        fprintf(stderr, "ERR(%d): zdtm_initialize() failed.\n", r);
         return 1;
     }
 
     printf("Succsessfully initialized zdtm sync library.\n");
-
-    r = _zdtm_connect(&cur_env, "192.168.129.201");
-    if(r != 0) {
-        printf("Error(%d): Failed to connect to Zaurus.\n", r);
-        return 1;
+    
+    r = zdtm_set_zaurus_ip(&cur_env, "192.168.129.201");
+    if (r != 0) {
+        fprintf(stderr, "ERR(%d): zdtm_set_zaurus_ip() failed.\n", r);
+        return 2;
     }
 
-    printf("Successfully connected to the Zaurus.\n");
+    printf("Successfully set the Zaurus IP address.\n");
+
+    r = zdtm_set_sync_type(&cur_env, 0);
+    if (r != 0) {
+        fprintf(stderr, "ERR(%d): zdtm_set_sync_type() failed.\n", r);
+        return 3;
+    }
+    
+    printf("Successfully set the Synchronization Type.\n");
+    
+    r = zdtm_initiate_sync(&cur_env);
+    if (r != 0) {
+        fprintf(stderr, "ERR(%d): zdtm_initiate_sync() failed.\n", r);
+        return 4;
+    }
+    printf("- Initiated Synchronization\n");
 
     r = test_get_changeinfo(&cur_env);
     printf("get_changeinfo - (%d).\n", r);
-    if(r != 0) { return 1; }
-
-    r = _zdtm_disconnect(&cur_env);
-    if(r != 0) {
-        printf("Error(%d): Failed to disconnect from the Zaurus.\n", r);
-        return 1;
+    if(r == 0) {
+        r = _zdtm_state_sync_done(&cur_env);
+        if (r != 0) {
+            fprintf(stderr, "ERR(%d): _zdtm_state_sync_done() failed.\n", r);
+            return 6;
+        }
     }
 
-    printf("Successfully disconnected from the Zaurus.\n");
+    r = zdtm_terminate_sync(&cur_env);
+    if (r != 0) {
+        fprintf(stderr, "ERR(%d): zdtm_terminate_sync() failed.\n", r);
+        return 7;
+    }
+
+    printf("Successfully terminated synchronization.\n");
 
     r = zdtm_finalize(&cur_env);
     if(r != 0) {
-        printf("Error(%d): Failed to finalize the zdtm library.\n", r);
-        return 1;
+        fprintf(stderr, "Error(%d): Failed to finalize the zdtm library.\n",
+                r);
+        return 8;
     }
 
     printf("Successfully finalized the zdtm sync library.\n");

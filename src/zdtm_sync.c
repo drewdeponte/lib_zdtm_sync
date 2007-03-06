@@ -46,6 +46,8 @@ int zdtm_initialize(zdtm_lib_env *cur_env) {
      * not having been set yet. */
     cur_env->sync_type = 0x00;
 
+    cur_env->retreived_device_info = 0;
+
     /* Set the Sync State flags to appropriate initial values. */
     cur_env->retrieved_sync_state = 0;
     cur_env->todo_slow_sync_required = 0;
@@ -148,6 +150,15 @@ int zdtm_initiate_sync(zdtm_lib_env *cur_env) {
 }
 
 int zdtm_check_cur_auth_state(zdtm_lib_env *cur_env) {
+    int r;
+
+    if (!cur_env->retreived_device_info) { /* get device info, it is needed */
+        r = _zdtm_obtain_device_info(cur_env);
+        if (r != 0) {
+            return -1;
+        }
+    }
+
     if ((cur_env->cur_auth_state == 0x0b) ||
         (cur_env->cur_auth_state == 0x07)) {
         return 1;
@@ -181,11 +192,6 @@ int zdtm_terminate_sync(zdtm_lib_env *cur_env) {
     int r;
     zdtm_msg msg, rmsg;
 
-    /* HERE the State Finished Synchronizing section should go as well
-     * as a following obtaining of the device information. */
-    r = _zdtm_state_sync_done(cur_env);
-    if (r != 0) { return -1; }
-
     /* send RQT message */
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RQT_MSG_TYPE, MSG_TYPE_SIZE);
@@ -193,27 +199,27 @@ int zdtm_terminate_sync(zdtm_lib_env *cur_env) {
         sizeof(msg.body.cont.rqt.null_bytes));
 
     r = _zdtm_wrapped_send_message(cur_env, &msg);
-    if (r != 0) { return -2; }
+    if (r != 0) { return -1; }
 
     memset(&rmsg, 0, sizeof(zdtm_msg));
     r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
     _zdtm_clean_message(&rmsg);
-    if (r != 0) { return -3; }
+    if (r != 0) { return -2; }
 
     /* recv rqst message */
     memset(&rmsg, 0, sizeof(zdtm_msg));
     r = _zdtm_recv_message(cur_env, &rmsg);
-    if (r != 2) { _zdtm_clean_message(&rmsg); return -4; }
+    if (r != 2) { _zdtm_clean_message(&rmsg); return -3; }
 
     /* send RAY message */
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RAY_MSG_TYPE, MSG_TYPE_SIZE);
     r = _zdtm_send_message(cur_env, &msg);
-    if (r != 0) { return -5; }
+    if (r != 0) { return -4; }
 
     /* close connection from the Zaurus */
     r = _zdtm_disconnect(cur_env);
-    if (r != 0) { return -6; }
+    if (r != 0) { return -5; }
 
     return 0;
 }

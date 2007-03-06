@@ -119,6 +119,7 @@ ZDTM_EXPORT int zdtm_initiate_sync(zdtm_lib_env *cur_env);
  * @return An integer representing current authentication state.
  * @retval 0 current auth state does NOT require a password.
  * @retval 1 current auth state DOES require a password.
+ * @retval -1 Failed to obtain device info to check auth state.
  */
 ZDTM_EXPORT int zdtm_check_cur_auth_state(zdtm_lib_env *cur_env);
 
@@ -147,12 +148,11 @@ ZDTM_EXPORT int zdtm_requires_slow_sync(zdtm_lib_env *cur_env);
  * @param cur_env Pointer to currenty zdtm library environment.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully disconnected from the Zaurus.
- * @retval -1 Failed to state sync done to the Zaurus.
- * @retval -2 Failed to send RQT message to the Zaurus.
- * @retval -3 Failed to receive AEX message from the Zaurus.
- * @retval -4 Failed to receive request message from the Zaurus.
- * @retval -5 Failed to send RAY message to the Zaurus.
- * @retval -6 Failed to close TCP/IP connection from Zaurus.
+ * @retval -1 Failed to send RQT message to the Zaurus.
+ * @retval -2 Failed to receive AEX message from the Zaurus.
+ * @retval -3 Failed to receive request message from the Zaurus.
+ * @retval -4 Failed to send RAY message to the Zaurus.
+ * @retval -5 Failed to close TCP/IP connection from Zaurus.
  */
 ZDTM_EXPORT int zdtm_terminate_sync(zdtm_lib_env *cur_env);
 
