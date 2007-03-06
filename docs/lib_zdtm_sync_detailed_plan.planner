@@ -274,6 +274,7 @@
     <resource group="1" id="3" name="John McCullough" short-name="John" type="1" units="0" email="jcmdev0@users.sourceforge.net" note="" std-rate="0"/>
   </resources>
   <allocations>
+    <allocation task-id="60" resource-id="1" units="100"/>
     <allocation task-id="62" resource-id="1" units="100"/>
     <allocation task-id="7" resource-id="1" units="100"/>
     <allocation task-id="29" resource-id="1" units="100"/>

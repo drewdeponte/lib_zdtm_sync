@@ -29,6 +29,9 @@ lib_zdtm_detailed_plan.planner file and lib_zdtm_detailed_plan.html
 files to represent the completion and integration of the
 _zdtm_state_sync_done() function.
 
+* Made a correction for resource allocation to the termnate sync task
+since I just completed it.
+
 2007-02-22 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Added the retrieved_sync_state, todo_slow_sync_required,
