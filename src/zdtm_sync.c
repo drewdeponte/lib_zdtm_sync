@@ -183,6 +183,8 @@ int zdtm_terminate_sync(zdtm_lib_env *cur_env) {
 
     /* HERE the State Finished Synchronizing section should go as well
      * as a following obtaining of the device information. */
+    r = _zdtm_state_sync_done(cur_env);
+    if (r != 0) { return -1; }
 
     /* send RQT message */
     memset(&msg, 0, sizeof(zdtm_msg));
@@ -191,27 +193,27 @@ int zdtm_terminate_sync(zdtm_lib_env *cur_env) {
         sizeof(msg.body.cont.rqt.null_bytes));
 
     r = _zdtm_wrapped_send_message(cur_env, &msg);
-    if (r != 0) { return -1; }
+    if (r != 0) { return -2; }
 
     memset(&rmsg, 0, sizeof(zdtm_msg));
     r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
     _zdtm_clean_message(&rmsg);
-    if (r != 0) { return -2; }
+    if (r != 0) { return -3; }
 
     /* recv rqst message */
     memset(&rmsg, 0, sizeof(zdtm_msg));
     r = _zdtm_recv_message(cur_env, &rmsg);
-    if (r != 2) { _zdtm_clean_message(&rmsg); return -3; }
+    if (r != 2) { _zdtm_clean_message(&rmsg); return -4; }
 
     /* send RAY message */
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RAY_MSG_TYPE, MSG_TYPE_SIZE);
     r = _zdtm_send_message(cur_env, &msg);
-    if (r != 0) { return -4; }
+    if (r != 0) { return -5; }
 
     /* close connection from the Zaurus */
-    r = _zdtm_close_zaurus_conn(cur_env);
-    if (r != 0) { return -5; }
+    r = _zdtm_disconnect(cur_env);
+    if (r != 0) { return -6; }
 
     return 0;
 }

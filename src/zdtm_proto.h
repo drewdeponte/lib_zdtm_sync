@@ -34,6 +34,7 @@
 #ifndef ZDTM_PROTO_H
 #define ZDTM_PROTO_H
 
+#include <time.h>
 #include "zdtm_types.h"
 #include "zdtm_net.h"
 #include "zdtm_log.h"
@@ -100,6 +101,73 @@ int _zdtm_obtain_device_info(zdtm_lib_env *cur_env);
  * @retval -3 Failed, message recv'd was not an AMG message.
  */
 int _zdtm_obtain_sync_state(zdtm_lib_env *cur_env);
+
+/**
+ * Authenticate Passcode
+ *
+ * The _zdtm_authenticate_passcode function attempts to authenticate the
+ * given passcode with the Zaurus so that a sync may be performed.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully authenticated passcode.
+ * @retval 1 Passcode was authentication was denied.
+ * @retval -1 Failed to allocate memory for RRL message.
+ * @retval -2 Failed to send RRL message.
+ * @retval -3 Failed to recv response message.
+ * @retval -4 Failed to recv'd an unhandled message as a response.
+ */
+int _zdtm_authenticate_passcode(zdtm_lib_env *cur_env, char *passcode);
+
+/**
+ * Obtain Last Time Synced
+ *
+ * The _zdtm_obtain_last_time_synced function attempts to obtain a
+ * timestamp of the last time a synchronization occured. This is often
+ * referred to as a synchronization anchor and can be used to help
+ * identify if a slow (full) sync needs to be performed.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param p_time Pointer to time_t variable to store returned time in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained last time synced.
+ * @retval -1 Failed to send RTG message.
+ * @retval -2 Failed to recv response message.
+ * @retval -3 Failed, response message wasn't an ATG message.
+ * @retval -4 Failed to convert timestamp into time_t format.
+ */
+int _zdtm_obtain_last_time_synced(zdtm_lib_env *cur_env, time_t *p_time);
+
+/**
+ * Set Last Time Synced
+ *
+ * The _zdtm_set_last_time_synced function attempts to set the timestamp
+ * of the last time a synchronization occured on the Zaurus. This is
+ * often referred to as setting the next synchronization anchor. It can
+ * be used to help identify if a slow (full) sync needs to be performed.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param time_synced The time of sync as seconds since Epoch.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully set the last time synced.
+ * @retval -1 Failed to convert time_synced to useable form.
+ * @retval -2 Failed to construct RTS message payload.
+ * @retval -3 Failed to send RTS message.
+ * @retval -4 Failed to recv a response message.
+ * @retval -5 Failed, response message was not an AEX message.
+ */
+int _zdtm_set_last_time_synced(zdtm_lib_env *cur_env, time_t time_synced);
+
+/**
+ * State Sync is Done
+ * 
+ * The _zdtm_state_sync_done function attempts to notify the Zaurus that
+ * the the Desktop side of the synchronization is done.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully told the Zaurus sync is done.
+ * @retval -1 Failed to send RDS message.
+ * @retval -2 Failed to recv response message.
+ * @retval -3 Failed, response message is not an AEX message.
+ */
+int _zdtm_state_sync_done(zdtm_lib_env *cur_env);
 
 /**
  * Disconnect from Zaurus.

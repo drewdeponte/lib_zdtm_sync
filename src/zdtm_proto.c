@@ -156,6 +156,176 @@ int _zdtm_obtain_sync_state(zdtm_lib_env *cur_env) {
     return 0;
 }
 
+int _zdtm_authenticate_passcode(zdtm_lib_env *cur_env, char *passcode) {
+    int r, pw_size;
+    zdtm_msg msg, rmsg;
+
+    pw_size = strlen(passcode);
+
+    /* construct a RRL message to attempt to authenticate */
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RRL_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rrl.pw = malloc(pw_size);
+    if (msg.body.cont.rrl.pw == NULL) {
+        return -1;
+    }
+    memcpy(msg.body.cont.rrl.pw, passcode, pw_size);
+    msg.body.cont.rrl.pw_size = pw_size;
+
+    /* send RRL message */
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
+    if (r != 0) { free(msg.body.cont.rrl.pw); return -2; }
+
+    free(msg.body.cont.rrl.pw);
+
+    /* recv response message (AEX if succeeded, ANG if failed) */
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
+    if (r != 0) { _zdtm_clean_message(&rmsg); return -3; }
+
+    if (memcmp(rmsg.body.type, AEX_MSG_TYPE, MSG_TYPE_SIZE) == 0) {
+        _zdtm_clean_message(&rmsg);
+        return 0;
+    } else if (memcmp(rmsg.body.type, ANG_MSG_TYPE, MSG_TYPE_SIZE) == 0) {
+        _zdtm_clean_message(&rmsg);
+        return 1;
+    } else {
+        _zdtm_clean_message(&rmsg);
+        return -4;
+    }
+}
+
+int _zdtm_obtain_last_time_synced(zdtm_lib_env *cur_env, time_t *p_time) {
+    zdtm_msg msg, rmsg;
+    int r;
+    char tmp_buf[5];
+    struct tm tmp_time;
+    time_t last_sync_time;
+
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RTG_MSG_TYPE, MSG_TYPE_SIZE);
+
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
+    if (r != 0) { return -1; }
+    
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
+    if (r != 0) { _zdtm_clean_message(&rmsg); return -2; }
+
+    if (memcmp(rmsg.body.type, ATG_MSG_TYPE, MSG_TYPE_SIZE) != 0) {
+        _zdtm_clean_message(&rmsg);
+        return -3;
+    }
+
+    memcpy(tmp_buf, rmsg.body.cont.atg.year, 4);
+    tmp_buf[4] = '\0';
+    tmp_time.tm_year = (atoi(tmp_buf) - 1900);
+
+    memcpy(tmp_buf, rmsg.body.cont.atg.month, 2);
+    tmp_buf[2] = '\0';
+    tmp_time.tm_mon = (atoi(tmp_buf) - 1);
+
+    memcpy(tmp_buf, rmsg.body.cont.atg.day, 2);
+    tmp_buf[2] = '\0';
+    tmp_time.tm_mday = atoi(tmp_buf);
+    
+    memcpy(tmp_buf, rmsg.body.cont.atg.hour, 2);
+    tmp_buf[2] = '\0';
+    tmp_time.tm_hour = atoi(tmp_buf);
+    
+    memcpy(tmp_buf, rmsg.body.cont.atg.minutes, 2);
+    tmp_buf[2] = '\0';
+    tmp_time.tm_min = atoi(tmp_buf);
+
+    memcpy(tmp_buf, rmsg.body.cont.atg.seconds, 2);
+    tmp_buf[2] = '\0';
+    tmp_time.tm_min = atoi(tmp_buf);
+
+    tmp_time.tm_isdst = -1;
+
+    last_sync_time = mktime(&tmp_time);
+    if (last_sync_time == -1) { /* error in call to mktime() */
+        _zdtm_clean_message(&rmsg);
+        return -4;
+    }
+
+    _zdtm_clean_message(&rmsg);
+
+    (*p_time) = last_sync_time;
+
+    return 0;
+}
+
+int _zdtm_set_last_time_synced(zdtm_lib_env *cur_env, time_t time_synced) {
+    struct tm time_brkdwn;
+    char msg_data[15];
+    zdtm_msg msg, rmsg;
+    int r;
+
+    if (localtime_r(&time_synced, &time_brkdwn) == NULL) {
+        return -1;
+    }
+
+    r = snprintf(msg_data, 15, "%.4d%.2d%.2d%.2d%.2d%.2d",
+                 (time_brkdwn.tm_year + 1900),
+                 (time_brkdwn.tm_mon + 1),
+                 time_brkdwn.tm_mday,
+                 time_brkdwn.tm_hour,
+                 time_brkdwn.tm_min,
+                 time_brkdwn.tm_sec);
+    if (r < 0) {
+        return -2;
+    }
+
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RTS_MSG_TYPE, MSG_TYPE_SIZE);
+    memcpy(msg.body.cont.rts.date, msg_data, RTS_DATE_LEN);
+
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
+    if (r != 0) { return -3; }
+    
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
+    if (r != 0) { _zdtm_clean_message(&rmsg); return -4; }
+
+    if (memcmp(rmsg.body.type, AEX_MSG_TYPE, MSG_TYPE_SIZE) != 0) {
+        _zdtm_clean_message(&rmsg);
+        return -5;
+    }
+
+    _zdtm_clean_message(&rmsg);
+
+    return 0;
+}
+
+int _zdtm_state_sync_done(zdtm_lib_env *cur_env) {
+    zdtm_msg msg, rmsg;
+    int r;
+    
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RDS_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rds.sync_type = cur_env->sync_type;
+    msg.body.cont.rds.status = 0x07;
+    msg.body.cont.rds.null_bytes[0] = 0x00;
+    msg.body.cont.rds.null_bytes[1] = 0x00;
+
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
+    if (r != 0) { return -1; }
+    
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
+    if (r != 0) { _zdtm_clean_message(&rmsg); return -2; }
+
+    if (memcmp(rmsg.body.type, AEX_MSG_TYPE, MSG_TYPE_SIZE) != 0) {
+        _zdtm_clean_message(&rmsg);
+        return -3;
+    }
+
+    _zdtm_clean_message(&rmsg);
+    
+    return 0;
+}
+
 int _zdtm_disconnect(zdtm_lib_env *cur_env) {
     int r;
 

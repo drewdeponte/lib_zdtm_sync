@@ -1,3 +1,34 @@
+2007-03-05 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Wrote and documented the _zdtm_authenticate_passcode() function in the
+zdtm_proto.h and zdtm_proto.c files respectively. I also updated the
+lib_zdtm_detailed_plan.planner file and lib_zdtm_detailed_plan.html
+files to represent the completion of this function.
+
+* Wrote and documented the _zdtm_obtain_list_time_synced() function in
+the zdtm_proto.h and zdtm_proto.c files respectively. I also updated the
+lib_zdtm_detailed_plan.planner file and lib_zdtm_detailed_plan.html
+files to represent the completion of this function.
+
+* Wrote and documented the _zdtm_set_last_time_synced() function in the
+zdtm_proto.h and zdtm_proto.c files respectively. I also updated the
+lib_zdtm_detailed_plan.planner file and lib_zdtm_detailed_plan.html
+files to represent the completion of this function.
+
+* Wrote and documented the _zdtm_state_sync_done() function in the
+zdtm_proto.h and zdtm_proto.c files respectively. I also updated the
+lib_zdtm_detailed_plan.planner file and lib_zdtm_detailed_plan.html
+files to represent the completion of this function.
+
+* Integrated the _zdtm_state_sync_done() function into the
+zdtm_terminate_sync() function found in the general API (zdtm_sync.h and
+zdtm_sync.c) and updated it's documentation appropriately. I also
+integrated the _zdtm_disconnect() function into the
+zdtm_terminate_sync() function. I also updated the
+lib_zdtm_detailed_plan.planner file and lib_zdtm_detailed_plan.html
+files to represent the completion and integration of the
+_zdtm_state_sync_done() function.
+
 2007-02-22 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Added the retrieved_sync_state, todo_slow_sync_required,
