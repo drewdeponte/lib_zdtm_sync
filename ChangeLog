@@ -75,6 +75,8 @@ _zdtm_obtain_sync_id_lists() function into zdtm_test_daemon.c for
 testing. I also updated the lib_zdtm_sync_detailed_plan.planner and
 lib_zdtm_sync_detailed_plan.html to represent this modification.
 
+* Modified the order of tasks so that the gantt chart is easier to read.
+
 2007-02-22 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Added the retrieved_sync_state, todo_slow_sync_required,
