@@ -156,6 +156,36 @@ int _zdtm_obtain_last_time_synced(zdtm_lib_env *cur_env, time_t *p_time);
 int _zdtm_set_last_time_synced(zdtm_lib_env *cur_env, time_t time_synced);
 
 /**
+ * Obtain Sync ID Lists
+ *
+ * The _zdtm_obtain_sync_id_lists function attempts to obtain the three
+ * lists of synchronization IDs from the Zaurus. One list contains all
+ * the IDs of the new items, one contains all the IDs of modified items,
+ * and the third list contains all the IDs of deleted items. In the case
+ * of failure none of the vairiables pointed to the parameters will be
+ * altered. If this function succeeds the memory containing the lists
+ * needs to be freed using the free() function because it is allocated
+ * inside this function.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param pp_new_sync_ids Pointer to a pointer to head of new ID list.
+ * @param p_num_new_sync_ids Pointer to var to store num new IDs in.
+ * @param pp_mod_sync_ids Pointer to a pointer to head of mod ID list.
+ * @param p_num_mod_sync_ids Pointer to var to store num mod IDs in.
+ * @param pp_del_sync_ids Pointer to a pointer to head of del ID list.
+ * @param p_num_del_sync_ids Pointer to var to store num del IDs in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained sync ID lists.
+ * @retval -1 Failed to send RSY message.
+ * @retval -2 Failed to recv response message.
+ * @retval -3 Failed, response message is NOT an ASY message.
+ * @retval -4 Failed to allocate memory for ID lists.
+ */
+int _zdtm_obtain_sync_id_lists(zdtm_lib_env *cur_env,
+    uint32_t **pp_new_sync_ids, uint16_t *p_num_new_sync_ids,
+    uint32_t **pp_mod_sync_ids, uint16_t *p_num_mod_sync_ids,
+    uint32_t **pp_del_sync_ids, uint16_t *p_num_del_sync_ids);
+
+/**
  * State Sync is Done
  * 
  * The _zdtm_state_sync_done function attempts to notify the Zaurus that

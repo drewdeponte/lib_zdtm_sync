@@ -69,6 +69,12 @@ _zdtm_obtain_sync_state(), _zdtm_obtain_last_time_synced(),
 _zdtm_set_last_time_synced(), zdtm_requires_slow_sync(),
 zdtm_terminate_sync(), and zdtm_finalize().
 
+* Wrote and documented the _zdtm_obtain_sync_id_lists() function in the
+zdtm_proto.h and zdtm_proto.c files. Integrated the
+_zdtm_obtain_sync_id_lists() function into zdtm_test_daemon.c for
+testing. I also updated the lib_zdtm_sync_detailed_plan.planner and
+lib_zdtm_sync_detailed_plan.html to represent this modification.
+
 2007-02-22 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Added the retrieved_sync_state, todo_slow_sync_required,

@@ -3,9 +3,16 @@
 
 int test_get_changeinfo(zdtm_lib_env *cur_env) {
     time_t last_time_synced, time_synced;
-    zdtm_msg msg, rmsg;
-    int r, i, retval;
+    //zdtm_msg msg, rmsg;
+    int i;
+    int r, retval;
     char buff[256];
+    uint32_t *p_new_sync_ids;
+    uint32_t *p_mod_sync_ids;
+    uint32_t *p_del_sync_ids;
+    uint16_t num_new_sync_ids;
+    uint16_t num_mod_sync_ids;
+    uint16_t num_del_sync_ids;
 
     /* Obtain Device Info from Zaurus */
     r = zdtm_check_cur_auth_state(cur_env);
@@ -95,42 +102,37 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
         return -2;
     }
 
-    /* make a  RSY message, send it and recv an ASY */
-    memset(&msg, 0, sizeof(zdtm_msg));
-    memcpy(msg.body.type, RSY_MSG_TYPE, MSG_TYPE_SIZE);
-    msg.body.cont.rsy.sync_type = SYNC_TYPE_TODO;
-    msg.body.cont.rsy.uk = 0x07;
+    r = _zdtm_obtain_sync_id_lists(cur_env, &p_new_sync_ids, &num_new_sync_ids,
+                                   &p_mod_sync_ids, &num_mod_sync_ids,
+                                   &p_del_sync_ids, &num_del_sync_ids);
+    if (r != 0) {
+        fprintf(stderr, "ERR(%d): _zdtm_obtain_sync_id_lists() failed.\n",
+            r);
+        return 8;
+    }
     
-    r = _zdtm_wrapped_send_message(cur_env, &msg);
-    if(r != 0){ return 1; }
-    
-    memset(&rmsg, 0, sizeof(zdtm_msg));
-    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
-    if(r != 0){ _zdtm_clean_message(&rmsg); return 1; }
-
-    printf("new list id = 0x%.2x\n", rmsg.body.cont.asy.new_list_id);
-    printf("num new sync ids = %u\n", rmsg.body.cont.asy.num_new_sync_ids);
-    for (i = 0; i < rmsg.body.cont.asy.num_new_sync_ids; i++) {
+    printf("num new sync ids = %u\n", num_new_sync_ids);
+    for (i = 0; i < num_new_sync_ids; i++) {
         printf(" -- new sync id [%d] = (hex) 0x%.8x, (dec) %u\n", i,
-            (int)rmsg.body.cont.asy.new_sync_ids[i],
-            (int)rmsg.body.cont.asy.new_sync_ids[i]);
+            (int)p_new_sync_ids[i],
+            (int)p_new_sync_ids[i]);
     }
-    printf("mod list id = 0x%.2x\n", rmsg.body.cont.asy.mod_list_id);
-    printf("num mod sync ids = %u\n", rmsg.body.cont.asy.num_mod_sync_ids);
-    for (i = 0; i < rmsg.body.cont.asy.num_mod_sync_ids; i++) {
+    printf("num mod sync ids = %u\n", num_mod_sync_ids);
+    for (i = 0; i < num_mod_sync_ids; i++) {
         printf(" -- mod sync id [%d] = (hex) 0x%.8x, (dec) %u\n", i,
-            (int)rmsg.body.cont.asy.mod_sync_ids[i],
-            (int)rmsg.body.cont.asy.mod_sync_ids[i]);
+            (int)p_mod_sync_ids[i],
+            (int)p_mod_sync_ids[i]);
     }
-    printf("del list id = 0x%.2x\n", rmsg.body.cont.asy.del_list_id);
-    printf("num del sync ids = %u\n", rmsg.body.cont.asy.num_del_sync_ids);
-    for (i = 0; i < rmsg.body.cont.asy.num_del_sync_ids; i++) {
+    printf("num del sync ids = %u\n", num_del_sync_ids);
+    for (i = 0; i < num_del_sync_ids; i++) {
         printf(" -- del sync id [%d] = (hex) 0x%.8x, (dec) %u\n", i,
-            (int)rmsg.body.cont.asy.del_sync_ids[i],
-            (int)rmsg.body.cont.asy.del_sync_ids[i]);
+            (int)p_del_sync_ids[i],
+            (int)p_del_sync_ids[i]);
     }
 
-    _zdtm_clean_message(&rmsg);
+    free(p_new_sync_ids);
+    free(p_mod_sync_ids);
+    free(p_del_sync_ids);
 
     return 0;
 }

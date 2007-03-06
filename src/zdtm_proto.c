@@ -315,6 +315,83 @@ int _zdtm_set_last_time_synced(zdtm_lib_env *cur_env, time_t time_synced) {
     return 0;
 }
 
+int _zdtm_obtain_sync_id_lists(zdtm_lib_env *cur_env,
+    uint32_t **pp_new_sync_ids, uint16_t *p_num_new_sync_ids,
+    uint32_t **pp_mod_sync_ids, uint16_t *p_num_mod_sync_ids,
+    uint32_t **pp_del_sync_ids, uint16_t *p_num_del_sync_ids) {
+
+    int r;
+    zdtm_msg msg, rmsg;
+    uint32_t *p_new_sync_ids;
+    uint32_t *p_mod_sync_ids;
+    uint32_t *p_del_sync_ids;
+    uint16_t num_new_sync_ids, num_mod_sync_ids, num_del_sync_ids;
+
+    p_new_sync_ids = NULL;
+    p_mod_sync_ids = NULL;
+    p_del_sync_ids = NULL;
+
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RSY_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rsy.sync_type = cur_env->sync_type;
+    msg.body.cont.rsy.uk = 0x07;
+
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
+    if(r != 0){ return -1; }
+
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
+    if(r != 0){ _zdtm_clean_message(&rmsg); return -2; }
+
+    if (memcmp(rmsg.body.type, ASY_MSG_TYPE, MSG_TYPE_SIZE) != 0) {
+        _zdtm_clean_message(&rmsg);
+        return -3;
+    }
+
+    num_new_sync_ids = rmsg.body.cont.asy.num_new_sync_ids;
+    p_new_sync_ids = malloc(sizeof(uint32_t) * num_new_sync_ids);
+    if (p_new_sync_ids == NULL) {
+        _zdtm_clean_message(&rmsg);
+        return -4;
+    }
+    num_mod_sync_ids = rmsg.body.cont.asy.num_mod_sync_ids;
+    p_mod_sync_ids = malloc(sizeof(uint32_t) * num_mod_sync_ids);
+    if (p_mod_sync_ids == NULL) {
+        free(p_new_sync_ids);
+        _zdtm_clean_message(&rmsg);
+        return -4;
+    }
+    num_del_sync_ids = rmsg.body.cont.asy.num_del_sync_ids;
+    p_del_sync_ids = malloc(sizeof(uint32_t) * num_del_sync_ids);
+    if (p_del_sync_ids == NULL) {
+        free(p_mod_sync_ids);
+        free(p_new_sync_ids);
+        _zdtm_clean_message(&rmsg);
+        return -4;
+    }
+
+    /* At this point I know I have allocated all the necessary space so
+     * I can copy the lists over and assign the pointers and their
+     * associated lengths. */
+    memcpy(p_new_sync_ids, rmsg.body.cont.asy.new_sync_ids,
+           (sizeof(uint32_t) * num_new_sync_ids));
+    memcpy(p_mod_sync_ids, rmsg.body.cont.asy.mod_sync_ids,
+           (sizeof(uint32_t) * num_mod_sync_ids));
+    memcpy(p_del_sync_ids, rmsg.body.cont.asy.del_sync_ids,
+           (sizeof(uint32_t) * num_del_sync_ids));
+
+    (*pp_new_sync_ids) = p_new_sync_ids;
+    (*pp_mod_sync_ids) = p_mod_sync_ids;
+    (*pp_del_sync_ids) = p_del_sync_ids;
+    (*p_num_new_sync_ids) = num_new_sync_ids;
+    (*p_num_mod_sync_ids) = num_mod_sync_ids;
+    (*p_num_del_sync_ids) = num_del_sync_ids;
+
+    _zdtm_clean_message(&rmsg);
+    
+    return 0;
+}
+
 int _zdtm_state_sync_done(zdtm_lib_env *cur_env) {
     zdtm_msg msg, rmsg;
     int r;
