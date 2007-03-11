@@ -392,6 +392,39 @@ int _zdtm_obtain_sync_id_lists(zdtm_lib_env *cur_env,
     return 0;
 }
 
+int _zdtm_obtain_param_format(zdtm_lib_env *cur_env) {
+    zdtm_msg msg, rmsg;
+    int r;
+
+    if (cur_env->params != NULL) {
+        return -4;
+    }
+
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RDI_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rdi.sync_type = cur_env->sync_type;
+    msg.body.cont.rdi.uk = 0x07;
+
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
+    if (r != 0) { return -1; }
+
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
+    if (r != 0) { _zdtm_clean_message(&rmsg); return -2; }
+
+    if (memcmp(rmsg.body.type, ADI_MSG_TYPE, MSG_TYPE_SIZE) != 0) {
+        _zdtm_clean_message(&rmsg);
+        return -3;
+    }
+
+    cur_env->num_params = rmsg.body.cont.adi.num_params;
+    cur_env->params = rmsg.body.cont.adi.params;
+
+    _zdtm_clean_message(&rmsg);
+
+    return 0;
+}
+
 int _zdtm_state_sync_done(zdtm_lib_env *cur_env) {
     zdtm_msg msg, rmsg;
     int r;

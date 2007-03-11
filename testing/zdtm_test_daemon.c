@@ -4,7 +4,7 @@
 int test_get_changeinfo(zdtm_lib_env *cur_env) {
     time_t last_time_synced, time_synced;
     //zdtm_msg msg, rmsg;
-    int i;
+    int i, desc_len;
     int r, retval;
     char buff[256];
     uint32_t *p_new_sync_ids;
@@ -83,6 +83,24 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     }
     ctime_r(&time_synced, buff);
     printf("Set Last Time Synced: %s", buff);
+
+    r = _zdtm_obtain_param_format(cur_env);
+    if (r != 0) {
+        fprintf(stderr, "ERR(%d): _zdtm_obtain_param_format() failed.\n",
+            r);
+        return 6;
+    }
+    for (i = 0; i < cur_env->num_params; i++) {
+        desc_len = 4;
+        memcpy(buff, cur_env->params[i].abrev, desc_len);
+        buff[desc_len] = '\0';
+        printf("Param %d: Abrev - %s\n", i, buff);
+        desc_len = cur_env->params[i].desc_len;
+        memcpy(buff, cur_env->params[i].desc, desc_len);
+        buff[desc_len] = '\0';
+        printf("Param %d: Desc - %s\n", i, buff);
+        printf("Param %d: Type ID - 0x%2x\n", i, cur_env->params[i].type_id);
+    }
 
     /* BEFORE I GO ANY FURTHER I MUST BE SURE THAT A FULL SYNC IS NOT
      * REQUIRED. IF A FULL SYNC IS REQUIRED THEN I SHOULD HANDLE THE

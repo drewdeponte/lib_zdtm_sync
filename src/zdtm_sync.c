@@ -54,6 +54,10 @@ int zdtm_initialize(zdtm_lib_env *cur_env) {
     cur_env->calendar_slow_sync_required = 0;
     cur_env->address_book_slow_sync_required = 0;
 
+    /* Set the pramaters format to appropriate initial values. */
+    cur_env->num_params = 0;
+    cur_env->params = NULL;
+
     r = _zdtm_listen_for_zaurus(cur_env);
     if (r != 0) { return -2; }
 
@@ -225,13 +229,20 @@ int zdtm_terminate_sync(zdtm_lib_env *cur_env) {
 }
 
 int zdtm_finalize(zdtm_lib_env *cur_env) {
-    int r;
+    int r, i;
 
     r = _zdtm_stop_listening(cur_env);
     if (r != 0) { return -2; }
 
     r = _zdtm_close_log(cur_env);
     if (r != 0) { return -1; }
+
+    if (cur_env->params != NULL) {
+        for (i = 0; i < cur_env->num_params; i++) {
+            free(cur_env->params[i].desc);
+        }
+        free(cur_env->params);
+    }
 
     return 0;
 }

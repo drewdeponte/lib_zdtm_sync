@@ -36,7 +36,8 @@ int zdtm_parse_raw_adi_msg(void *buf, struct zdtm_adi_msg_content *adi) {
     adi->uk_data_0 = *((unsigned char *)buf);
     buf += 1;
 
-    adi->params = (struct zdtm_adi_msg_param *)malloc(adi->num_params);
+    adi->params = (struct zdtm_adi_msg_param *)malloc(
+        (adi->num_params * sizeof(struct zdtm_adi_msg_param)));
     if (adi->params == NULL)
         return -1;
 
@@ -59,7 +60,7 @@ int zdtm_parse_raw_adi_msg(void *buf, struct zdtm_adi_msg_content *adi) {
         buf += sizeof(uint16_t);
 
         adi->params[i].desc = \
-            (unsigned char *)malloc( adi->params[i].desc_len);
+            (unsigned char *)malloc(adi->params[i].desc_len);
         if (adi->params[i].desc == NULL) {
             for (j = 0; j < i; j++) {
                 free((void *)adi->params[j].desc);

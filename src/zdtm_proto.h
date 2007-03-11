@@ -186,6 +186,23 @@ int _zdtm_obtain_sync_id_lists(zdtm_lib_env *cur_env,
     uint32_t **pp_del_sync_ids, uint16_t *p_num_del_sync_ids);
 
 /**
+ * Obtain Parameter Format
+ *
+ * The _zdtm_obtain_param_format function attempts to obtain the format
+ * which describes the current item for the given type of
+ * synchronization and store it in the current library environment for
+ * later use.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained parameter format.
+ * @retval -1 Failed to send RDI message.
+ * @retval -2 Failed to recv response message.
+ * @retval -3 Failed, response message is NOT an ADI message.
+ * @retval -4 Failed, parameter format already obtained for this lib env.
+ */
+int _zdtm_obtain_param_format(zdtm_lib_env *cur_env);
+
+/**
  * State Sync is Done
  * 
  * The _zdtm_state_sync_done function attempts to notify the Zaurus that

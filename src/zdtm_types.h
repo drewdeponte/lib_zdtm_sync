@@ -67,6 +67,20 @@ extern const unsigned char DMSG_HDR[MSG_HDR_SIZE];
 #define MSG_HDR_CONT_OFFSET 0x09
 
 /**
+ * Zaurus ADI message parameter.
+ *
+ * The zdtm_adi_msg_param is designed to be a substructure of the AID
+ * message content structure. It is used to provide an easily accessible
+ * interface to the data after the raw ADI message has been parsed.
+ */
+struct zdtm_adi_msg_param {
+    unsigned char abrev[4];
+    unsigned char type_id;
+    uint16_t desc_len;
+    unsigned char *desc;
+};
+
+/**
  * Zaurus DTM library environment.
  *
  * The zdtm_lib_env is a type defined to represent the environment for a
@@ -94,6 +108,8 @@ typedef struct ZDTM_EXPORT zdtm_environment {
     int todo_slow_sync_required; // flag if slow sync is required
     int calendar_slow_sync_required; // flag if slow sync is required
     int address_book_slow_sync_required; // flag if slow sync is required
+    uint16_t num_params;    // number of parameters in the params list
+    struct zdtm_adi_msg_param *params; // params that compose item data format
 } zdtm_lib_env;
 
 #endif

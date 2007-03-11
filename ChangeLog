@@ -1,3 +1,26 @@
+2007-03-11 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Implemented the RDI and ADI messages respectively in zdtm_rdi_msg.h,
+zdtm_rdi_msg.c, zdtm_adi_msg.h, and zdtm_adi_msg.c. To do so I needed to
+add the struct zdtm_adi_msg_param to the zdtm_types.h file so that I
+could create a list of params inside the library environment structure
+as well as have one in the ADI message payload structure.
+
+* Added code to zdtm_initialize() and zdtm_finalize() to appropriately
+handle the initializing and freeing of the memory used for the parameter
+list (data format).
+
+* Wrote and documented the _zdtm_obtain_param_format() function in
+zdtm_proto.h and zdtm_proto.c respectively.
+
+* Added code to zdtm_test_daemon.c which uses
+_zdtm_obtain_param_format() and prints the obtained parameter format
+information on standard out as a method of testing it's functionality
+(passed with flying colors).
+
+* Updated lib_zdtm_sync_detailed_plan.planner and
+lib_zdtm_sync_detailed_plan.html to represent these changes.
+
 2007-03-05 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Wrote and documented the _zdtm_authenticate_passcode() function in the

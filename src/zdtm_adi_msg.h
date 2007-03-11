@@ -2,20 +2,7 @@
 #define ZDTM_ADI_MSG_H
 
 #include "zdtm_common.h"
-
-/**
- * Zaurus ADI message parameter.
- *
- * The zdtm_adi_msg_param is designed to be a substructure of the AID
- * message content structure. It is used to provide an easily accessible
- * interface to the data after the raw ADI message has been parsed.
- */
-struct zdtm_adi_msg_param {
-    unsigned char abrev[4];
-    unsigned char type_id;
-    uint16_t desc_len;
-    unsigned char *desc;
-};
+#include "zdtm_types.h"
 
 /**
  * Zaurus ADI message content.
