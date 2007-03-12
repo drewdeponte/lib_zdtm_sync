@@ -1,3 +1,19 @@
+2007-03-12 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Modified the _zdtm_reset_sync_log() function to match the previous
+implementation since the protocol document is not descriptive enough for
+one to implement this function properly. I also modified the funtions
+associated documentation to match my modifications.
+
+* Modified zdtm_test_daemon.c to ignore the -C option for now and call
+the _zdtm_reset_sync_log() function in the appropriate place for it to
+match the protocol order which I have seen in all my packet captures of
+the protocol.
+
+* Modified the rms message implementation in zdtm_rms_msg.h and
+zdtm_rms_msg.c to eliminate some possible problems in the future and
+provide better code consistancy.
+
 2007-03-11 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Implemented the RDI and ADI messages respectively in zdtm_rdi_msg.h,

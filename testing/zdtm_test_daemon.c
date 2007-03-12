@@ -73,6 +73,16 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     ctime_r(&last_time_synced, buff);
     printf("Obtained Last Time Synced: %s", buff);
 
+    /* Attempt to reset the sync log. */
+    if (zdtm_requires_slow_sync(cur_env) == 1) {
+        r = _zdtm_reset_sync_log(cur_env);
+        if (r != 0) {
+            fprintf(stderr, "ERR(%d): _zdtm_reset_sync_log() failed.\n",
+                r);
+            return 6;
+        }
+    }
+
     /* Get the current time of the system and set the last time synced
      * to it. */
     time_synced = time(NULL);
@@ -199,6 +209,7 @@ int main(int argc, char *argv[]) {
     }
     printf("- Initiated Synchronization\n");
 
+    /*
     if (resetLog) {
         r = _zdtm_reset_sync_log(&cur_env);
         if (r != 0) {
@@ -216,6 +227,16 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "ERR(%d): _zdtm_state_sync_done() failed.\n", r);
                 return 6;
             }
+        }
+    }
+    */
+    r = test_get_changeinfo(&cur_env);
+    printf("get_changeinfo - (%d).\n", r);
+    if(r == 0) {
+        r = _zdtm_state_sync_done(&cur_env);
+        if (r != 0) {
+            fprintf(stderr, "ERR(%d): _zdtm_state_sync_done() failed.\n", r);
+            return 6;
         }
     }
     

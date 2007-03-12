@@ -164,9 +164,12 @@ int _zdtm_set_last_time_synced(zdtm_lib_env *cur_env, time_t time_synced);
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully obtained and updated sync state.
  * @retval -1 Failed to send RMS message.
- * @retval -2 Failed to recv ANG message.
- * @retval -3 Failed, message recv'd was not an ANG message.
- * @retval -4 Failed to send second RMS message.
+ * @retval -2 Failed to recv abort common message as response.
+ * @retval -3 Failed to recv response message.
+ * @retval -4 Failed, message recv'd was not an ANG message.
+ * @retval -5 Failed to send RMS message containing log.
+ * @retval -6 Failed to recv response message.
+ * @retval -7 Failed, message recv'd was not an AEX message.
 */
 int _zdtm_reset_sync_log(zdtm_lib_env *cur_env);
 

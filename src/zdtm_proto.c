@@ -321,7 +321,7 @@ int _zdtm_reset_sync_log(zdtm_lib_env *cur_env) {
 
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RMS_MSG_TYPE, MSG_TYPE_SIZE);
-    msg.body.cont.rms.log_size = RMS_LOG_SIZE;
+    msg.body.cont.rms.log_size = 0;
     memset(msg.body.cont.rms.log, 0x00, RMS_LOG_SIZE);
 
     r = _zdtm_wrapped_send_message(cur_env, &msg);
@@ -329,23 +329,54 @@ int _zdtm_reset_sync_log(zdtm_lib_env *cur_env) {
 
     memset(&rmsg, 0, sizeof(zdtm_msg));
     r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
-    if (r != 0) { _zdtm_clean_message(&rmsg); return -2; }
-
-    if (memcmp(rmsg.body.type, ANG_MSG_TYPE, MSG_TYPE_SIZE) != 0) {
-        //fprintf(stderr, "    rmsg.body.type = %c%c%c\n", rmsg.body.type[0], rmsg.body.type[1], rmsg.body.type[2]);
-        // For some reason, I am getting an AEX msg here.
-        _zdtm_clean_message(&rmsg);
-        return -3;
+    if (r != 3) { /* failed to recv abrt common message */
+        _zdtm_clean_message(&rmsg); return -2;
+    }
+    
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
+    if (r != 0) { /* failed to recv response message */
+        _zdtm_clean_message(&rmsg); return -3;
     }
 
+    if (memcmp(rmsg.body.type, ANG_MSG_TYPE, MSG_TYPE_SIZE) != 0) {
+        _zdtm_clean_message(&rmsg);
+        return -4;
+    }
+
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RMS_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rms.log_size = 5;
+    msg.body.cont.rms.log[0] = 0x01;
+    msg.body.cont.rms.log[1] = 0x02;
+    msg.body.cont.rms.log[2] = 0x03;
+    msg.body.cont.rms.log[3] = 0x04;
+    msg.body.cont.rms.log[4] = 0x05;
     r = _zdtm_wrapped_send_message(cur_env, &msg);
-    if (r != 0) { return -4; }
-    
+    if (r != 0) { _zdtm_clean_message(&rmsg); return -5; }
+   
+    /* I am not 100% sure we want to do this here, so I am commenting it
+     * out for now. If we decide in the future that it is the proper
+     * place then we will uncomment this.
     cur_env->retrieved_sync_state = 0;
     cur_env->todo_slow_sync_required = 1;
     cur_env->calendar_slow_sync_required = 1;
     cur_env->address_book_slow_sync_required = 1;
+    */
     
+    _zdtm_clean_message(&rmsg);
+
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
+    if (r != 0) { /* failed to recv response message */
+        _zdtm_clean_message(&rmsg); return -6;
+    }
+
+    if (memcmp(rmsg.body.type, AEX_MSG_TYPE, MSG_TYPE_SIZE) != 0) {
+        _zdtm_clean_message(&rmsg);
+        return -7;
+    }
+
     _zdtm_clean_message(&rmsg);
 
     return 0;

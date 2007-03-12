@@ -25,9 +25,9 @@ void *zdtm_rms_write(void *buf, struct zdtm_rms_msg_content *rms){
 
         buf += rms->log_size;
 
-        memset(buf, 0x00, sizeof(rms->log) - rms->log_size);
+        memset(buf, 0x00, (RMS_LOG_SIZE - rms->log_size));
 
-        buf += sizeof(rms->log) - rms->log_size;
+        buf += (RMS_LOG_SIZE - rms->log_size);
 
         return buf;
 }

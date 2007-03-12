@@ -192,7 +192,9 @@ int _zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     }else if(IS_RMS(p_msg)){
         p_body = zdtm_rms_write(p_body, &p_msg->body.cont.rms);
 
+        /*
         if(p_body == NULL) return RET_BAD_SIZE;
+        */
 
     }else if(IS_RTS(p_msg)){
         p_body = zdtm_rts_write(p_body, &p_msg->body.cont.rts);
