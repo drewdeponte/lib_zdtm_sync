@@ -124,11 +124,16 @@ int _zdtm_authenticate_passcode(zdtm_lib_env *cur_env, char *passcode);
  * The _zdtm_obtain_last_time_synced function attempts to obtain a
  * timestamp of the last time a synchronization occured. This is often
  * referred to as a synchronization anchor and can be used to help
- * identify if a slow (full) sync needs to be performed.
+ * identify if a slow (full) sync needs to be performed. If the device
+ * has either gone through a hard reset or has never been synced before
+ * it will return a sync anchor of all zeros representing that the
+ * device hasn't been synced before. This has its own posetive return
+ * value.
  * @param cur_env Pointer to the current zdtm library environment.
  * @param p_time Pointer to time_t variable to store returned time in.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully obtained last time synced.
+ * @retval 1 Successfully obtained last time synced (never synced before).
  * @retval -1 Failed to send RTG message.
  * @retval -2 Failed to recv response message.
  * @retval -3 Failed, response message wasn't an ATG message.

@@ -234,6 +234,17 @@ int _zdtm_obtain_last_time_synced(zdtm_lib_env *cur_env, time_t *p_time) {
         return -3;
     }
 
+    if ((rmsg.body.cont.atg.year == 0) &&
+        (rmsg.body.cont.atg.month == 0) &&
+        (rmsg.body.cont.atg.day == 0) &&
+        (rmsg.body.cont.atg.hour == 0) &&
+        (rmsg.body.cont.atg.minutes == 0) &&
+        (rmsg.body.cont.atg.seconds == 0)) {
+        
+        _zdtm_clean_message(&rmsg);
+        return 1;
+    }
+
     memcpy(tmp_buf, rmsg.body.cont.atg.year, 4);
     tmp_buf[4] = '\0';
     tmp_time.tm_year = (atoi(tmp_buf) - 1900);

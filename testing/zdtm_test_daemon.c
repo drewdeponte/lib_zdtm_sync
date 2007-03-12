@@ -66,9 +66,19 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     /* Here I get the last time it was synced */
     r = _zdtm_obtain_last_time_synced(cur_env, &last_time_synced);
     if (r != 0) {
-        fprintf(stderr, "ERR(%d): _zdtm_obtain_last_time_synced() failed.\n",
-            r);
-        return 5;
+        if (r == 1) {
+            fprintf(stderr,
+                "Warning:: _zdtm_obtain_last_time_synced() claimed\n");
+            fprintf(stderr,
+                "that the device has never been synced before by ATG\n");
+            fprintf(stderr, "of all zeros.\n"); 
+            return 5;
+        } else {
+            fprintf(stderr,
+                "ERR(%d): _zdtm_obtain_last_time_synced() failed.\n",
+                r);
+            return 5;
+        }
     }
     ctime_r(&last_time_synced, buff);
     printf("Obtained Last Time Synced: %s", buff);
