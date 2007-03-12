@@ -19,6 +19,10 @@ set to all zeros, and returns a value signifying this case, so that
 callers may determine if this case occurs because it is seen to occur
 the first time a sync is ever performed on a device.
 
+* Modified zdtm_test_daemon.c to check the call
+_zdtm_obtain_device_info() after zdtm_check_cur_auth_state() in normal
+(non-slow) syncs.
+
 2007-03-11 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Implemented the RDI and ADI messages respectively in zdtm_rdi_msg.h,
