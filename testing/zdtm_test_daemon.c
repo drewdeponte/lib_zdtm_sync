@@ -1,5 +1,6 @@
 #include "zdtm_sync.h"
 #include <stdio.h>
+#include <string.h>
 
 int test_get_changeinfo(zdtm_lib_env *cur_env) {
     time_t last_time_synced, time_synced;
@@ -158,6 +159,12 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
 int main(int argc, char *argv[]) {
     zdtm_lib_env cur_env;
     int r;
+    int resetLog = 0;
+    
+    for (r=1; r<argc; r++) {
+        if (strcmp(argv[r], "-C") == 0)
+            resetLog = 1;
+    }
     
     memset(&cur_env, 0, sizeof(zdtm_lib_env));
     
@@ -192,16 +199,26 @@ int main(int argc, char *argv[]) {
     }
     printf("- Initiated Synchronization\n");
 
-    r = test_get_changeinfo(&cur_env);
-    printf("get_changeinfo - (%d).\n", r);
-    if(r == 0) {
-        r = _zdtm_state_sync_done(&cur_env);
+    if (resetLog) {
+        r = _zdtm_reset_sync_log(&cur_env);
         if (r != 0) {
-            fprintf(stderr, "ERR(%d): _zdtm_state_sync_done() failed.\n", r);
-            return 6;
+            fprintf(stderr, "ERR(%d): _zdtm_reset_sync_log() failed.\n", r);
+            return 5;
+        }
+        printf("Successfully reset sync log.\n");
+    }
+    else {
+        r = test_get_changeinfo(&cur_env);
+        printf("get_changeinfo - (%d).\n", r);
+        if(r == 0) {
+            r = _zdtm_state_sync_done(&cur_env);
+            if (r != 0) {
+                fprintf(stderr, "ERR(%d): _zdtm_state_sync_done() failed.\n", r);
+                return 6;
+            }
         }
     }
-
+    
     r = zdtm_terminate_sync(&cur_env);
     if (r != 0) {
         fprintf(stderr, "ERR(%d): zdtm_terminate_sync() failed.\n", r);

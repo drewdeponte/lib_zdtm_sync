@@ -13,9 +13,11 @@
  * The message is padded with 0x00 if it is not the full size.
  */
 
+#define RMS_LOG_SIZE 38
+ 
 struct zdtm_rms_msg_content {
     uint16_t log_size;
-    unsigned char log[38];
+    unsigned char log[RMS_LOG_SIZE];
 };
 
 extern const char *RMS_MSG_TYPE;

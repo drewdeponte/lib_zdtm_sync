@@ -315,6 +315,42 @@ int _zdtm_set_last_time_synced(zdtm_lib_env *cur_env, time_t time_synced) {
     return 0;
 }
 
+int _zdtm_reset_sync_log(zdtm_lib_env *cur_env) {
+    int r;
+    zdtm_msg msg, rmsg;
+
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RMS_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rms.log_size = RMS_LOG_SIZE;
+    memset(msg.body.cont.rms.log, 0x00, RMS_LOG_SIZE);
+
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
+    if (r != 0) { return -1; }
+
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
+    if (r != 0) { _zdtm_clean_message(&rmsg); return -2; }
+
+    if (memcmp(rmsg.body.type, ANG_MSG_TYPE, MSG_TYPE_SIZE) != 0) {
+        //fprintf(stderr, "    rmsg.body.type = %c%c%c\n", rmsg.body.type[0], rmsg.body.type[1], rmsg.body.type[2]);
+        // For some reason, I am getting an AEX msg here.
+        _zdtm_clean_message(&rmsg);
+        return -3;
+    }
+
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
+    if (r != 0) { return -4; }
+    
+    cur_env->retrieved_sync_state = 0;
+    cur_env->todo_slow_sync_required = 1;
+    cur_env->calendar_slow_sync_required = 1;
+    cur_env->address_book_slow_sync_required = 1;
+    
+    _zdtm_clean_message(&rmsg);
+
+    return 0;
+}
+
 int _zdtm_obtain_sync_id_lists(zdtm_lib_env *cur_env,
     uint32_t **pp_new_sync_ids, uint16_t *p_num_new_sync_ids,
     uint32_t **pp_mod_sync_ids, uint16_t *p_num_mod_sync_ids,

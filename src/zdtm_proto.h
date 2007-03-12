@@ -156,6 +156,26 @@ int _zdtm_obtain_last_time_synced(zdtm_lib_env *cur_env, time_t *p_time);
 int _zdtm_set_last_time_synced(zdtm_lib_env *cur_env, time_t time_synced);
 
 /**
+*  Reset Sync Log
+ *
+ * The _zdtm_reset_sync_log function attempts to reset the sync log
+ * on the Zaurus. This effectively makes a slow (full) sync required.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained and updated sync state.
+ * @retval -1 Failed to send RMS message.
+ * @retval -2 Failed to recv ANG message.
+ * @retval -3 Failed, message recv'd was not an ANG message.
+ * @retval -4 Failed to send second RMS message.
+*/
+int _zdtm_reset_sync_log(zdtm_lib_env *cur_env);
+
+/**
+*  Reset Item State
+ */
+int _zdtm_reset_item_states(zdtm_lib_env *cur_env);
+
+/**
  * Obtain Sync ID Lists
  *
  * The _zdtm_obtain_sync_id_lists function attempts to obtain the three
