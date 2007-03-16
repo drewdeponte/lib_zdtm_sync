@@ -231,6 +231,74 @@ int _zdtm_obtain_sync_id_lists(zdtm_lib_env *cur_env,
 int _zdtm_obtain_param_format(zdtm_lib_env *cur_env);
 
 /**
+ * Obtain Item
+ *
+ * The _zdtm_obtain_item function attempts to obtain the data of an item
+ * on the Zaurus given the sync id of that item. If successful it stores
+ * the address of a dynamically allocated array of the parameters of the
+ * item in the pointer passed by address to the function as p_params. If
+ * successful it also stores the number of parameters in the variable
+ * passed by address to the function as p_num_params. Note: In failure
+ * no values or set via p_params or p_num_params. In success since the
+ * array of parameters is dynamically allocated along with the parameter
+ * data of each parameter, it must be appropriately deallocated using
+ * the free() function.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param sync_id The sync id of the item to obtain.
+ * @param p_params Pointer to the pointer to store addr of params array in.
+ * @param p_num_parms Pointer to variable to store num of params in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained parameter format.
+ * @retval -1 Failed to send RDR message.
+ * @retval -2 Failed to recv response message.
+ * @retval -3 Failed, response message is NOT an ADR message.
+ */
+int _zdtm_obtain_item(zdtm_lib_env *cur_env, uint32_t sync_id,
+    struct zdtm_adr_msg_param **p_params, uint16_t *p_num_params);
+
+/**
+ * Parse params for a Todo item.
+ *
+ * The _zdtm_parse_todo_item_params function attempts to take the
+ * parameters for an object obtained via the _zdtm_obtain_item()
+ * function and parse them into a structure representing a Todo item by
+ * using the previously obtained parameter format from the
+ * _zdtm_obtain_param_format() function.
+ * @param p_param_format Pointer to parameter based format.
+ * @param num_format_params The number of params in the format.
+ * @param params Pointer to item data params.
+ * @param num_params The number of item data params.
+ * @param Pointer to zdtm_todo struct to store results in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully parsed todo item params.
+ * @retval -1 Num of params between data params and format don't match.
+ * @retval -2 Failed to allocate memory for category.
+ * @retval -3 Failed to allocate memory for description.
+ * @retval -4 Failed to allocate memory for notes.
+ */
+int _zdtm_parse_todo_item_params(struct zdtm_adi_msg_param *p_param_format,
+    uint16_t num_format_params, struct zdtm_adr_msg_param *params,
+    uint16_t num_params, struct zdtm_todo *p_todo);
+
+/**
+ * Obtain Todo Item.
+ *
+ * The _zdtm_obtain_todo_item function attempts to obtain the data for a
+ * Todo item and build a struture to represent the Todo item given a
+ * sync id.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param sync_id The sync id of the item to obtain.
+ * @param p_todo Pointer to zdtm_todo structure to store results in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained Todo item.
+ * @retval -1 Failed, current environment is not set to Todo sync type.
+ * @retval -2 Failed to obtain item data from the Zaurus.
+ * @retval -3 Failed to build zdtm_todo struct from item data.
+ * */
+int _zdtm_obtain_todo_item(zdtm_lib_env *cur_env, uint32_t sync_id,
+    struct zdtm_todo *p_todo);
+
+/**
  * State Sync is Done
  * 
  * The _zdtm_state_sync_done function attempts to notify the Zaurus that

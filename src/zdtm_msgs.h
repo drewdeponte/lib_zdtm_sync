@@ -35,6 +35,7 @@
 
 #include "zdtm_aay_msg.h"
 #include "zdtm_adi_msg.h"
+#include "zdtm_adr_msg.h"
 #include "zdtm_aex_msg.h"
 #include "zdtm_aig_msg.h"
 #include "zdtm_amg_msg.h"
@@ -77,6 +78,7 @@ struct zdtm_message_body {
         struct zdtm_aex_msg_content aex;
         struct zdtm_ang_msg_content ang;
         struct zdtm_adi_msg_content adi;
+        struct zdtm_adr_msg_content adr;
         struct zdtm_asy_msg_content asy;
 
         // Content structures for Qtopia Desktop messages

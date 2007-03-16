@@ -178,7 +178,7 @@
         <task id="45" name="RDR Message" note="" work="28800" start="20070314T170000Z" end="20070316T170000Z" work-start="20070315T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work">
           <constraint type="start-no-earlier-than" time="20070311T000000Z"/>
         </task>
-        <task id="46" name="ADR Message" note="" work="28800" start="20070314T170000Z" end="20070316T170000Z" work-start="20070315T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <task id="46" name="ADR Message" note="" work="28800" start="20070314T170000Z" end="20070316T170000Z" work-start="20070315T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work">
           <constraint type="start-no-earlier-than" time="20070311T000000Z"/>
         </task>
         <task id="47" name="Parse Item Data Into Approp Struct" note="" work="86400" start="20070316T170000Z" end="20070321T170000Z" work-start="20070319T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
@@ -186,7 +186,7 @@
             <predecessor id="1" predecessor-id="46" type="FS"/>
             <predecessor id="1" predecessor-id="45" type="FS"/>
           </predecessors>
-          <task id="48" name="Parse Todo Item Data" note="" work="28800" start="20070316T170000Z" end="20070319T170000Z" work-start="20070319T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+          <task id="48" name="Parse Todo Item Data" note="" work="28800" start="20070316T170000Z" end="20070319T170000Z" work-start="20070319T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
           <task id="49" name="Parse Calendar Item Data" note="" work="28800" start="20070319T170000Z" end="20070320T170000Z" work-start="20070320T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
             <predecessors>
               <predecessor id="1" predecessor-id="48" type="FS"/>
@@ -202,7 +202,7 @@
           <predecessors>
             <predecessor id="1" predecessor-id="47" type="FS"/>
           </predecessors>
-          <task id="52" name="Get Todo Item" note="" work="28800" start="20070321T170000Z" end="20070327T081320Z" work-start="20070322T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+          <task id="52" name="Get Todo Item" note="" work="28800" start="20070321T170000Z" end="20070327T081320Z" work-start="20070322T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
           <task id="53" name="Get Calendar Item" note="" work="28800" start="20070321T170000Z" end="20070327T081320Z" work-start="20070322T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
           <task id="54" name="Get Address Book Item" note="" work="28800" start="20070321T170000Z" end="20070327T081320Z" work-start="20070322T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
         </task>

@@ -276,6 +276,10 @@ int _zdtm_parse_raw_msg(zdtm_msg *p_msg) {
         if (zdtm_parse_raw_asy_msg(p_msg->body.p_raw_content,
                     &p_msg->body.cont.asy))
             return -8;
+    } else if (IS_ADR(p_msg)) {
+        if (zdtm_parse_raw_adr_msg(p_msg->body.p_raw_content,
+                    &p_msg->body.cont.adr))
+            return -9;
     } else {
         return -255;
     }

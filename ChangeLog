@@ -1,3 +1,45 @@
+2007-03-15 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Created the zdtm_adr_msg.h and zdtm_adr_msg.c files and wrote the ADR
+message handling code so that ADR messages can now be properly parsed
+and handled.
+
+* Added code to the _zdtm_parse_raw_msg() function in the zdtm_msgs.c
+file so that ADR messages will now use the code from zdtm_adr_msg.h and
+zdtm_adr_msg.c to parse them when they are received. I also added code
+to zdtm_msgs.h so that the header would be included and the structure
+representing the ADR message payload would be included in the body
+structures payload union.
+
+* Wrote and documented the _zdtm_obtain_item() function in the
+zdtm_proto.h and zdtm_proto.c files respectively. Its purpose is to
+obtain the data for an item on the Zaurus given that items sync id. It
+is designed to return an array of type struct zdtm_adr_msg_param and the
+number of params in the array via the parameter passing and returns an
+integer representing success or failure.
+
+* Added the DATA_ID_* macros to zdtm_common.h so that internally we may
+identify different paramater types that are specified by the Zaurus
+protocol. These are specifically useful for the parameter parsing using
+the parameter based item format specifiers obtained via the protocol.
+
+* Created the zdtm_todo structure in the zdtm_common.h file which is
+designed to basically represent a Todo Item. It will be what gets
+returned when on Obtains a TodoItem from the Zaurus.
+
+* Implemented the _zdtm_parse_todo_item_params() function which
+basically takes in the previously obtained parameter format and the
+parameters retreived from the Zaurus using the _zdtm_obtain_item()
+function and builds a struct zdtm_todo with the data from the params. I
+also documented the _zdtm_parse_todo_item_params() function.
+
+* Wrote and documented the _zdtm_obtain_todo_item() function which
+handles obtaining a todo item from the Zaurus given a synchronization
+id.
+
+* Updated the lib_zdtm_sync_detailed_plan .planner and .html files
+respectively to show these modifications.
+
 2007-03-12 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Modified the _zdtm_reset_sync_log() function to match the previous
