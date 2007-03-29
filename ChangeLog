@@ -1,3 +1,8 @@
+2007-03-28 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Added the zdtm_adr_msg.h and zdtm_adr_msg.c files to the svn repos
+because I forgot too last commit.
+
 2007-03-15 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Created the zdtm_adr_msg.h and zdtm_adr_msg.c files and wrote the ADR
