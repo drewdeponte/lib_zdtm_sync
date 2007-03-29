@@ -130,6 +130,9 @@ int _zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
     }else if(IS_RSY(p_msg)) {
         p_msg->body_size += zdtm_rsy_length(&p_msg->body.cont.rsy);
 
+    }else if(IS_RSS(p_msg)) {
+        p_msg->body_size += zdtm_rss_length(&p_msg->body.cont.rss);
+
     }else if(IS_RDR(p_msg)) {
         p_msg->body_size += zdtm_rdr_length(&p_msg->body.cont.rdr);
 
@@ -204,6 +207,9 @@ int _zdtm_prepare_message(zdtm_lib_env *cur_env, zdtm_msg *p_msg) {
 
     }else if(IS_RSY(p_msg)){
         p_body = zdtm_rsy_write(p_body, &p_msg->body.cont.rsy);
+
+    }else if(IS_RSS(p_msg)){
+        p_body = zdtm_rss_write(p_body, &p_msg->body.cont.rss);
 
     }else if(IS_RDR(p_msg)){
         p_body = zdtm_rdr_write(p_body, &p_msg->body.cont.rdr);

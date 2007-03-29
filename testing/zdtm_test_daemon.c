@@ -151,6 +151,7 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
             r);
         return 7;
     }
+    /*
     if (r == 1) {
         printf("SLOW SYNC REQUIRED!\n");
         printf("This test_daemon currently does not support slow syncs\n");
@@ -159,6 +160,7 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
         printf("to get beyond this point in the synchronization\n");
         return -2;
     }
+    */
 
     r = _zdtm_obtain_sync_id_lists(cur_env, &p_new_sync_ids, &num_new_sync_ids,
                                    &p_mod_sync_ids, &num_mod_sync_ids,

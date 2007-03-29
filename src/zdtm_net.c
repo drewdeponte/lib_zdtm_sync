@@ -529,16 +529,19 @@ int _zdtm_wrapped_send_message(zdtm_lib_env *cur_env, zdtm_msg *msg) {
     /* recv rqst message */
     memset(&rmsg, 0, sizeof(zdtm_msg));
     r = _zdtm_recv_message(cur_env, &rmsg);
-    if (r != 2) { _zdtm_clean_message(&rmsg); return -1; }
+    if (r != 2) {
+        _zdtm_clean_message(&rmsg); return -1; }
 
     /* send general message */
     r = _zdtm_send_message(cur_env, msg);
-    if (r != 0) { return -2; }
+    if (r != 0) {
+        _zdtm_clean_message(&rmsg); return -2; }
 
     /* recv ack message */
     memset(&rmsg, 0, sizeof(zdtm_msg));
     r = _zdtm_recv_message(cur_env, &rmsg);
-    if (r != 1) { _zdtm_clean_message(&rmsg); return -3; }
+    if (r != 1) {
+        _zdtm_clean_message(&rmsg); return -3; }
 
     return 0;
 }

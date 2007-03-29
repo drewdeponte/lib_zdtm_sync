@@ -3,6 +3,12 @@
 * Added the zdtm_adr_msg.h and zdtm_adr_msg.c files to the svn repos
 because I forgot too last commit.
 
+* Added the RSS message functions to the _zdtm_prepare_message()
+function so that it was built properly before sending it.
+
+* Commented out the full-sync -2 error return in the test daemon so that
+in the case of full syncs it will get all the members etc.
+
 2007-03-15 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Created the zdtm_adr_msg.h and zdtm_adr_msg.c files and wrote the ADR

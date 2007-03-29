@@ -92,6 +92,7 @@ struct zdtm_message_body {
         struct zdtm_rts_msg_content rts;
         struct zdtm_rdi_msg_content rdi;
         struct zdtm_rsy_msg_content rsy;
+        struct zdtm_rss_msg_content rss;
         struct zdtm_rdr_msg_content rdr;
         struct zdtm_rdw_msg_content rdw;
         struct zdtm_rdd_msg_content rdd;
@@ -99,7 +100,6 @@ struct zdtm_message_body {
         struct zdtm_rqt_msg_content rqt;
         struct zdtm_rlr_msg_content rlr;
         struct zdtm_rge_msg_content rge;
-        struct zdtm_rss_msg_content rss;
     } cont;
 };
 
