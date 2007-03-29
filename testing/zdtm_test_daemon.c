@@ -37,17 +37,17 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
                 "ERR(%d): _zdtm_authenticate_passcode() failed.\n", r);
             return 5;
         }
-    } else { /* doesn't require passcode */
-        r = _zdtm_obtain_device_info(cur_env);
-        if (r < 0) {
-            fprintf(stderr, "ERR(%d): zdtm_check_cur_auth_state() failed.\n", r);
-            return 5;
-        }
-        printf("- Obtained Device Info\n");
-        printf("\tModel String: %s\n", cur_env->model);
-        printf("\tLanguage: %c%c\n", cur_env->language[0], cur_env->language[1]);
-        printf("\tCurrent Auth State: 0x%.2x\n", cur_env->cur_auth_state);
     }
+
+    r = _zdtm_obtain_device_info(cur_env);
+    if (r < 0) {
+        fprintf(stderr, "ERR(%d): zdtm_check_cur_auth_state() failed.\n", r);
+        return 5;
+    }
+    printf("- Obtained Device Info\n");
+    printf("\tModel String: %s\n", cur_env->model);
+    printf("\tLanguage: %c%c\n", cur_env->language[0], cur_env->language[1]);
+    printf("\tCurrent Auth State: 0x%.2x\n", cur_env->cur_auth_state);
 
     /* Obtain Zaurus Sync State */
     r = _zdtm_obtain_sync_state(cur_env);
