@@ -103,6 +103,37 @@ int _zdtm_obtain_device_info(zdtm_lib_env *cur_env);
 int _zdtm_obtain_sync_state(zdtm_lib_env *cur_env);
 
 /**
+ *  Reset Sync State
+ *
+ * The _zdtm_reset_sync_state function attempts to actually reset the
+ * state of items in the database on the Zaurus so that they will be
+ * recognized as new items.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @type sync type (0 - Todo, 1 - Calendar, 2 - Address Book)
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully reset sync state.
+ * @retval -1 Failed to send RSS message.
+ * @retval -2 Failed to recv AEX message.
+ * @retval -3 Failed, message recv'd was not an AEX message.
+ */
+int _zdtm_reset_sync_state(zdtm_lib_env *cur_env, unsigned int type);
+
+/**
+ *  Reset Sync States
+ *
+ * The _zdtm_reset_sync_states function attempts to actually reset the
+ * state of all items in the database on the Zaurus so that they will be
+ * recognized as new items.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully reset sync states.
+ * @retval -1 Failed to reset Todo sync state.
+ * @retval -2 Failed to reset Calendar sync state.
+ * @retval -3 Failed to reset Address Book sync state.
+ */
+int _zdtm_reset_sync_states(zdtm_lib_env *cur_env);
+
+/**
  * Authenticate Passcode
  *
  * The _zdtm_authenticate_passcode function attempts to authenticate the
@@ -161,7 +192,7 @@ int _zdtm_obtain_last_time_synced(zdtm_lib_env *cur_env, time_t *p_time);
 int _zdtm_set_last_time_synced(zdtm_lib_env *cur_env, time_t time_synced);
 
 /**
-*  Reset Sync Log
+ *  Reset Sync Log
  *
  * The _zdtm_reset_sync_log function attempts to reset the sync log
  * on the Zaurus. This effectively makes a slow (full) sync required.
@@ -177,11 +208,6 @@ int _zdtm_set_last_time_synced(zdtm_lib_env *cur_env, time_t time_synced);
  * @retval -7 Failed, message recv'd was not an AEX message.
 */
 int _zdtm_reset_sync_log(zdtm_lib_env *cur_env);
-
-/**
-*  Reset Item State
- */
-int _zdtm_reset_item_states(zdtm_lib_env *cur_env);
 
 /**
  * Obtain Sync ID Lists

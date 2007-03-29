@@ -59,6 +59,7 @@
 #include "zdtm_rqt_msg.h"
 #include "zdtm_rlr_msg.h"
 #include "zdtm_rge_msg.h"
+#include "zdtm_rss_msg.h"
 
 /**
  * Zaurus DTM Message Body.
@@ -98,6 +99,7 @@ struct zdtm_message_body {
         struct zdtm_rqt_msg_content rqt;
         struct zdtm_rlr_msg_content rlr;
         struct zdtm_rge_msg_content rge;
+        struct zdtm_rss_msg_content rss;
     } cont;
 };
 
