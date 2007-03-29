@@ -100,12 +100,6 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
                 r);
             return 6;
         }
-        r = _zdtm_reset_sync_states(cur_env);
-        if (r != 0) {
-            fprintf(stderr, "ERR(%d): _zdtm_reset_sync_states() failed.\n",
-                r);
-            return 13;
-        }
     }
 
     /* Get the current time of the system and set the last time synced
@@ -119,6 +113,16 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     }
     ctime_r(&time_synced, buff);
     printf("Set Last Time Synced: %s", buff);
+    
+    /* Attempt to reset the sync state. */
+    if (zdtm_requires_slow_sync(cur_env) == 1) {
+        r = _zdtm_reset_sync_state(cur_env);
+        if (r != 0) {
+            fprintf(stderr, "ERR(%d): _zdtm_reset_sync_state() failed.\n",
+                r);
+            return 13;
+        }
+    }
 
     r = _zdtm_obtain_param_format(cur_env);
     if (r != 0) {

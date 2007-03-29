@@ -158,14 +158,14 @@ int _zdtm_obtain_sync_state(zdtm_lib_env *cur_env) {
     return 0;
 }
 
-int _zdtm_reset_sync_state(zdtm_lib_env *cur_env, unsigned int type) {
+int _zdtm_reset_sync_state(zdtm_lib_env *cur_env) {
     int r;
     zdtm_msg msg, rmsg;
 
     memset(&msg, 0, sizeof(zdtm_msg));
     memcpy(msg.body.type, RSS_MSG_TYPE, MSG_TYPE_SIZE);
     msg.body.cont.rss.uk_1 = 0x01;
-    msg.body.cont.rss.sync_type = type;
+    msg.body.cont.rss.sync_type = cur_env->sync_type;
     msg.body.cont.rss.uk_2 = 0x01;
 
     r = _zdtm_wrapped_send_message(cur_env, &msg);
@@ -180,21 +180,13 @@ int _zdtm_reset_sync_state(zdtm_lib_env *cur_env, unsigned int type) {
         return -3;
     }
 
-    switch(type) {
+    switch(cur_env->sync_type) {
         case 0:  cur_env->todo_slow_sync_required = 1;
         case 1:  cur_env->calendar_slow_sync_required = 1;
         default: cur_env->address_book_slow_sync_required = 1;
     }
     
     _zdtm_clean_message(&rmsg);
-    
-    return 0;
-}
-
-int _zdtm_reset_sync_states(zdtm_lib_env *cur_env) {
-    if (_zdtm_reset_sync_state(cur_env, 0)) return -1;
-    if (_zdtm_reset_sync_state(cur_env, 1)) return -2;
-    if (_zdtm_reset_sync_state(cur_env, 2)) return -3;
     
     return 0;
 }
