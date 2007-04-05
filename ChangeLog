@@ -12,6 +12,27 @@ _zdtm_delete_item() function in the zdtm_proto.h file.
 docs/lib_zdtm_sync_detailed_plan.html to reflect the addition of the
 _zdtm_delete_item() function.
 
+* Implemented the zdtm_calendar_item structure in zdtm_common.h to
+represent calendar items.
+
+* Implemented the _zdtm_parse_calendar_item_params() function in the
+zdtm_proto.h and zdtm_proto.c files respectively. I also documented the
+_zdtm_parse_calendar_item_params() function in the zdtm_proto.h file.
+
+* Implemented the _zdtm_obtain_calendar_item() function in the
+zdtm_proto.h and zdtm_proto.c files respectively. I also documented the
+_zdtm_obtain_calendar_item() function in the zdtm_proto.h file.
+
+* Renamed the zdtm_todo structure to zdtm_todo_item structure to better
+identify what it represents and modified the appropriate code and
+documentation that was effected.
+
+* Updated docs/lib_zdtm_sync_detailed_plan.planner and
+docs/lib_zdtm_sync_detailed_plan.html to reflect the addition of the
+_zdtm_parse_calendar_item_params() and _zdtm_obtain_calendar_item()
+functions.
+
+
 2007-03-28 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Added the zdtm_adr_msg.h and zdtm_adr_msg.c files to the svn repos

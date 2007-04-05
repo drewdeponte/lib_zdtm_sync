@@ -277,7 +277,7 @@ int _zdtm_obtain_item(zdtm_lib_env *cur_env, uint32_t sync_id,
  * @param num_format_params The number of params in the format.
  * @param params Pointer to item data params.
  * @param num_params The number of item data params.
- * @param Pointer to zdtm_todo struct to store results in.
+ * @param Pointer to zdtm_todo_item struct to store results in.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully parsed todo item params.
  * @retval -1 Num of params between data params and format don't match.
@@ -287,7 +287,32 @@ int _zdtm_obtain_item(zdtm_lib_env *cur_env, uint32_t sync_id,
  */
 int _zdtm_parse_todo_item_params(struct zdtm_adi_msg_param *p_param_format,
     uint16_t num_format_params, struct zdtm_adr_msg_param *params,
-    uint16_t num_params, struct zdtm_todo *p_todo);
+    uint16_t num_params, struct zdtm_todo_item *p_todo_item);
+
+/**
+ * Parse params for a Calendar item.
+ *
+ * The _zdtm_parse_calendar_item_params function attempts to take the
+ * parameters for an object obtained via the _zdtm_obtain_item()
+ * function and parse them into a structure representing a Calendar item
+ * by using the previously obtained parameter format from the
+ * _zdtm_obtain_param_format() function.
+ * @param p_param_format Pointer to parameter based format.
+ * @param num_format_params The number of params in the format.
+ * @param params Pointer to item data params.
+ * @param num_params The number of item data params.
+ * @param Pointer to zdtm_calendar_item struct to store results in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully parsed todo item params.
+ * @retval -1 Num of params between data params and format don't match.
+ * @retval -2 Failed to allocate memory for category.
+ * @retval -3 Failed to allocate memory for description.
+ * @retval -4 Failed to allocate memory for location.
+ * @retval -5 Failed to allocate memory for notes.
+ */
+int _zdtm_parse_calendar_item_params(struct zdtm_adi_msg_param *p_param_format,
+    uint16_t num_format_params, struct zdtm_adr_msg_param *params,
+    uint16_t num_params, struct zdtm_calendar_item *p_calendar_item);
 
 /**
  * Obtain Todo Item.
@@ -297,15 +322,34 @@ int _zdtm_parse_todo_item_params(struct zdtm_adi_msg_param *p_param_format,
  * sync id.
  * @param cur_env Pointer to the current zdtm library environment.
  * @param sync_id The sync id of the item to obtain.
- * @param p_todo Pointer to zdtm_todo structure to store results in.
+ * @param p_todo Pointer to zdtm_todo_item structure to store results in.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully obtained Todo item.
  * @retval -1 Failed, current environment is not set to Todo sync type.
  * @retval -2 Failed to obtain item data from the Zaurus.
- * @retval -3 Failed to build zdtm_todo struct from item data.
+ * @retval -3 Failed to build zdtm_todo_item struct from item data.
  * */
 int _zdtm_obtain_todo_item(zdtm_lib_env *cur_env, uint32_t sync_id,
-    struct zdtm_todo *p_todo);
+    struct zdtm_todo_item *p_todo_item);
+
+
+/**
+ * Obtain Calendar Item.
+ *
+ * The _zdtm_obtain_calendar_item function attempts to obtain the data
+ * for a Calendar item and build a struture to represent the Calendar
+ * item given a sync id.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param sync_id The sync id of the item to obtain.
+ * @param p_todo Pointer to zdtm_calendar_item structure to store results in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained Todo item.
+ * @retval -1 Failed, current environment is not set to Calendar sync type.
+ * @retval -2 Failed to obtain item data from the Zaurus.
+ * @retval -3 Failed to build zdtm_calendar_item struct from item data.
+ * */
+int _zdtm_obtain_calendar_item(zdtm_lib_env *cur_env, uint32_t sync_id,
+    struct zdtm_calendar_item *p_todo_calendar);
 
 /**
  * Delete Item.

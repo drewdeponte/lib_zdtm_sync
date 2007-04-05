@@ -569,7 +569,7 @@ int _zdtm_obtain_item(zdtm_lib_env *cur_env, uint32_t sync_id,
 
 int _zdtm_parse_todo_item_params(struct zdtm_adi_msg_param *p_param_format,
     uint16_t num_format_params, struct zdtm_adr_msg_param *params,
-    uint16_t num_params, struct zdtm_todo *p_todo) {
+    uint16_t num_params, struct zdtm_todo_item *p_todo_item) {
 
     int i;
 
@@ -582,71 +582,203 @@ int _zdtm_parse_todo_item_params(struct zdtm_adi_msg_param *p_param_format,
         switch (p_param_format[i].type_id) {
             case DATA_ID_TIME:
                 if (memcmp(p_param_format[i].abrev, "CTTM", 4) == 0) {
-                    memcpy(p_todo->creation_date, params[i].param_data,
+                    memcpy(p_todo_item->creation_date, params[i].param_data,
                         params[i].param_len);
                 } else if (memcmp(p_param_format[i].abrev, "MDTM", 4) == 0) {
-                    memcpy(p_todo->modification_date, params[i].param_data,
+                    memcpy(p_todo_item->modification_date, params[i].param_data,
                         params[i].param_len);
                 } else if (memcmp(p_param_format[i].abrev, "ETDY", 4) == 0) {
-                    memcpy(p_todo->start_date, params[i].param_data,
+                    memcpy(p_todo_item->start_date, params[i].param_data,
                         params[i].param_len);
                 } else if (memcmp(p_param_format[i].abrev, "LTDY", 4) == 0) {
-                    memcpy(p_todo->due_date, params[i].param_data,
+                    memcpy(p_todo_item->due_date, params[i].param_data,
                         params[i].param_len);
                 } else if (memcmp(p_param_format[i].abrev, "FNDY", 4) == 0) {
-                    memcpy(p_todo->completed_date, params[i].param_data,
+                    memcpy(p_todo_item->completed_date, params[i].param_data,
                         params[i].param_len);
                 }
                 break;
             case DATA_ID_BIT:
                 if (memcmp(p_param_format[i].abrev, "ATTR", 4) == 0) {
-                    memcpy(&p_todo->attribute, params[i].param_data,
+                    memcpy(&p_todo_item->attribute, params[i].param_data,
                         params[i].param_len);
                 }
                 break;
             case DATA_ID_UCHAR:
                 if (memcmp(p_param_format[i].abrev, "MARK", 4) == 0) {
-                    memcpy(&p_todo->progress, params[i].param_data,
+                    memcpy(&p_todo_item->progress, params[i].param_data,
                         params[i].param_len);
                 } else if (memcmp(p_param_format[i].abrev, "PRTY", 4) == 0) {
-                    memcpy(&p_todo->priority, params[i].param_data,
+                    memcpy(&p_todo_item->priority, params[i].param_data,
                         params[i].param_len);
                 }
                 break;
             case DATA_ID_BARRAY:
                 if (memcmp(p_param_format[i].abrev, "CTGR", 4) == 0) {
-                    p_todo->category_len = params[i].param_len;
-                    p_todo->category = malloc(params[i].param_len);
-                    if (p_todo->category == NULL) {
+                    p_todo_item->category_len = params[i].param_len;
+                    p_todo_item->category = malloc(params[i].param_len);
+                    if (p_todo_item->category == NULL) {
                         return -2;
                     }
-                    memcpy(p_todo->category, params[i].param_data,
+                    memcpy(p_todo_item->category, params[i].param_data,
                         params[i].param_len);
 
                 }
                 break;
             case DATA_ID_UTF8:
                 if (memcmp(p_param_format[i].abrev, "TITL", 4) == 0) {
-                    p_todo->description_len = params[i].param_len;
-                    p_todo->description = malloc(params[i].param_len);
-                    if (p_todo->description == NULL) {
+                    p_todo_item->description_len = params[i].param_len;
+                    p_todo_item->description = malloc(params[i].param_len);
+                    if (p_todo_item->description == NULL) {
                         return -3;
                     }
-                    memcpy(p_todo->description, params[i].param_data,
+                    memcpy(p_todo_item->description, params[i].param_data,
                         params[i].param_len);
                 } else if (memcmp(p_param_format[i].abrev, "MEM1", 4) == 0) {
-                    p_todo->notes_len = params[i].param_len;
-                    p_todo->notes = malloc(params[i].param_len);
-                    if (p_todo->notes == NULL) {
+                    p_todo_item->notes_len = params[i].param_len;
+                    p_todo_item->notes = malloc(params[i].param_len);
+                    if (p_todo_item->notes == NULL) {
                         return -4;
                     }
-                    memcpy(p_todo->notes, params[i].param_data,
+                    memcpy(p_todo_item->notes, params[i].param_data,
                         params[i].param_len);
                 }
                 break;
             case DATA_ID_ULONG:
                 if (memcmp(p_param_format[i].abrev, "SYID", 4) == 0) {
-                    memcpy(&p_todo->sync_id, params[i].param_data,
+                    memcpy(&p_todo_item->sync_id, params[i].param_data,
+                        params[i].param_len);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    return 0;
+}
+
+int _zdtm_parse_calendar_item_params(struct zdtm_adi_msg_param *p_param_format,
+    uint16_t num_format_params, struct zdtm_adr_msg_param *params,
+    uint16_t num_params, struct zdtm_calendar_item *p_calendar_item) {
+
+    int i;
+
+    if (num_format_params != num_params) {
+        return -1;
+    }
+
+    /* iterate through the format params and for each iteration */
+    for (i = 0; i < num_format_params; i++) {
+        switch (p_param_format[i].type_id) {
+            case DATA_ID_TIME:
+                if (memcmp(p_param_format[i].abrev, "CTTM", 4) == 0) {
+                    memcpy(p_calendar_item->creation_date, params[i].param_data,
+                        params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "MDTM", 4) == 0) {
+                    memcpy(p_calendar_item->modification_date,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "TIM1", 4) == 0) {
+                    memcpy(p_calendar_item->start_time,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "TIM2", 4) == 0) {
+                    memcpy(p_calendar_item->end_time,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "REDT", 4) == 0) {
+                    memcpy(p_calendar_item->repeat_end_date,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "ALSD", 4) == 0) {
+                    memcpy(p_calendar_item->all_day_start_date,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "ALED", 4) == 0) {
+                    memcpy(p_calendar_item->all_day_end_date,
+                        params[i].param_data, params[i].param_len);
+                }
+                break;
+            case DATA_ID_BIT:
+                if (memcmp(p_param_format[i].abrev, "ATTR", 4) == 0) {
+                    memcpy(&p_calendar_item->attribute, params[i].param_data,
+                        params[i].param_len);
+                }
+                break;
+            case DATA_ID_UCHAR:
+                if (memcmp(p_param_format[i].abrev, "ADAY", 4) == 0) {
+                    memcpy(&p_calendar_item->schedule_type,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "ARON", 4) == 0) {
+                    memcpy(&p_calendar_item->alarm,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "ARSD", 4) == 0) {
+                    memcpy(&p_calendar_item->alarm_setting,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "RTYP", 4) == 0) {
+                    memcpy(&p_calendar_item->repeat_type,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "RDYS", 4) == 0) {
+                    memcpy(&p_calendar_item->repeat_date,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "REND", 4) == 0) {
+                    memcpy(&p_calendar_item->repeat_end_date_setting,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "MDAY", 4) == 0) {
+                    memcpy(&p_calendar_item->multiple_days_flag,
+                        params[i].param_data, params[i].param_len);
+                }
+                break;
+            case DATA_ID_WORD:
+                if (memcmp(p_param_format[i].abrev, "ARMN", 4) == 0) {
+                    memcpy(&p_calendar_item->alarm_time,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "RFRQ", 4) == 0) {
+                    memcpy(&p_calendar_item->repeat_period,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "RPOS", 4) == 0) {
+                    memcpy(&p_calendar_item->repeat_position,
+                        params[i].param_data, params[i].param_len);
+                }
+                break;
+            case DATA_ID_BARRAY:
+                if (memcmp(p_param_format[i].abrev, "CTGR", 4) == 0) {
+                    p_calendar_item->category_len = params[i].param_len;
+                    p_calendar_item->category = malloc(params[i].param_len);
+                    if (p_calendar_item->category == NULL) {
+                        return -2;
+                    }
+                    memcpy(p_calendar_item->category, params[i].param_data,
+                        params[i].param_len);
+
+                }
+                break;
+            case DATA_ID_UTF8:
+                if (memcmp(p_param_format[i].abrev, "DSRP", 4) == 0) {
+                    p_calendar_item->description_len = params[i].param_len;
+                    p_calendar_item->description = malloc(params[i].param_len);
+                    if (p_calendar_item->description == NULL) {
+                        return -3;
+                    }
+                    memcpy(p_calendar_item->description, params[i].param_data,
+                        params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "PLCE", 4) == 0) {
+                    p_calendar_item->location_len = params[i].param_len;
+                    p_calendar_item->location = malloc(params[i].param_len);
+                    if (p_calendar_item->location == NULL) {
+                        return -4;
+                    }
+                    memcpy(p_calendar_item->location, params[i].param_data,
+                        params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "MEM1", 4) == 0) {
+                    p_calendar_item->notes_len = params[i].param_len;
+                    p_calendar_item->notes = malloc(params[i].param_len);
+                    if (p_calendar_item->notes == NULL) {
+                        return -5;
+                    }
+                    memcpy(p_calendar_item->notes, params[i].param_data,
+                        params[i].param_len);
+                }
+                break;
+            case DATA_ID_ULONG:
+                if (memcmp(p_param_format[i].abrev, "SYID", 4) == 0) {
+                    memcpy(&p_calendar_item->sync_id, params[i].param_data,
                         params[i].param_len);
                 }
                 break;
@@ -659,7 +791,7 @@ int _zdtm_parse_todo_item_params(struct zdtm_adi_msg_param *p_param_format,
 }
 
 int _zdtm_obtain_todo_item(zdtm_lib_env *cur_env, uint32_t sync_id,
-    struct zdtm_todo *p_todo) {
+    struct zdtm_todo_item *p_todo_item) {
 
     int r;
     struct zdtm_adr_msg_param *params;
@@ -675,7 +807,35 @@ int _zdtm_obtain_todo_item(zdtm_lib_env *cur_env, uint32_t sync_id,
     }
 
     r = _zdtm_parse_todo_item_params(cur_env->params, cur_env->num_params,
-        params, num_params, p_todo);
+        params, num_params, p_todo_item);
+    if (r != 0) {
+        /* NOTE: NEED TO ADD CODE HERE TO FREE params */
+        return -3;
+    }
+    
+    /* NOTE: NEED TO ADD CODE HERE TO FREE params */
+
+    return 0;
+}
+
+int _zdtm_obtain_calendar_item(zdtm_lib_env *cur_env, uint32_t sync_id,
+    struct zdtm_calendar_item *p_calendar_item) {
+
+    int r;
+    struct zdtm_adr_msg_param *params;
+    uint16_t num_params;
+
+    if (cur_env->sync_type != SYNC_TYPE_CALENDAR) {
+        return -1;
+    }
+
+    r = _zdtm_obtain_item(cur_env, sync_id, &params, &num_params);
+    if (r != 0) {
+        return -2;
+    }
+
+    r = _zdtm_parse_calendar_item_params(cur_env->params, cur_env->num_params,
+        params, num_params, p_calendar_item);
     if (r != 0) {
         /* NOTE: NEED TO ADD CODE HERE TO FREE params */
         return -3;

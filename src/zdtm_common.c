@@ -93,7 +93,7 @@ uint32_t zdtm_bigtolill(uint32_t biglong) {
  * @param todo a filled in todo struct
  * @return the number of bytes necessary in the packed packet.
  */
-int zdtm_todo_length(struct zdtm_todo *todo){
+int zdtm_todo_length(struct zdtm_todo_item *todo){
     return sizeof(uint32_t) + todo->category_len +
            sizeof(uint32_t) + sizeof(todo->start_date) +
            sizeof(uint32_t) + sizeof(todo->due_date) +
@@ -108,7 +108,7 @@ int zdtm_todo_length(struct zdtm_todo *todo){
  * Copies the contents of a zdtm_todo struct into a packet buffer
  * and returns a pointer just past the end of the data.
  */
-void* zdtm_todo_write(void *buf, struct zdtm_todo *todo){
+void* zdtm_todo_write(void *buf, struct zdtm_todo_item *todo){
 #ifdef WORDS_BIGENDIAN
     *((uint32_t*)buf) = zdtm_liltobigl(todo->category_len);            
 #else

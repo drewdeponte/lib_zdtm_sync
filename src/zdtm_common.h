@@ -57,12 +57,13 @@ uint32_t zdtm_bigtolill(uint32_t biglong);
 /**
  * zdtm_todo contains the information for a todo message. 
  */ 
-struct zdtm_todo{
+struct zdtm_todo_item {
     unsigned char attribute;
     char creation_date[5];
     char modification_date[5];
     uint32_t sync_id;
     uint32_t category_len;
+
     char *category;
     char start_date[5];
     char due_date[5];
@@ -75,8 +76,40 @@ struct zdtm_todo{
     char *notes;
 };
 
-inline int zdtm_todo_length(struct zdtm_todo * todo);
-inline void *zdtm_todo_write(void *buf, struct zdtm_todo *todo);
+struct zdtm_calendar_item {
+    unsigned char attribute;
+    char creation_date[5];
+    char modification_date[5];
+    uint32_t sync_id;
+
+    uint32_t category_len;
+    char *category;
+    uint32_t description_len;
+    char *description;
+    uint32_t location_len;
+    char *location;
+    uint32_t notes_len;
+    char *notes;
+    
+    char start_time[5];
+    char end_time[5];
+    unsigned char schedule_type;
+    unsigned char alarm;
+    unsigned char alarm_setting;
+    uint16_t alarm_time;
+    unsigned char repeat_type;
+    uint16_t repeat_period;
+    uint16_t repeat_position;
+    unsigned char repeat_date;
+    unsigned char repeat_end_date_setting;
+    char repeat_end_date[5];
+    char all_day_start_date[5];
+    char all_day_end_date[5];
+    unsigned char multiple_days_flag;
+};
+
+inline int zdtm_todo_length(struct zdtm_todo_item * todo);
+inline void *zdtm_todo_write(void *buf, struct zdtm_todo_item *todo);
 
 
 #endif

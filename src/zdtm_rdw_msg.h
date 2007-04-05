@@ -58,7 +58,7 @@ struct zdtm_rdw_msg_content {
     } vars;
 
     union {
-        struct zdtm_todo todo;
+        struct zdtm_todo_item todo;
     } cont;
 };
 
