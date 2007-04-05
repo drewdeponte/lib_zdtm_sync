@@ -3,11 +3,10 @@
  * 
  * This file is part of lib_zdtm_sync.
  * 
- * lib_zdtm_sync is free software; you can redistribute it and/or
- * modify
+ * lib_zdtm_sync is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * any later version.
+ * the Free Software Foundation; either version 2 of the License, or any
+ * later version.
  * 
  * lib_zdtm_sync is distributed in the hopes that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -684,6 +683,33 @@ int _zdtm_obtain_todo_item(zdtm_lib_env *cur_env, uint32_t sync_id,
     
     /* NOTE: NEED TO ADD CODE HERE TO FREE params */
 
+    return 0;
+}
+
+int _zdtm_delete_item(zdtm_lib_env *cur_env, uint32_t sync_id) {
+    zdtm_msg msg, rmsg;
+    int r;
+
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RDD_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rdd.sync_type = cur_env->sync_type;
+    msg.body.cont.rdd.num_sync_ids = 1;
+    msg.body.cont.rdd.sync_id = sync_id;
+
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
+    if (r != 0) { return -1; }
+    
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
+    if (r != 0) { _zdtm_clean_message(&rmsg); return -2; }
+
+    if (memcmp(rmsg.body.type, AEX_MSG_TYPE, MSG_TYPE_SIZE) != 0) {
+        _zdtm_clean_message(&rmsg);
+        return -3;
+    }
+
+    _zdtm_clean_message(&rmsg);
+    
     return 0;
 }
 

@@ -1,3 +1,17 @@
+2007-04-04 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Updated all the Copyright notices at the top of the files to be
+correct for GPL and added to the files which were missing a Copyright
+notice.
+
+* Implemented the _zdtm_delete_item() function in the zdtm_proto.h and
+zdtm_proto.c files respectively. I also documented the
+_zdtm_delete_item() function in the zdtm_proto.h file.
+
+* Updated docs/lib_zdtm_sync_detailed_plan.planner and
+docs/lib_zdtm_sync_detailed_plan.html to reflect the addition of the
+_zdtm_delete_item() function.
+
 2007-03-28 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Added the zdtm_adr_msg.h and zdtm_adr_msg.c files to the svn repos

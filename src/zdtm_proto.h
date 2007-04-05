@@ -3,11 +3,10 @@
  * 
  * This file is part of lib_zdtm_sync.
  * 
- * lib_zdtm_sync is free software; you can redistribute it and/or
- * modify
+ * lib_zdtm_sync is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * any later version.
+ * the Free Software Foundation; either version 2 of the License, or any
+ * later version.
  * 
  * lib_zdtm_sync is distributed in the hopes that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -307,6 +306,22 @@ int _zdtm_parse_todo_item_params(struct zdtm_adi_msg_param *p_param_format,
  * */
 int _zdtm_obtain_todo_item(zdtm_lib_env *cur_env, uint32_t sync_id,
     struct zdtm_todo *p_todo);
+
+/**
+ * Delete Item.
+ *
+ * The _zdtm_delete_item function attempts to delete an item from the
+ * Zaurus database. This is generally done with a Desktop software has
+ * had the item matching the given sync_id removed as well.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param sync_id The sync id of the item to delete.
+ * @return An integer representintg success (zero) or failure (non-zero).
+ * @retval 0 Successfully deleted the item.
+ * @retval -1 Failed to sent the RDD message.
+ * @retval -2 Failed to recv the response message.
+ * @retval -3 Failed, response message received was NOT an AEX message.
+ */
+int _zdtm_delete_item(zdtm_lib_env *cur_env, uint32_t sync_id);
 
 /**
  * State Sync is Done
