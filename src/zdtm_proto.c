@@ -567,6 +567,26 @@ int _zdtm_obtain_item(zdtm_lib_env *cur_env, uint32_t sync_id,
     return 0;
 }
 
+int _zdtm_free_params(zdtm_lib_env *cur_env,
+    struct zdtm_adr_msg_param *p_params, uint16_t num_params) {
+
+    int i;
+
+    if (p_params == NULL) {
+        return -1;
+    }
+
+    for (i = 0; i < num_params; i++) {
+        if ((p_params[i].param_len != 0) && (p_params[i].param_data != NULL)) {
+            free((void *)p_params[i].param_data);
+        }
+    }
+
+    free((void *)p_params);
+
+    return 0;
+}
+
 int _zdtm_parse_todo_item_params(struct zdtm_adi_msg_param *p_param_format,
     uint16_t num_format_params, struct zdtm_adr_msg_param *params,
     uint16_t num_params, struct zdtm_todo_item *p_todo_item) {
@@ -790,6 +810,485 @@ int _zdtm_parse_calendar_item_params(struct zdtm_adi_msg_param *p_param_format,
     return 0;
 }
 
+int _zdtm_parse_address_item_params(struct zdtm_adi_msg_param *p_param_format,
+    uint16_t num_format_params, struct zdtm_adr_msg_param *params,
+    uint16_t num_params, struct zdtm_address_item *p_address_item) {
+
+    int i;
+
+    if (num_format_params != num_params) {
+        return -1;
+    }
+
+    /* iterate through the format params and for each iteration */
+    for (i = 0; i < num_format_params; i++) {
+        switch (p_param_format[i].type_id) {
+            case DATA_ID_TIME:
+                if (memcmp(p_param_format[i].abrev, "CTTM", 4) == 0) {
+                    memcpy(p_address_item->creation_date,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "MDTM", 4) == 0) {
+                    memcpy(p_address_item->modification_date,
+                        params[i].param_data, params[i].param_len);
+                }
+                break;
+            case DATA_ID_BIT:
+                if (memcmp(p_param_format[i].abrev, "ATTR", 4) == 0) {
+                    memcpy(&p_address_item->attribute, params[i].param_data,
+                        params[i].param_len);
+                }
+                break;
+            case DATA_ID_BARRAY:
+                if (memcmp(p_param_format[i].abrev, "CTGR", 4) == 0) {
+                    p_address_item->category_len = params[i].param_len;
+                    p_address_item->category = malloc(params[i].param_len);
+                    if (p_address_item->category == NULL) {
+                        return -2;
+                    }
+                    memcpy(p_address_item->category, params[i].param_data,
+                        params[i].param_len);
+
+                }
+                break;
+            case DATA_ID_UTF8:
+                if (memcmp(p_param_format[i].abrev, "FULL", 4) == 0) {
+                    p_address_item->full_name_len = params[i].param_len;
+                    p_address_item->full_name = malloc(params[i].param_len);
+                    if (p_address_item->full_name == NULL) {
+                        return -3;
+                    }
+                    memcpy(p_address_item->full_name, params[i].param_data,
+                        params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "NAPR", 4) == 0) {
+                    p_address_item->full_name_pronun_len = params[i].param_len;
+                    p_address_item->full_name_pronun = malloc(
+                        params[i].param_len);
+                    if (p_address_item->full_name_pronun == NULL) {
+                        return -4;
+                    }
+                    memcpy(p_address_item->full_name_pronun,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "TITL", 4) == 0) {
+                    p_address_item->title_len = params[i].param_len;
+                    p_address_item->title = malloc(
+                        params[i].param_len);
+                    if (p_address_item->title == NULL) {
+                        return -5;
+                    }
+                    memcpy(p_address_item->title, params[i].param_data,
+                        params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "LNME", 4) == 0) {
+                    p_address_item->last_name_len = params[i].param_len;
+                    p_address_item->last_name = malloc(
+                        params[i].param_len);
+                    if (p_address_item->last_name == NULL) {
+                        return -6;
+                    }
+                    memcpy(p_address_item->last_name, params[i].param_data,
+                        params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "FNME", 4) == 0) {
+                    p_address_item->first_name_len = params[i].param_len;
+                    p_address_item->first_name = malloc(
+                        params[i].param_len);
+                    if (p_address_item->first_name == NULL) {
+                        return -7;
+                    }
+                    memcpy(p_address_item->first_name, params[i].param_data,
+                        params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "MNME", 4) == 0) {
+                    p_address_item->middle_name_len = params[i].param_len;
+                    p_address_item->middle_name = malloc(
+                        params[i].param_len);
+                    if (p_address_item->middle_name == NULL) {
+                        return -8;
+                    }
+                    memcpy(p_address_item->middle_name, params[i].param_data,
+                        params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "SUFX", 4) == 0) {
+                    p_address_item->suffix_len = params[i].param_len;
+                    p_address_item->suffix = malloc(
+                        params[i].param_len);
+                    if (p_address_item->suffix == NULL) {
+                        return -9;
+                    }
+                    memcpy(p_address_item->suffix, params[i].param_data,
+                        params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "FLAS", 4) == 0) {
+                    p_address_item->alternative_name_len = params[i].param_len;
+                    p_address_item->alternative_name = malloc(
+                        params[i].param_len);
+                    if (p_address_item->alternative_name == NULL) {
+                        return -10;
+                    }
+                    memcpy(p_address_item->alternative_name,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "LNPR", 4) == 0) {
+                    p_address_item->last_name_pronun_len = params[i].param_len;
+                    p_address_item->last_name_pronun = malloc(
+                        params[i].param_len);
+                    if (p_address_item->last_name_pronun == NULL) {
+                        return -11;
+                    }
+                    memcpy(p_address_item->last_name_pronun,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "FNPR", 4) == 0) {
+                    p_address_item->first_name_pronun_len = params[i].param_len;
+                    p_address_item->first_name_pronun = malloc(
+                        params[i].param_len);
+                    if (p_address_item->first_name_pronun == NULL) {
+                        return -12;
+                    }
+                    memcpy(p_address_item->first_name_pronun,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "CPNY", 4) == 0) {
+                    p_address_item->company_len = params[i].param_len;
+                    p_address_item->company = malloc(
+                        params[i].param_len);
+                    if (p_address_item->company == NULL) {
+                        return -13;
+                    }
+                    memcpy(p_address_item->company,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "CPPR", 4) == 0) {
+                    p_address_item->company_pronun_len = params[i].param_len;
+                    p_address_item->company_pronun = malloc(
+                        params[i].param_len);
+                    if (p_address_item->company_pronun == NULL) {
+                        return -14;
+                    }
+                    memcpy(p_address_item->company_pronun,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "SCTN", 4) == 0) {
+                    p_address_item->department_len = params[i].param_len;
+                    p_address_item->department = malloc(
+                        params[i].param_len);
+                    if (p_address_item->department == NULL) {
+                        return -15;
+                    }
+                    memcpy(p_address_item->department,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "PSTN", 4) == 0) {
+                    p_address_item->job_title_len = params[i].param_len;
+                    p_address_item->job_title = malloc(
+                        params[i].param_len);
+                    if (p_address_item->job_title == NULL) {
+                        return -16;
+                    }
+                    memcpy(p_address_item->job_title,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "TEL2", 4) == 0) {
+                    p_address_item->work_phone_len = params[i].param_len;
+                    p_address_item->work_phone = malloc(
+                        params[i].param_len);
+                    if (p_address_item->work_phone == NULL) {
+                        return -17;
+                    }
+                    memcpy(p_address_item->work_phone,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "FAX2", 4) == 0) {
+                    p_address_item->work_fax_len = params[i].param_len;
+                    p_address_item->work_fax = malloc(
+                        params[i].param_len);
+                    if (p_address_item->work_fax == NULL) {
+                        return -18;
+                    }
+                    memcpy(p_address_item->work_fax,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "CPS2", 4) == 0) {
+                    p_address_item->work_mobile_len = params[i].param_len;
+                    p_address_item->work_mobile = malloc(
+                        params[i].param_len);
+                    if (p_address_item->work_mobile == NULL) {
+                        return -19;
+                    }
+                    memcpy(p_address_item->work_mobile,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "BSTA", 4) == 0) {
+                    p_address_item->work_state_len = params[i].param_len;
+                    p_address_item->work_state = malloc(
+                        params[i].param_len);
+                    if (p_address_item->work_state == NULL) {
+                        return -20;
+                    }
+                    memcpy(p_address_item->work_state,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "BCTY", 4) == 0) {
+                    p_address_item->work_city_len = params[i].param_len;
+                    p_address_item->work_city = malloc(
+                        params[i].param_len);
+                    if (p_address_item->work_city == NULL) {
+                        return -21;
+                    }
+                    memcpy(p_address_item->work_city,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "BSTR", 4) == 0) {
+                    p_address_item->work_street_len = params[i].param_len;
+                    p_address_item->work_street = malloc(
+                        params[i].param_len);
+                    if (p_address_item->work_street == NULL) {
+                        return -22;
+                    }
+                    memcpy(p_address_item->work_street,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "BZIP", 4) == 0) {
+                    p_address_item->work_zip_len = params[i].param_len;
+                    p_address_item->work_zip = malloc(
+                        params[i].param_len);
+                    if (p_address_item->work_zip == NULL) {
+                        return -23;
+                    }
+                    memcpy(p_address_item->work_zip,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "BCTR", 4) == 0) {
+                    p_address_item->work_country_len = params[i].param_len;
+                    p_address_item->work_country = malloc(
+                        params[i].param_len);
+                    if (p_address_item->work_country == NULL) {
+                        return -24;
+                    }
+                    memcpy(p_address_item->work_country,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "BWEB", 4) == 0) {
+                    p_address_item->work_web_page_len = params[i].param_len;
+                    p_address_item->work_web_page = malloc(
+                        params[i].param_len);
+                    if (p_address_item->work_web_page == NULL) {
+                        return -25;
+                    }
+                    memcpy(p_address_item->work_web_page,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "OFCE", 4) == 0) {
+                    p_address_item->office_len = params[i].param_len;
+                    p_address_item->office = malloc(
+                        params[i].param_len);
+                    if (p_address_item->office == NULL) {
+                        return -26;
+                    }
+                    memcpy(p_address_item->office,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "PRFS", 4) == 0) {
+                    p_address_item->profession_len = params[i].param_len;
+                    p_address_item->profession = malloc(
+                        params[i].param_len);
+                    if (p_address_item->profession == NULL) {
+                        return -27;
+                    }
+                    memcpy(p_address_item->profession,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "ASST", 4) == 0) {
+                    p_address_item->assistant_len = params[i].param_len;
+                    p_address_item->assistant = malloc(
+                        params[i].param_len);
+                    if (p_address_item->assistant == NULL) {
+                        return -28;
+                    }
+                    memcpy(p_address_item->assistant,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "MNGR", 4) == 0) {
+                    p_address_item->manager_len = params[i].param_len;
+                    p_address_item->manager = malloc(
+                        params[i].param_len);
+                    if (p_address_item->manager == NULL) {
+                        return -29;
+                    }
+                    memcpy(p_address_item->manager,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "BPGR", 4) == 0) {
+                    p_address_item->pager_len = params[i].param_len;
+                    p_address_item->pager = malloc(
+                        params[i].param_len);
+                    if (p_address_item->pager == NULL) {
+                        return -30;
+                    }
+                    memcpy(p_address_item->pager,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "CPS1", 4) == 0) {
+                    p_address_item->cellular_len = params[i].param_len;
+                    p_address_item->cellular = malloc(
+                        params[i].param_len);
+                    if (p_address_item->cellular == NULL) {
+                        return -31;
+                    }
+                    memcpy(p_address_item->cellular,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "TEL1", 4) == 0) {
+                    p_address_item->home_phone_len = params[i].param_len;
+                    p_address_item->home_phone = malloc(
+                        params[i].param_len);
+                    if (p_address_item->home_phone == NULL) {
+                        return -32;
+                    }
+                    memcpy(p_address_item->home_phone,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "FAX1", 4) == 0) {
+                    p_address_item->home_fax_len = params[i].param_len;
+                    p_address_item->home_fax = malloc(
+                        params[i].param_len);
+                    if (p_address_item->home_fax == NULL) {
+                        return -33;
+                    }
+                    memcpy(p_address_item->home_fax,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "HSTA", 4) == 0) {
+                    p_address_item->home_state_len = params[i].param_len;
+                    p_address_item->home_state = malloc(
+                        params[i].param_len);
+                    if (p_address_item->home_state == NULL) {
+                        return -34;
+                    }
+                    memcpy(p_address_item->home_state,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "HCTY", 4) == 0) {
+                    p_address_item->home_city_len = params[i].param_len;
+                    p_address_item->home_city = malloc(
+                        params[i].param_len);
+                    if (p_address_item->home_city == NULL) {
+                        return -35;
+                    }
+                    memcpy(p_address_item->home_city,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "HSTR", 4) == 0) {
+                    p_address_item->home_street_len = params[i].param_len;
+                    p_address_item->home_street = malloc(
+                        params[i].param_len);
+                    if (p_address_item->home_street == NULL) {
+                        return -36;
+                    }
+                    memcpy(p_address_item->home_street,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "HZIP", 4) == 0) {
+                    p_address_item->home_zip_len = params[i].param_len;
+                    p_address_item->home_zip = malloc(
+                        params[i].param_len);
+                    if (p_address_item->home_zip == NULL) {
+                        return -37;
+                    }
+                    memcpy(p_address_item->home_zip,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "HCTR", 4) == 0) {
+                    p_address_item->home_country_len = params[i].param_len;
+                    p_address_item->home_country = malloc(
+                        params[i].param_len);
+                    if (p_address_item->home_country == NULL) {
+                        return -38;
+                    }
+                    memcpy(p_address_item->home_country,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "HWEB", 4) == 0) {
+                    p_address_item->home_web_page_len = params[i].param_len;
+                    p_address_item->home_web_page = malloc(
+                        params[i].param_len);
+                    if (p_address_item->home_web_page == NULL) {
+                        return -39;
+                    }
+                    memcpy(p_address_item->home_web_page,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "DMAL", 4) == 0) {
+                    p_address_item->default_email_len = params[i].param_len;
+                    p_address_item->default_email = malloc(
+                        params[i].param_len);
+                    if (p_address_item->default_email == NULL) {
+                        return -40;
+                    }
+                    memcpy(p_address_item->default_email,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "MAL1", 4) == 0) {
+                    p_address_item->emails_len = params[i].param_len;
+                    p_address_item->emails = malloc(
+                        params[i].param_len);
+                    if (p_address_item->emails == NULL) {
+                        return -41;
+                    }
+                    memcpy(p_address_item->emails,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "SPUS", 4) == 0) {
+                    p_address_item->spouse_len = params[i].param_len;
+                    p_address_item->spouse = malloc(
+                        params[i].param_len);
+                    if (p_address_item->spouse == NULL) {
+                        return -42;
+                    }
+                    memcpy(p_address_item->spouse,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "GNDR", 4) == 0) {
+                    p_address_item->gender_len = params[i].param_len;
+                    p_address_item->gender = malloc(
+                        params[i].param_len);
+                    if (p_address_item->gender == NULL) {
+                        return -43;
+                    }
+                    memcpy(p_address_item->gender,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "BRTH", 4) == 0) {
+                    p_address_item->birthday_len = params[i].param_len;
+                    p_address_item->birthday = malloc(
+                        params[i].param_len);
+                    if (p_address_item->birthday == NULL) {
+                        return -44;
+                    }
+                    memcpy(p_address_item->birthday,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "ANIV", 4) == 0) {
+                    p_address_item->anniversary_len = params[i].param_len;
+                    p_address_item->anniversary = malloc(
+                        params[i].param_len);
+                    if (p_address_item->anniversary == NULL) {
+                        return -45;
+                    }
+                    memcpy(p_address_item->anniversary,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "NCNM", 4) == 0) {
+                    p_address_item->nickname_len = params[i].param_len;
+                    p_address_item->nickname = malloc(
+                        params[i].param_len);
+                    if (p_address_item->nickname == NULL) {
+                        return -46;
+                    }
+                    memcpy(p_address_item->nickname,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "CLDR", 4) == 0) {
+                    p_address_item->children_len = params[i].param_len;
+                    p_address_item->children = malloc(
+                        params[i].param_len);
+                    if (p_address_item->children == NULL) {
+                        return -47;
+                    }
+                    memcpy(p_address_item->children,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "MEM1", 4) == 0) {
+                    p_address_item->memo_len = params[i].param_len;
+                    p_address_item->memo = malloc(
+                        params[i].param_len);
+                    if (p_address_item->memo == NULL) {
+                        return -48;
+                    }
+                    memcpy(p_address_item->memo,
+                        params[i].param_data, params[i].param_len);
+                } else if (memcmp(p_param_format[i].abrev, "GRPS", 4) == 0) {
+                    p_address_item->group_len = params[i].param_len;
+                    p_address_item->group = malloc(
+                        params[i].param_len);
+                    if (p_address_item->group == NULL) {
+                        return -49;
+                    }
+                    memcpy(p_address_item->group,
+                        params[i].param_data, params[i].param_len);
+                }
+                break;
+            case DATA_ID_ULONG:
+                if (memcmp(p_param_format[i].abrev, "SYID", 4) == 0) {
+                    memcpy(&p_address_item->sync_id, params[i].param_data,
+                        params[i].param_len);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    return 0;
+}
+
 int _zdtm_obtain_todo_item(zdtm_lib_env *cur_env, uint32_t sync_id,
     struct zdtm_todo_item *p_todo_item) {
 
@@ -809,11 +1308,11 @@ int _zdtm_obtain_todo_item(zdtm_lib_env *cur_env, uint32_t sync_id,
     r = _zdtm_parse_todo_item_params(cur_env->params, cur_env->num_params,
         params, num_params, p_todo_item);
     if (r != 0) {
-        /* NOTE: NEED TO ADD CODE HERE TO FREE params */
+        _zdtm_free_params(cur_env, params, num_params);
         return -3;
     }
     
-    /* NOTE: NEED TO ADD CODE HERE TO FREE params */
+    _zdtm_free_params(cur_env, params, num_params);
 
     return 0;
 }
@@ -837,11 +1336,39 @@ int _zdtm_obtain_calendar_item(zdtm_lib_env *cur_env, uint32_t sync_id,
     r = _zdtm_parse_calendar_item_params(cur_env->params, cur_env->num_params,
         params, num_params, p_calendar_item);
     if (r != 0) {
-        /* NOTE: NEED TO ADD CODE HERE TO FREE params */
+        _zdtm_free_params(cur_env, params, num_params);
         return -3;
     }
     
-    /* NOTE: NEED TO ADD CODE HERE TO FREE params */
+    _zdtm_free_params(cur_env, params, num_params);
+
+    return 0;
+}
+
+int _zdtm_obtain_address_item(zdtm_lib_env *cur_env, uint32_t sync_id,
+    struct zdtm_address_item *p_address_item) {
+
+    int r;
+    struct zdtm_adr_msg_param *params;
+    uint16_t num_params;
+
+    if (cur_env->sync_type != SYNC_TYPE_ADDRESS) {
+        return -1;
+    }
+
+    r = _zdtm_obtain_item(cur_env, sync_id, &params, &num_params);
+    if (r != 0) {
+        return -2;
+    }
+
+    r = _zdtm_parse_address_item_params(cur_env->params, cur_env->num_params,
+        params, num_params, p_address_item);
+    if (r != 0) {
+        _zdtm_free_params(cur_env, params, num_params);
+        return -3;
+    }
+    
+    _zdtm_free_params(cur_env, params, num_params);
 
     return 0;
 }

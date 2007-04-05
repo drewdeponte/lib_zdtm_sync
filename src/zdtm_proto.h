@@ -251,7 +251,8 @@ int _zdtm_obtain_param_format(zdtm_lib_env *cur_env);
  * no values or set via p_params or p_num_params. In success since the
  * array of parameters is dynamically allocated along with the parameter
  * data of each parameter, it must be appropriately deallocated using
- * the free() function.
+ * the free() function. This can also be done in a one step fashion by
+ * calling _zdtm_free_params().
  * @param cur_env Pointer to the current zdtm library environment.
  * @param sync_id The sync id of the item to obtain.
  * @param p_params Pointer to the pointer to store addr of params array in.
@@ -264,6 +265,23 @@ int _zdtm_obtain_param_format(zdtm_lib_env *cur_env);
  */
 int _zdtm_obtain_item(zdtm_lib_env *cur_env, uint32_t sync_id,
     struct zdtm_adr_msg_param **p_params, uint16_t *p_num_params);
+
+/**
+ * Free Parameters
+ *
+ * The _zdtm_free_params function attempts to free the parameters which
+ * given by the provide pointer and number of params counter. This
+ * function is designed to be a helper function to be used with the
+ * _zdtm_obtain_item() function.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param p_params Pointer to params array.
+ * @param num_params The number of params in the params array.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @return 0 Successfully free'd the params array and it's components.
+ * @retval -1 Failure, p_parms is NULL.
+ */
+int _zdtm_free_params(zdtm_lib_env *cur_env,
+    struct zdtm_adr_msg_param *p_params, uint16_t num_params);
 
 /**
  * Parse params for a Todo item.
@@ -303,7 +321,7 @@ int _zdtm_parse_todo_item_params(struct zdtm_adi_msg_param *p_param_format,
  * @param num_params The number of item data params.
  * @param Pointer to zdtm_calendar_item struct to store results in.
  * @return An integer representing success (zero) or failure (non-zero).
- * @retval 0 Successfully parsed todo item params.
+ * @retval 0 Successfully parsed calendar item params.
  * @retval -1 Num of params between data params and format don't match.
  * @retval -2 Failed to allocate memory for category.
  * @retval -3 Failed to allocate memory for description.
@@ -315,6 +333,28 @@ int _zdtm_parse_calendar_item_params(struct zdtm_adi_msg_param *p_param_format,
     uint16_t num_params, struct zdtm_calendar_item *p_calendar_item);
 
 /**
+ * Parse params for a Address item.
+ *
+ * The _zdtm_parse_address_item_params function attempts to take the
+ * parameters for an object obtained via the _zdtm_obtain_item()
+ * function and parse them into a structure representing a Address item
+ * by using the previously obtained parameter format from the
+ * _zdtm_obtain_param_format() function.
+ * @param p_param_format Pointer to parameter based format.
+ * @param num_format_params The number of params in the format.
+ * @param params Pointer to item data params.
+ * @param num_params The number of item data params.
+ * @param Pointer to zdtm_address_item struct to store results in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully parsed address item params.
+ * @retval -1 Num of params between data params and format don't match.
+ * @retval -X Failed to allocate memory for field.
+ */
+int _zdtm_parse_address_item_params(struct zdtm_adi_msg_param *p_param_format,
+    uint16_t num_format_params, struct zdtm_adr_msg_param *params,
+    uint16_t num_params, struct zdtm_address_item *p_address_item);
+
+/**
  * Obtain Todo Item.
  *
  * The _zdtm_obtain_todo_item function attempts to obtain the data for a
@@ -322,7 +362,8 @@ int _zdtm_parse_calendar_item_params(struct zdtm_adi_msg_param *p_param_format,
  * sync id.
  * @param cur_env Pointer to the current zdtm library environment.
  * @param sync_id The sync id of the item to obtain.
- * @param p_todo Pointer to zdtm_todo_item structure to store results in.
+ * @param p_todo_item Pointer to zdtm_todo_item structure to store
+ * results in.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully obtained Todo item.
  * @retval -1 Failed, current environment is not set to Todo sync type.
@@ -332,7 +373,6 @@ int _zdtm_parse_calendar_item_params(struct zdtm_adi_msg_param *p_param_format,
 int _zdtm_obtain_todo_item(zdtm_lib_env *cur_env, uint32_t sync_id,
     struct zdtm_todo_item *p_todo_item);
 
-
 /**
  * Obtain Calendar Item.
  *
@@ -341,7 +381,8 @@ int _zdtm_obtain_todo_item(zdtm_lib_env *cur_env, uint32_t sync_id,
  * item given a sync id.
  * @param cur_env Pointer to the current zdtm library environment.
  * @param sync_id The sync id of the item to obtain.
- * @param p_todo Pointer to zdtm_calendar_item structure to store results in.
+ * @param p_calendar_item Pointer to zdtm_calendar_item structure to
+ * store results in.
  * @return An integer representing success (zero) or failure (non-zero).
  * @retval 0 Successfully obtained Todo item.
  * @retval -1 Failed, current environment is not set to Calendar sync type.
@@ -349,7 +390,26 @@ int _zdtm_obtain_todo_item(zdtm_lib_env *cur_env, uint32_t sync_id,
  * @retval -3 Failed to build zdtm_calendar_item struct from item data.
  * */
 int _zdtm_obtain_calendar_item(zdtm_lib_env *cur_env, uint32_t sync_id,
-    struct zdtm_calendar_item *p_todo_calendar);
+    struct zdtm_calendar_item *p_calendar_item);
+
+/**
+ * Obtain Address Item.
+ *
+ * The _zdtm_obtain_address_item function attempts to obtain the data
+ * for a Address item and build a struture to represent the Address item
+ * given a sync id.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param sync_id The sync id of the item to obtain.
+ * @param p_address_item Pointer to zdtm_address_item structure to store
+ * results in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained Address item.
+ * @retval -1 Failed, current environment is not set to Address sync type.
+ * @retval -2 Failed to obtain item data from the Zaurus.
+ * @retval -3 Failed to build zdtm_address_item struct from item data.
+ * */
+int _zdtm_obtain_address_item(zdtm_lib_env *cur_env, uint32_t sync_id,
+    struct zdtm_address_item *p_address_item);
 
 /**
  * Delete Item.

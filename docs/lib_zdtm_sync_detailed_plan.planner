@@ -192,7 +192,7 @@
               <predecessor id="1" predecessor-id="48" type="FS"/>
             </predecessors>
           </task>
-          <task id="50" name="Parse Address Book Item Data" note="" work="28800" start="20070320T170000Z" end="20070321T170000Z" work-start="20070321T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <task id="50" name="Parse Address Book Item Data" note="" work="28800" start="20070320T170000Z" end="20070321T170000Z" work-start="20070321T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work">
             <predecessors>
               <predecessor id="1" predecessor-id="49" type="FS"/>
             </predecessors>
@@ -204,7 +204,7 @@
           </predecessors>
           <task id="52" name="Get Todo Item" note="" work="28800" start="20070321T170000Z" end="20070327T081320Z" work-start="20070322T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
           <task id="53" name="Get Calendar Item" note="" work="28800" start="20070321T170000Z" end="20070327T081320Z" work-start="20070322T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
-          <task id="54" name="Get Address Book Item" note="" work="28800" start="20070321T170000Z" end="20070327T081320Z" work-start="20070322T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+          <task id="54" name="Get Address Book Item" note="" work="28800" start="20070321T170000Z" end="20070327T081320Z" work-start="20070322T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
         </task>
       </task>
       <task id="55" name="Delete Item Functionality" note="" work="57600" start="20070327T081320Z" end="20070329T081320Z" work-start="20070327T081320Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
