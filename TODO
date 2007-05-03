@@ -1,0 +1,3 @@
+* Write the zdtm_set_passcode() function so that I can set the passcode
+  to be used within a given zdtm_environment. Note: The function should
+  appropriately fill the zdtm_lib_env->passcode field.

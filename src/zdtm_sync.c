@@ -57,6 +57,9 @@ int zdtm_initialize(zdtm_lib_env *cur_env) {
     cur_env->num_params = 0;
     cur_env->params = NULL;
 
+    /* Set the passcode to an appropriate initial value. */
+    cur_env->passcode = NULL;
+
     r = _zdtm_listen_for_zaurus(cur_env);
     if (r != 0) { return -2; }
 
@@ -84,10 +87,28 @@ int zdtm_set_sync_type(zdtm_lib_env *cur_env, unsigned int type) {
     return 0;
 }
 
+int zdtm_set_passcode(zdtm_lib_env *cur_env, char *passcode) {
+    size_t pass_len;
+
+    pass_len = (size_t)(strlen(passcode) + 1);
+
+    cur_env->passcode = (char *)malloc(pass_len);
+    if (cur_env->passcode == NULL) {
+        return -1;  /* return specifying that failed to allocate mem */
+    }
+
+    memcpy(cur_env->passcode, passcode, pass_len);
+
+    return 0;
+}
+
 int zdtm_initiate_sync(zdtm_lib_env *cur_env) {
-    int r;
+    int r, retval;
+    int i, desc_len;
+    char buff[256];
     zdtm_msg msg, rmsg;
     char ip_cmp[IP_STR_SIZE];
+    time_t last_time_synced, time_synced;
 
     if (cur_env->sync_type == 0x00) {
         return -7;
@@ -148,6 +169,82 @@ int zdtm_initiate_sync(zdtm_lib_env *cur_env) {
     }
 
     _zdtm_clean_message(&rmsg);
+
+    /* Obtain Device Info from Zaurus */
+    r = zdtm_check_cur_auth_state(cur_env);
+    if (r < 0) {
+        return -6;
+    } else if (r == 1) {
+        if (cur_env->passcode != NULL) {
+            retval = _zdtm_authenticate_passcode(cur_env, cur_env->passcode);
+            if (retval == 1) {
+                return 1;
+            } else if (retval != 0) {
+                return -7;
+            }
+        } else {
+            return -8;
+        }
+    }
+
+    r = _zdtm_obtain_device_info(cur_env);
+    if (r < 0) {
+        return -9;
+    }
+
+    /* Obtain Zaurus Sync State */
+    r = _zdtm_obtain_sync_state(cur_env);
+    if (r != 0) {
+        return -10;
+    }
+
+    /* Here I get the last time it was synced */
+    r = _zdtm_obtain_last_time_synced(cur_env, &last_time_synced);
+    if (r != 0) {
+        if (r == 1) {
+            return -11;
+        } else {
+            return -12;
+        }
+    }
+
+    /* Attempt to reset the sync log */
+    if (zdtm_requires_slow_sync(cur_env) == 1) {
+        r = _zdtm_reset_sync_log(cur_env);
+        if (r != 0) {
+            return -13;
+        }
+    }
+
+    /* Get the current time of the system and set the last time synced
+     * to it. */
+    time_synced = time(NULL);
+    r = _zdtm_set_last_time_synced(cur_env, time_synced);
+    if (r != 0) {
+        return -14;
+    }
+
+    /* Attempt to reset the sync state */
+    if (zdtm_requires_slow_sync(cur_env) == 1) {
+        r = _zdtm_reset_sync_state(cur_env);
+        if (r != 0) {
+            return -15;
+        }
+    }
+
+    /* Attempt to obtain param format */
+    r = _zdtm_obtain_param_format(cur_env);
+    if (r != 0) {
+        return -16;
+    }
+    for (i = 0; i < cur_env->num_params; i++) {
+        desc_len = 4;
+        memcpy(buff, cur_env->params[i].abrev, desc_len);
+        buff[desc_len] = '\0';
+        desc_len = cur_env->params[i].desc_len;
+        memcpy(buff, cur_env->params[i].desc, desc_len);
+        buff[desc_len] = '\0';
+    }
 
     return 0;
 }
@@ -241,6 +338,10 @@ int zdtm_finalize(zdtm_lib_env *cur_env) {
             free(cur_env->params[i].desc);
         }
         free(cur_env->params);
+    }
+
+    if (cur_env->passcode != NULL) {
+        free(cur_env->passcode);
     }
 
     return 0;

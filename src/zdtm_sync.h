@@ -89,6 +89,19 @@ ZDTM_EXPORT int zdtm_set_zaurus_ip(zdtm_lib_env *cur_env, char *ip_addr);
 ZDTM_EXPORT int zdtm_set_sync_type(zdtm_lib_env *cur_env, unsigned int type);
 
 /**
+ * Set the Passcode.
+ *
+ * The zdtm_set_passcode() function sets the passcode to use in the
+ * synchronization if a passcode is required.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param passcode Pointer to C-string containing the passcode to use.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully set the synchronization passcode.
+ * @retval -1 Failed to allocate memory to store the passcode.
+ */
+ZDTM_EXPORT int zdtm_set_passcode(zdtm_lib_env *cur_env, char *passcode);
+
+/**
  * Initiate Synchronization
  *
  * The zdtm_initiate_sync function initiates the synchronization process

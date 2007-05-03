@@ -24,164 +24,13 @@
 #include <string.h>
 
 int test_get_changeinfo(zdtm_lib_env *cur_env) {
-    time_t last_time_synced, time_synced;
-    //zdtm_msg msg, rmsg;
-    int i, desc_len;
-    int r, retval;
-    char buff[256];
+    int i, r;
     uint32_t *p_new_sync_ids;
     uint32_t *p_mod_sync_ids;
     uint32_t *p_del_sync_ids;
     uint16_t num_new_sync_ids;
     uint16_t num_mod_sync_ids;
     uint16_t num_del_sync_ids;
-
-    /* Obtain Device Info from Zaurus */
-    r = zdtm_check_cur_auth_state(cur_env);
-    if (r < 0) {
-        fprintf(stderr, "ERR(%d): zdtm_check_cur_auth_state() failed.\n", r);
-        return 5;
-    }
-    printf("- Obtained Device Info\n");
-    printf("\tModel String: %s\n", cur_env->model);
-    printf("\tLanguage: %c%c\n", cur_env->language[0], cur_env->language[1]);
-    printf("\tCurrent Auth State: 0x%.2x\n", cur_env->cur_auth_state);
-    if (r == 1) { /* does require passcode */
-        retval = _zdtm_authenticate_passcode(cur_env, "1234");
-        if (retval == 0) {
-            printf("Successfully authenticated passcode \"1234\".\n");
-        } else if (retval == 1) {
-            printf("Passcode \"1234\"'s authentication was denied.\n");
-            return 5;
-        } else {
-            fprintf(stderr,
-                "ERR(%d): _zdtm_authenticate_passcode() failed.\n", r);
-            return 5;
-        }
-    }
-
-    r = _zdtm_obtain_device_info(cur_env);
-    if (r < 0) {
-        fprintf(stderr, "ERR(%d): zdtm_check_cur_auth_state() failed.\n", r);
-        return 5;
-    }
-    printf("- Obtained Device Info\n");
-    printf("\tModel String: %s\n", cur_env->model);
-    printf("\tLanguage: %c%c\n", cur_env->language[0], cur_env->language[1]);
-    printf("\tCurrent Auth State: 0x%.2x\n", cur_env->cur_auth_state);
-
-    /* Obtain Zaurus Sync State */
-    r = _zdtm_obtain_sync_state(cur_env);
-    if (r != 0) {
-        fprintf(stderr, "ERR(%d): _zdtm_obtain_sync_state() failed.\n", r);
-        return 5;
-    }
-
-    /* Here I check if ToDo Slow Sync is Required */
-    if (cur_env->todo_slow_sync_required) {
-        /* todo slow sync required */
-        printf("ToDo Slow Sync Required!\n");
-    }
-
-    if (cur_env->calendar_slow_sync_required) {
-        /* cal slow sync required */
-        printf("Calendar Slow Sync Required!\n");
-    }
-    
-    if (cur_env->address_book_slow_sync_required) {
-        /* address book slow sync required */
-        printf("Address Book Slow Sync Required!\n");
-    }
-
-    /* Here I get the last time it was synced */
-    r = _zdtm_obtain_last_time_synced(cur_env, &last_time_synced);
-    if (r != 0) {
-        if (r == 1) {
-            fprintf(stderr,
-                "Warning:: _zdtm_obtain_last_time_synced() claimed\n");
-            fprintf(stderr,
-                "that the device has never been synced before by ATG\n");
-            fprintf(stderr, "of all zeros.\n"); 
-            return 5;
-        } else {
-            fprintf(stderr,
-                "ERR(%d): _zdtm_obtain_last_time_synced() failed.\n",
-                r);
-            return 5;
-        }
-    }
-    ctime_r(&last_time_synced, buff);
-    printf("Obtained Last Time Synced: %s", buff);
-
-    /* Attempt to reset the sync log. */
-    if (zdtm_requires_slow_sync(cur_env) == 1) {
-        r = _zdtm_reset_sync_log(cur_env);
-        if (r != 0) {
-            fprintf(stderr, "ERR(%d): _zdtm_reset_sync_log() failed.\n",
-                r);
-            return 6;
-        }
-    }
-
-    /* Get the current time of the system and set the last time synced
-     * to it. */
-    time_synced = time(NULL);
-    r = _zdtm_set_last_time_synced(cur_env, time_synced);
-    if (r != 0) {
-        fprintf(stderr, "ERR(%d): _zdtm_set_last_time_synced() failed.\n",
-            r);
-        return 6;
-    }
-    ctime_r(&time_synced, buff);
-    printf("Set Last Time Synced: %s", buff);
-    
-    /* Attempt to reset the sync state. */
-    if (zdtm_requires_slow_sync(cur_env) == 1) {
-        r = _zdtm_reset_sync_state(cur_env);
-        if (r != 0) {
-            fprintf(stderr, "ERR(%d): _zdtm_reset_sync_state() failed.\n",
-                r);
-            return 13;
-        }
-    }
-
-    r = _zdtm_obtain_param_format(cur_env);
-    if (r != 0) {
-        fprintf(stderr, "ERR(%d): _zdtm_obtain_param_format() failed.\n",
-            r);
-        return 6;
-    }
-    for (i = 0; i < cur_env->num_params; i++) {
-        desc_len = 4;
-        memcpy(buff, cur_env->params[i].abrev, desc_len);
-        buff[desc_len] = '\0';
-        printf("Param %d: Abrev - %s\n", i, buff);
-        desc_len = cur_env->params[i].desc_len;
-        memcpy(buff, cur_env->params[i].desc, desc_len);
-        buff[desc_len] = '\0';
-        printf("Param %d: Desc - %s\n", i, buff);
-        printf("Param %d: Type ID - 0x%2x\n", i, cur_env->params[i].type_id);
-    }
-
-    /* BEFORE I GO ANY FURTHER I MUST BE SURE THAT A FULL SYNC IS NOT
-     * REQUIRED. IF A FULL SYNC IS REQUIRED THEN I SHOULD HANDLE THE
-     * FULL SYNC. */
-    r = zdtm_requires_slow_sync(cur_env);
-    if (r < 0) {
-        fprintf(stderr, "ERR(%d): _zdtm_requires_slow_sync() failed.\n",
-            r);
-        return 7;
-    }
-    /*
-    if (r == 1) {
-        printf("SLOW SYNC REQUIRED!\n");
-        printf("This test_daemon currently does not support slow syncs\n");
-        printf("Hence, you must sync your Zaurus with the Windows sync\n");
-        printf("software and come back and sync with the test_daemon\n");
-        printf("to get beyond this point in the synchronization\n");
-        return -2;
-    }
-    */
 
     r = _zdtm_obtain_sync_id_lists(cur_env, &p_new_sync_ids, &num_new_sync_ids,
                                    &p_mod_sync_ids, &num_mod_sync_ids,
@@ -221,11 +70,10 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
 int main(int argc, char *argv[]) {
     zdtm_lib_env cur_env;
     int r;
-    int resetLog = 0;
-    
-    for (r=1; r<argc; r++) {
-        if (strcmp(argv[r], "-C") == 0)
-            resetLog = 1;
+
+    if (argc > 2) {
+        printf("Usage: %s [passcode]\n", argv[0]);
+        return 0;
     }
     
     memset(&cur_env, 0, sizeof(zdtm_lib_env));
@@ -253,6 +101,17 @@ int main(int argc, char *argv[]) {
     }
     
     printf("Successfully set the Synchronization Type.\n");
+
+    if (argc == 2) {
+        r = zdtm_set_passcode(&cur_env, argv[1]);
+        if (r != 0) {
+            fprintf(stderr, "ERR(%d): zdtm_set_passcode() failed.\n", r);
+            return 5;
+        }
+        printf("Successfully set the passcode.\n");
+    } else {
+        printf("No passcode given, trying without one.\n");
+    }
     
     r = zdtm_initiate_sync(&cur_env);
     if (r != 0) {
@@ -261,27 +120,6 @@ int main(int argc, char *argv[]) {
     }
     printf("- Initiated Synchronization\n");
 
-    /*
-    if (resetLog) {
-        r = _zdtm_reset_sync_log(&cur_env);
-        if (r != 0) {
-            fprintf(stderr, "ERR(%d): _zdtm_reset_sync_log() failed.\n", r);
-            return 5;
-        }
-        printf("Successfully reset sync log.\n");
-    }
-    else {
-        r = test_get_changeinfo(&cur_env);
-        printf("get_changeinfo - (%d).\n", r);
-        if(r == 0) {
-            r = _zdtm_state_sync_done(&cur_env);
-            if (r != 0) {
-                fprintf(stderr, "ERR(%d): _zdtm_state_sync_done() failed.\n", r);
-                return 6;
-            }
-        }
-    }
-    */
     r = test_get_changeinfo(&cur_env);
     printf("get_changeinfo - (%d).\n", r);
     if(r == 0) {

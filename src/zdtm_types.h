@@ -109,6 +109,7 @@ typedef struct ZDTM_EXPORT zdtm_environment {
     int address_book_slow_sync_required; // flag if slow sync is required
     uint16_t num_params;    // number of parameters in the params list
     struct zdtm_adi_msg_param *params; // params that compose item data format
+    char *passcode; // zaurus passcode to use in synchronization
 } zdtm_lib_env;
 
 #endif
