@@ -151,6 +151,109 @@ ZDTM_EXPORT int zdtm_check_cur_auth_state(zdtm_lib_env *cur_env);
 ZDTM_EXPORT int zdtm_requires_slow_sync(zdtm_lib_env *cur_env);
 
 /**
+ * Obtain Sync ID Lists
+ *
+ * The zdtm_obtain_sync_id_lists function attempts to obtain the three
+ * lists of synchronization IDs from the Zaurus. One list contains all
+ * the IDs of the new items, one contains all the IDs of modified items,
+ * and the third list contains all the IDs of deleted items. In the case
+ * of failure none of the vairiables pointed to by the parameters will
+ * be altered. If this function succeeds the memory containing the lists
+ * needs to be freed using the free() function because it is allocated
+ * dynamically inside this function.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param pp_new_sync_ids Pointer to a pointer to head of new ID list.
+ * @param p_num_new_sync_ids Pointer to var to store num new IDs in.
+ * @param pp_mod_sync_ids Pointer to a pointer to head of mod ID list.
+ * @param p_num_mod_sync_ids Pointer to var to store num mod IDs in.
+ * @param pp_del_sync_ids Pointer to a pointer to head of del ID list.
+ * @param p_num_del_sync_ids Pointer to var to store num del IDs in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained sync ID lists.
+ * @retval -1 Failed to send RSY message.
+ * @retval -2 Failed to recv response message.
+ * @retval -3 Failed, response message is NOT an ASY message.
+ * @retval -4 Failed to allocate memory for ID lists.
+ */
+ZDTM_EXPORT int zdtm_obtain_sync_id_lists(zdtm_lib_env *cur_env,
+    uint32_t **pp_new_sync_ids, uint16_t *p_num_new_sync_ids,
+    uint32_t **pp_mod_sync_ids, uint16_t *p_num_mod_sync_ids,
+    uint32_t **pp_del_sync_ids, uint16_t *p_num_del_sync_ids);
+
+/**
+ * Obtain Todo Item.
+ *
+ * The zdtm_obtain_todo_item function attempts to obtain the data for a
+ * Todo item and build a struture to represent the Todo item given a
+ * sync id.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param sync_id The sync id of the item to obtain.
+ * @param p_todo_item Pointer to zdtm_todo_item structure to store
+ * results in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained Todo item.
+ * @retval -1 Failed, current environment is not set to Todo sync type.
+ * @retval -2 Failed to obtain item data from the Zaurus.
+ * @retval -3 Failed to build zdtm_todo_item struct from item data.
+ * */
+ZDTM_EXPORT int zdtm_obtain_todo_item(zdtm_lib_env *cur_env,
+    uint32_t sync_id, struct zdtm_todo_item *p_todo_item);
+
+/**
+ * Obtain Calendar Item.
+ *
+ * The zdtm_obtain_calendar_item function attempts to obtain the data
+ * for a Calendar item and build a struture to represent the Calendar
+ * item given a sync id.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param sync_id The sync id of the item to obtain.
+ * @param p_calendar_item Pointer to zdtm_calendar_item structure to
+ * store results in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained Todo item.
+ * @retval -1 Failed, current environment is not set to Calendar sync type.
+ * @retval -2 Failed to obtain item data from the Zaurus.
+ * @retval -3 Failed to build zdtm_calendar_item struct from item data.
+ * */
+ZDTM_EXPORT int zdtm_obtain_calendar_item(zdtm_lib_env *cur_env,
+    uint32_t sync_id, struct zdtm_calendar_item *p_calendar_item);
+
+/**
+ * Obtain Address Item.
+ *
+ * The zdtm_obtain_address_item function attempts to obtain the data
+ * for a Address item and build a struture to represent the Address item
+ * given a sync id.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param sync_id The sync id of the item to obtain.
+ * @param p_address_item Pointer to zdtm_address_item structure to store
+ * results in.
+ * @return An integer representing success (zero) or failure (non-zero).
+ * @retval 0 Successfully obtained Address item.
+ * @retval -1 Failed, current environment is not set to Address sync type.
+ * @retval -2 Failed to obtain item data from the Zaurus.
+ * @retval -3 Failed to build zdtm_address_item struct from item data.
+ * */
+ZDTM_EXPORT int zdtm_obtain_address_item(zdtm_lib_env *cur_env,
+    uint32_t sync_id, struct zdtm_address_item *p_address_item);
+
+/**
+ * Delete Item.
+ *
+ * The zdtm_delete_item function attempts to delete an item from the
+ * Zaurus database. This is generally done with a Desktop software has
+ * had the item matching the given sync_id removed as well.
+ * @param cur_env Pointer to the current zdtm library environment.
+ * @param sync_id The sync id of the item to delete.
+ * @return An integer representintg success (zero) or failure (non-zero).
+ * @retval 0 Successfully deleted the item.
+ * @retval -1 Failed to sent the RDD message.
+ * @retval -2 Failed to recv the response message.
+ * @retval -3 Failed, response message received was NOT an AEX message.
+ */
+ZDTM_EXPORT int zdtm_delete_item(zdtm_lib_env *cur_env, uint32_t sync_id);
+
+/**
  * Terminate Synchronization
  *
  * The zdtm_terminate_sync function terminates the synchronization

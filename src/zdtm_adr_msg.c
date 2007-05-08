@@ -30,13 +30,13 @@ int zdtm_parse_raw_adr_msg(void *buf, struct zdtm_adr_msg_content *adr) {
     buf += 2;
 
 #ifdef WORDS_BIGENDIAN
-    adr->num_params = zdtm_liltobigl(*((uint32_t *)buf));
-    buf += sizeof(uint32_t);
+    adr->num_params = zdtm_liltobigl(*((uint16_t *)buf));
+    buf += sizeof(uint16_t);
 #else
-    adr->num_params = *((uint32_t *)buf);
-    buf += sizeof(uint32_t);
+    adr->num_params = *((uint16_t *)buf);
+    buf += sizeof(uint16_t);
 #endif
-
+        
     adr->params = (struct zdtm_adr_msg_param *)malloc(
         (adr->num_params * sizeof(struct zdtm_adr_msg_param)));
     if (adr->params == NULL)

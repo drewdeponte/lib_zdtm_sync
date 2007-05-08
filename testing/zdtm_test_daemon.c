@@ -23,6 +23,24 @@
 #include <stdio.h>
 #include <string.h>
 
+void print_todo_item(struct zdtm_todo_item *p_todo_item) {
+    char buff[256];
+
+    printf("--== Todo Item ==--\n");
+    printf("Sync ID: %u\n", p_todo_item->sync_id);
+    memset(buff, 0, 256);
+    memcpy(buff, p_todo_item->category, p_todo_item->category_len);
+    printf("Category: %s\n", buff);
+    printf("Progress: 0x%.2x\n", p_todo_item->progress);
+    printf("Priority: 0x%.2x\n", p_todo_item->priority);
+    memset(buff, 0, 256);
+    memcpy(buff, p_todo_item->description, p_todo_item->description_len);
+    printf("Description: %s\n", buff);
+    memset(buff, 0, 256);
+    memcpy(buff, p_todo_item->notes, p_todo_item->notes_len);
+    printf("Notes: %s\n", buff);
+}
+
 int test_get_changeinfo(zdtm_lib_env *cur_env) {
     int i, r;
     uint32_t *p_new_sync_ids;
@@ -31,8 +49,9 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
     uint16_t num_new_sync_ids;
     uint16_t num_mod_sync_ids;
     uint16_t num_del_sync_ids;
+    struct zdtm_todo_item todo_item;
 
-    r = _zdtm_obtain_sync_id_lists(cur_env, &p_new_sync_ids, &num_new_sync_ids,
+    r = zdtm_obtain_sync_id_lists(cur_env, &p_new_sync_ids, &num_new_sync_ids,
                                    &p_mod_sync_ids, &num_mod_sync_ids,
                                    &p_del_sync_ids, &num_del_sync_ids);
     if (r != 0) {
@@ -46,6 +65,15 @@ int test_get_changeinfo(zdtm_lib_env *cur_env) {
         printf(" -- new sync id [%d] = (hex) 0x%.8x, (dec) %u\n", i,
             (int)p_new_sync_ids[i],
             (int)p_new_sync_ids[i]);
+        printf("Before the call to zdtm_obtain_todo_item.\n");
+        r = zdtm_obtain_todo_item(cur_env, p_new_sync_ids[i], &todo_item);
+        printf("After the call to zdtm_obtain_todo_item.\n");
+        if (r != 0) {
+            fprintf(stderr, "ERR(%d): zdtm_obtain_todo_item() failed.\n",
+                r);
+            return 22;
+        }
+        print_todo_item(&todo_item);
     }
     printf("num mod sync ids = %u\n", num_mod_sync_ids);
     for (i = 0; i < num_mod_sync_ids; i++) {

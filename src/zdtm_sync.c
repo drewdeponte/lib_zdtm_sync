@@ -288,6 +288,194 @@ int zdtm_requires_slow_sync(zdtm_lib_env *cur_env) {
     }
 }
 
+int zdtm_obtain_sync_id_lists(zdtm_lib_env *cur_env,
+    uint32_t **pp_new_sync_ids, uint16_t *p_num_new_sync_ids,
+    uint32_t **pp_mod_sync_ids, uint16_t *p_num_mod_sync_ids,
+    uint32_t **pp_del_sync_ids, uint16_t *p_num_del_sync_ids) {
+
+    int r;
+    zdtm_msg msg, rmsg;
+    uint32_t *p_new_sync_ids;
+    uint32_t *p_mod_sync_ids;
+    uint32_t *p_del_sync_ids;
+    uint16_t num_new_sync_ids, num_mod_sync_ids, num_del_sync_ids;
+
+    p_new_sync_ids = NULL;
+    p_mod_sync_ids = NULL;
+    p_del_sync_ids = NULL;
+
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RSY_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rsy.sync_type = cur_env->sync_type;
+    msg.body.cont.rsy.uk = 0x07;
+
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
+    if(r != 0){ return -1; }
+
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
+    if(r != 0){ _zdtm_clean_message(&rmsg); return -2; }
+
+    if (memcmp(rmsg.body.type, ASY_MSG_TYPE, MSG_TYPE_SIZE) != 0) {
+        _zdtm_clean_message(&rmsg);
+        return -3;
+    }
+
+    num_new_sync_ids = rmsg.body.cont.asy.num_new_sync_ids;
+    p_new_sync_ids = malloc(sizeof(uint32_t) * num_new_sync_ids);
+    if (p_new_sync_ids == NULL) {
+        _zdtm_clean_message(&rmsg);
+        return -4;
+    }
+    num_mod_sync_ids = rmsg.body.cont.asy.num_mod_sync_ids;
+    p_mod_sync_ids = malloc(sizeof(uint32_t) * num_mod_sync_ids);
+    if (p_mod_sync_ids == NULL) {
+        free(p_new_sync_ids);
+        _zdtm_clean_message(&rmsg);
+        return -4;
+    }
+    num_del_sync_ids = rmsg.body.cont.asy.num_del_sync_ids;
+    p_del_sync_ids = malloc(sizeof(uint32_t) * num_del_sync_ids);
+    if (p_del_sync_ids == NULL) {
+        free(p_mod_sync_ids);
+        free(p_new_sync_ids);
+        _zdtm_clean_message(&rmsg);
+        return -4;
+    }
+
+    /* At this point I know I have allocated all the necessary space so
+     * I can copy the lists over and assign the pointers and their
+     * associated lengths. */
+    memcpy(p_new_sync_ids, rmsg.body.cont.asy.new_sync_ids,
+           (sizeof(uint32_t) * num_new_sync_ids));
+    memcpy(p_mod_sync_ids, rmsg.body.cont.asy.mod_sync_ids,
+           (sizeof(uint32_t) * num_mod_sync_ids));
+    memcpy(p_del_sync_ids, rmsg.body.cont.asy.del_sync_ids,
+           (sizeof(uint32_t) * num_del_sync_ids));
+
+    (*pp_new_sync_ids) = p_new_sync_ids;
+    (*pp_mod_sync_ids) = p_mod_sync_ids;
+    (*pp_del_sync_ids) = p_del_sync_ids;
+    (*p_num_new_sync_ids) = num_new_sync_ids;
+    (*p_num_mod_sync_ids) = num_mod_sync_ids;
+    (*p_num_del_sync_ids) = num_del_sync_ids;
+
+    _zdtm_clean_message(&rmsg);
+
+    return 0;
+}
+
+int zdtm_obtain_todo_item(zdtm_lib_env *cur_env, uint32_t sync_id,
+    struct zdtm_todo_item *p_todo_item) {
+
+    int r;
+    struct zdtm_adr_msg_param *params;
+    uint16_t num_params;
+
+    if (cur_env->sync_type != SYNC_TYPE_TODO) {
+        return -1;
+    }
+
+    r = _zdtm_obtain_item(cur_env, sync_id, &params, &num_params);
+    if (r != 0) {
+        return -2;
+    }
+
+    r = _zdtm_parse_todo_item_params(cur_env->params, cur_env->num_params,
+        params, num_params, p_todo_item);
+    if (r != 0) {
+        _zdtm_free_params(cur_env, params, num_params);
+        return -3;
+    }
+
+    _zdtm_free_params(cur_env, params, num_params);
+
+    return 0;
+}
+
+int zdtm_obtain_calendar_item(zdtm_lib_env *cur_env, uint32_t sync_id,
+    struct zdtm_calendar_item *p_calendar_item) {
+
+    int r;
+    struct zdtm_adr_msg_param *params;
+    uint16_t num_params;
+
+    if (cur_env->sync_type != SYNC_TYPE_CALENDAR) {
+        return -1;
+    }
+
+    r = _zdtm_obtain_item(cur_env, sync_id, &params, &num_params);
+    if (r != 0) {
+        return -2;
+    }
+
+    r = _zdtm_parse_calendar_item_params(cur_env->params, cur_env->num_params,
+        params, num_params, p_calendar_item);
+    if (r != 0) {
+        _zdtm_free_params(cur_env, params, num_params);
+        return -3;
+    }
+
+    _zdtm_free_params(cur_env, params, num_params);
+
+    return 0;
+}
+
+int zdtm_obtain_address_item(zdtm_lib_env *cur_env, uint32_t sync_id,
+    struct zdtm_address_item *p_address_item) {
+
+    int r;
+    struct zdtm_adr_msg_param *params;
+    uint16_t num_params;
+
+    if (cur_env->sync_type != SYNC_TYPE_ADDRESS) {
+        return -1;
+    }
+
+    r = _zdtm_obtain_item(cur_env, sync_id, &params, &num_params);
+    if (r != 0) {
+        return -2;
+    }
+
+    r = _zdtm_parse_address_item_params(cur_env->params, cur_env->num_params,
+        params, num_params, p_address_item);
+    if (r != 0) {
+        _zdtm_free_params(cur_env, params, num_params);
+        return -3;
+    }
+
+    _zdtm_free_params(cur_env, params, num_params);
+
+    return 0;
+}
+
+int zdtm_delete_item(zdtm_lib_env *cur_env, uint32_t sync_id) {
+    zdtm_msg msg, rmsg;
+    int r;
+
+    memset(&msg, 0, sizeof(zdtm_msg));
+    memcpy(msg.body.type, RDD_MSG_TYPE, MSG_TYPE_SIZE);
+    msg.body.cont.rdd.sync_type = cur_env->sync_type;
+    msg.body.cont.rdd.num_sync_ids = 1;
+    msg.body.cont.rdd.sync_id = sync_id;
+
+    r = _zdtm_wrapped_send_message(cur_env, &msg);
+    if (r != 0) { return -1; }
+
+    memset(&rmsg, 0, sizeof(zdtm_msg));
+    r = _zdtm_wrapped_recv_message(cur_env, &rmsg);
+    if (r != 0) { _zdtm_clean_message(&rmsg); return -2; }
+
+    if (memcmp(rmsg.body.type, AEX_MSG_TYPE, MSG_TYPE_SIZE) != 0) {
+        _zdtm_clean_message(&rmsg);
+        return -3;
+    }
+
+    _zdtm_clean_message(&rmsg);
+
+    return 0;
+}
+
 int zdtm_terminate_sync(zdtm_lib_env *cur_env) {
     int r;
     zdtm_msg msg, rmsg;

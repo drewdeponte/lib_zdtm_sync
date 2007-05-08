@@ -1,3 +1,52 @@
+2007-07-03 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Fixed a bug in the zdtm_adr_msg.c file that was causing a segfault in
+the zdtm_parse_raw_adr_msg() function. Specifically it was a problem
+with the fact that the num_params was being interpreted as a uint32_t
+when it should have only been interpreted as a uint16_t. Hence, when the
+buf pointer was incremeneted by uint32_t it was incremented 2 bytes too
+far.
+
+2007-05-03 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Implemented the zdtm_obtain_sync_id_lists() function in the
+zdtm_sync.h and zdtm_sync.c files respectively and documented it so that
+it could be used through the general API.
+
+* Modified zdtm_test_daemon.c to use zdtm_obtain_sync_id_lists() rather
+than _zdtm_obtain_sync_id_lists().
+
+* Moved the _zdtm_obtain_sync_id_lists() function to zdtm_sync.h and
+zdtm_sync.c and renamed it zdtm_obtain_sync_id_lists() so that there was
+no extra wrapper layer for that function.
+
+* Moved the _zdtm_obtain_todo_item() function from zdtm_proto.h and
+zdtm_proto.c to zdtm_sync.h and zdtm_sync.c and renamed it
+zdtm_obtain_todo_item() so that there was no need for an extra wrapper
+layer to make it part of the general API.
+
+* Moved the _zdtm_obtain_calendar_item() function from zdtm_proto.h and
+zdtm_proto.c to zdtm_sync.h and zdtm_sync.c and renamed it
+zdtm_obtain_calendar_item() so that there was no need for an extra
+wrapper layer to make it part of the general API.
+
+* Moved the _zdtm_obtain_address_item() function from zdtm_proto.h and
+zdtm_proto.c to zdtm_sync.h and zdtm_sync.c and renamed it
+zdtm_obtain_address_item() so that there was no need for an extra
+wrapper layer to make it part of the general API.
+
+* Moved the _zdtm_delete_item() function from zdtm_proto.h and
+zdtm_proto.c to zdtm_sync.h and zdtm_sync.c and renamed it
+zdtm_delete_item() so that there was no need for an extra wrapper lapyer
+to make it part of the general API.
+
+2007-05-02 Andrew De Ponte <cyphactor@socal.rr.com>
+
+* Moved the standard sync stuff from the zdtm_test_daemon.c into the 
+standard libraries public API specifically in the zdtm_initiate_sync() 
+function. I also modified the the zdtm_test_daemon.c file and removed 
+what should now be unnecessary code.
+
 2007-04-04 Andrew De Ponte <cyphactor@socal.rr.com>
 
 * Updated all the Copyright notices at the top of the files to be
