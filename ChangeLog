@@ -1,4 +1,19 @@
-2007-07-03 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-07-30 Andrew De Ponte <cyphactor@users.sourceforge.net>
+
+* Created the zdtm_adw_msg.h and zdtm_adw_msg.c source files and
+implemented a structure to represent ADW messages as well as a function
+to parse raw ADW message content into a ADW message content structure.
+Beyond that, I defined the ADW_MSG_TYPE constant so that it can be used
+for message type identification and comparison.
+
+* Modified the zdtm_message_body structures zdtm_spec_type_content union
+by adding in instance of the zdtm_adw_msg_content structure called 'adw'
+to it so that the message body structure could be used to represent an
+ADW message body. I also modified the _zdtm_parse_raw_msg() function so
+that it parses raw ADW messages using the newly created
+zdtm_parse_raw_adw_msg() function.
+
+2007-07-03 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Fixed a bug in the zdtm_adr_msg.c file that was causing a segfault in
 the zdtm_parse_raw_adr_msg() function. Specifically it was a problem
@@ -7,7 +22,7 @@ when it should have only been interpreted as a uint16_t. Hence, when the
 buf pointer was incremeneted by uint32_t it was incremented 2 bytes too
 far.
 
-2007-05-03 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-05-03 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Implemented the zdtm_obtain_sync_id_lists() function in the
 zdtm_sync.h and zdtm_sync.c files respectively and documented it so that
@@ -40,14 +55,14 @@ zdtm_proto.c to zdtm_sync.h and zdtm_sync.c and renamed it
 zdtm_delete_item() so that there was no need for an extra wrapper lapyer
 to make it part of the general API.
 
-2007-05-02 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-05-02 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Moved the standard sync stuff from the zdtm_test_daemon.c into the 
 standard libraries public API specifically in the zdtm_initiate_sync() 
 function. I also modified the the zdtm_test_daemon.c file and removed 
 what should now be unnecessary code.
 
-2007-04-04 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-04-04 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Updated all the Copyright notices at the top of the files to be
 correct for GPL and added to the files which were missing a Copyright
@@ -106,7 +121,7 @@ docs/lib_zdtm_sync_detailed_plan.html to reflect the addition of the
 _zdtm_parse_address_item_params() and _zdtm_obtain_address_item()
 functions.
 
-2007-03-28 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-03-28 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Added the zdtm_adr_msg.h and zdtm_adr_msg.c files to the svn repos
 because I forgot too last commit.
@@ -117,7 +132,7 @@ function so that it was built properly before sending it.
 * Commented out the full-sync -2 error return in the test daemon so that
 in the case of full syncs it will get all the members etc.
 
-2007-03-15 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-03-15 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Created the zdtm_adr_msg.h and zdtm_adr_msg.c files and wrote the ADR
 message handling code so that ADR messages can now be properly parsed
@@ -159,7 +174,7 @@ id.
 * Updated the lib_zdtm_sync_detailed_plan .planner and .html files
 respectively to show these modifications.
 
-2007-03-12 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-03-12 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Modified the _zdtm_reset_sync_log() function to match the previous
 implementation since the protocol document is not descriptive enough for
@@ -184,7 +199,7 @@ the first time a sync is ever performed on a device.
 _zdtm_obtain_device_info() after zdtm_check_cur_auth_state() in normal
 (non-slow) syncs.
 
-2007-03-11 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-03-11 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Implemented the RDI and ADI messages respectively in zdtm_rdi_msg.h,
 zdtm_rdi_msg.c, zdtm_adi_msg.h, and zdtm_adi_msg.c. To do so I needed to
@@ -207,7 +222,7 @@ information on standard out as a method of testing it's functionality
 * Updated lib_zdtm_sync_detailed_plan.planner and
 lib_zdtm_sync_detailed_plan.html to represent these changes.
 
-2007-03-05 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-03-05 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Wrote and documented the _zdtm_authenticate_passcode() function in the
 zdtm_proto.h and zdtm_proto.c files respectively. I also updated the
@@ -286,7 +301,7 @@ lib_zdtm_sync_detailed_plan.html to represent this modification.
 
 * Modified the order of tasks so that the gantt chart is easier to read.
 
-2007-02-22 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-02-22 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Added the retrieved_sync_state, todo_slow_sync_required,
 calendar_slow_sync_required, and address_book_slow_sync_required flags
@@ -310,7 +325,7 @@ a slow sync is required for the current sync type. If the sync state has
 however not been retrieved from the Zaurus yet, it attempts to retrieve
 the sync state and then determine if a slow sync is required.
 
-2007-02-20 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-02-20 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Created the zdtm_proto.h and zdtm_proto.c files and added them to the
 project.
@@ -357,7 +372,7 @@ This function was added to the general API.
 * Updated the planner file with the tasks that I completed in this
 coding session.
 
-2007-02-13 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-02-13 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Implemented the zdtm_handle_connection() function in the zdtm_sync.c
 file and documented it in the zdtm_sync.h so that people reading the
@@ -365,7 +380,7 @@ code can have a better understanding of the general API.
 
 * Fixed some documentation in the zdtm network abstraction layer.
 
-2007-02-07 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-02-07 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Moved the zdtm_send_message() and zdtm_recv_message() functions from
 the zdtm_sync.h and zdtm_sync.c files into zdtm_net.h and zdtm_net.c and
@@ -380,14 +395,14 @@ understood.
 fixed all the documentation in the zdtm_net.h file so that it is correct
 to all the modifications I have made in the past few days.
 
-2007-02-05 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-02-05 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Modified the build configuration so that the testing sub-directory is
 build conditionally depending on if it is a Unix Variant or Windows.
 Hence, the testing sub-directory will be built on Unix Variants and will
 NOT be built for Windows.
 
-2007-02-05 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-02-05 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * I moved the appropriate portions of zdtm_sync.h and zdtm_sync.c into
 the newley created files to create better structure and organization to
@@ -457,12 +472,12 @@ testing designed for unix version only, and hence uses functions that
 are not exported via the windows DLL yet. Once, they are ported over
 it will be re-inserted into the root Makefile.am.
 
-2007-01-31 Andrew De Ponte <cyphactor@socal.rr.com>
+2007-01-31 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * I created all the files for the new code base structure and added them
 to the Makefile.am.
 
-2006-10-09 Andrew De Ponte <cyphactor@socal.rr.com>
+2006-10-09 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Implemented the zdtm_obtain_device_info() function as part of the
 general API and documented it.
@@ -474,7 +489,7 @@ of the general API and documented it.
 zdtm_obtain_device_info() where used to replace the code that is now
 obfuscated by those general API functions.
 
-2006-10-06 Andrew De Ponte <cyphactor@socal.rr.com>
+2006-10-06 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Changed the names of the zdtm_open_log, zdtm_write_log,
 zdtm_dump_msg_log, zdtm_close_log, and zdtm_listen_for_zaurus by

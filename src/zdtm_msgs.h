@@ -41,6 +41,7 @@
 #include "zdtm_ang_msg.h"
 #include "zdtm_asy_msg.h"
 #include "zdtm_atg_msg.h"
+#include "zdtm_adw_msg.h"
 
 #include "zdtm_ray_msg.h"
 #include "zdtm_rig_msg.h"
@@ -80,6 +81,7 @@ struct zdtm_message_body {
         struct zdtm_adi_msg_content adi;
         struct zdtm_adr_msg_content adr;
         struct zdtm_asy_msg_content asy;
+        struct zdtm_adw_msg_content adw;
 
         // Content structures for Qtopia Desktop messages
         struct zdtm_ray_msg_content ray;
