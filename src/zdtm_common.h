@@ -214,6 +214,8 @@ struct zdtm_address_item {
 
 inline int zdtm_todo_length(struct zdtm_todo_item * todo);
 inline void *zdtm_todo_write(void *buf, struct zdtm_todo_item *todo);
+inline int zdtm_calendar_length(struct zdtm_calendar_item *calendar);
+inline int zdtm_address_length(struct zdtm_address_item *address);
 
 
 #endif

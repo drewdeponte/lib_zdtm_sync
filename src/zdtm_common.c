@@ -191,3 +191,75 @@ void* zdtm_todo_write(void *buf, struct zdtm_todo_item *todo){
 
     return buf;
 }
+
+int zdtm_calendar_length(struct zdtm_calendar_item *calendar) {
+    return sizeof(uint32_t) + calendar->category_len +
+           sizeof(uint32_t) + calendar->description_len +
+           sizeof(uint32_t) + calendar->location_len +
+           sizeof(uint32_t) + calendar->notes_len +
+           sizeof(uint32_t) + sizeof(calendar->start_time) +
+           sizeof(uint32_t) + sizeof(calendar->end_time) +
+           sizeof(uint32_t) + sizeof(calendar->schedule_type) +
+           sizeof(uint32_t) + sizeof(calendar->alarm) +
+           sizeof(uint32_t) + sizeof(calendar->alarm_setting) +
+           sizeof(uint32_t) + sizeof(calendar->repeat_type) +
+           sizeof(uint32_t) + sizeof(calendar->repeat_period) +
+           sizeof(uint32_t) + sizeof(calendar->repeat_position) +
+           sizeof(uint32_t) + sizeof(calendar->repeat_date) +
+           sizeof(uint32_t) + sizeof(calendar->repeat_end_date_setting) +
+           sizeof(uint32_t) + sizeof(calendar->repeat_end_date) +
+           sizeof(uint32_t) + sizeof(calendar->all_day_start_date) +
+           sizeof(uint32_t) + sizeof(calendar->all_day_end_date) +
+           sizeof(uint32_t) + sizeof(calendar->multiple_days_flag);
+}
+
+int zdtm_address_length(struct zdtm_address_item *address) {
+    return sizeof(uint32_t) + address->category_len +
+           sizeof(uint32_t) + address->full_name_len +
+           sizeof(uint32_t) + address->full_name_pronun_len +
+           sizeof(uint32_t) + address->title_len +
+           sizeof(uint32_t) + address->last_name_len +
+           sizeof(uint32_t) + address->first_name_len +
+           sizeof(uint32_t) + address->middle_name_len +
+           sizeof(uint32_t) + address->suffix_len +
+           sizeof(uint32_t) + address->alternative_name_len +
+           sizeof(uint32_t) + address->last_name_pronun_len +
+           sizeof(uint32_t) + address->first_name_pronun_len +
+           sizeof(uint32_t) + address->company_len +
+           sizeof(uint32_t) + address->department_len +
+           sizeof(uint32_t) + address->job_title_len +
+           sizeof(uint32_t) + address->work_phone_len +
+           sizeof(uint32_t) + address->work_fax_len +
+           sizeof(uint32_t) + address->work_mobile_len +
+           sizeof(uint32_t) + address->work_state_len +
+           sizeof(uint32_t) + address->work_city_len +
+           sizeof(uint32_t) + address->work_street_len +
+           sizeof(uint32_t) + address->work_zip_len +
+           sizeof(uint32_t) + address->work_country_len +
+           sizeof(uint32_t) + address->work_web_page_len +
+           sizeof(uint32_t) + address->office_len +
+           sizeof(uint32_t) + address->profession_len +
+           sizeof(uint32_t) + address->assistant_len +
+           sizeof(uint32_t) + address->manager_len +
+           sizeof(uint32_t) + address->pager_len +
+           sizeof(uint32_t) + address->cellular_len +
+           sizeof(uint32_t) + address->home_phone_len +
+           sizeof(uint32_t) + address->home_fax_len +
+           sizeof(uint32_t) + address->home_state_len +
+           sizeof(uint32_t) + address->home_city_len +
+           sizeof(uint32_t) + address->home_street_len +
+           sizeof(uint32_t) + address->home_zip_len +
+           sizeof(uint32_t) + address->home_country_len +
+           sizeof(uint32_t) + address->home_web_page_len +
+           sizeof(uint32_t) + address->default_email_len +
+           sizeof(uint32_t) + address->emails_len +
+           sizeof(uint32_t) + address->spouse_len +
+           sizeof(uint32_t) + address->gender_len +
+           sizeof(uint32_t) + address->birthday_len +
+           sizeof(uint32_t) + address->anniversary_len +
+           sizeof(uint32_t) + address->nickname_len +
+           sizeof(uint32_t) + address->children_len +
+           sizeof(uint32_t) + address->memo_len +
+           sizeof(uint32_t) + address->group_len;
+
+}

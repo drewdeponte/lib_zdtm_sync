@@ -1,3 +1,14 @@
+2007-08-02 Andrew De Ponte <cyphactor@users.sourceforge.net>
+
+* Implemented the zdtm_calendar_length() function in the zdtm_common.h
+and zdtm_common.c files. I implemented this function as a means of
+returning the number of bytes necessary for the sync type specific item
+data for calendar items.
+
+* Implemented the zdtm_address_length() function in the zdtm_common.h
+and zdtm_common.c files so that there existed a function to return the
+length the of calendar specific data in bytes for a given calendar item.
+
 2007-07-30 Andrew De Ponte <cyphactor@users.sourceforge.net>
 
 * Created the zdtm_adw_msg.h and zdtm_adw_msg.c source files and
